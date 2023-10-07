@@ -7,6 +7,7 @@ import { ethers } from 'hardhat'
 import { 
   FacetCutAction,
 } from '../scripts/libraries/diamond'
+import { DiamondLoupeFacet, Test1Facet } from '../typechain-types'
 
 const { assert } = require('chai')
 
@@ -16,8 +17,8 @@ const { assert } = require('chai')
 // selector slot array, so we'll fill up a new slot with
 // things, and have a fresh row to work with.
 describe('Cache bug test', async () => {
-  let diamondLoupeFacet
-  let test1Facet
+  let diamondLoupeFacet: DiamondLoupeFacet
+  let test1Facet: Test1Facet
   const ownerSel = '0x8da5cb5b'
 
   const sel0 = '0x19e3b533' // fills up slot 1

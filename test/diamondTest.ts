@@ -9,18 +9,19 @@ import {
 
 import deployDiamond from '../scripts/deploy'
 import { ethers } from 'hardhat'
+import { DiamondCutFacet, DiamondLoupeFacet, OwnershipFacet } from '../typechain-types'
 
 const { assert } = require('chai')
 
 describe('DiamondTest', async function () {
-  let diamondAddress
-  let diamondCutFacet
-  let diamondLoupeFacet
-  let ownershipFacet
+  let diamondAddress: string
+  let diamondCutFacet: DiamondCutFacet
+  let diamondLoupeFacet: DiamondLoupeFacet
+  let ownershipFacet: OwnershipFacet
   let tx
   let receipt
   let result
-  const addresses = []
+  const addresses: string[] = []
 
   before(async function () {
     diamondAddress = await deployDiamond()

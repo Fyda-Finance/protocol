@@ -38,7 +38,7 @@ async function deployDiamond () {
     'DiamondLoupeFacet',
     'OwnershipFacet'
   ]
-  const cut = []
+  const cut: []Cut = []
   for (const FacetName of FacetNames) {
     const Facet = await ethers.getContractFactory(FacetName)
     const facet = await Facet.deploy()
