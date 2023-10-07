@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 
 import { AppStorage } from "../AppStorage.sol";
+import { LibDiamond } from "../libraries/LibDiamond.sol";
 
-contract Modifiers {
-    AppStorage internal s;
-
+abstract contract Modifiers {
     modifier onlyOwner {
+        AppStorage storage s = LibDiamond.diamondStorage();
         require(msg.sender == s.owner, "Modifiers: Must be contract owner");
         _;
     }

@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+struct Strategy {
+    address investToken;
+    address stableToken;
+    uint256 buyAt;
+    uint256 amount;
+}
+
 struct AppStorage {
     // maps function selectors to the facets that execute the functions.
     // and maps the selectors to their position in the selectorSlots array.
@@ -20,4 +27,10 @@ struct AppStorage {
     
     // owner of the contract
     address owner;
+
+    // next id to use for strategies
+    uint256 nextStrategyId;
+
+    // array of strategies
+    mapping(uint256 => Strategy) strategies;
 }
