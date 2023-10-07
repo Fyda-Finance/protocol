@@ -13,7 +13,8 @@ contract StrategyFacet {
             investToken: _investToken,
             stableToken: _stableToken,
             buyAt: _buyAt,
-            amount: _amount
+            amount: _amount,
+            user: msg.sender
         });
 
         s.nextStrategyId++;

@@ -9,7 +9,6 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 library LibSwap {
     struct SwapData {
         address callTo;
-        address approveTo;
         address fromAsset;
         address toAsset;
         uint256 fromAmount;
@@ -26,7 +25,7 @@ library LibSwap {
         address account
     );
 
-    function swap(SwapData calldata _swap) internal returns (uint256) {
+    function swap(SwapData memory _swap) internal returns (uint256) {
         uint256 fromAmount = _swap.fromAmount;
         if (fromAmount == 0) revert NoSwapFromZeroBalance();
 

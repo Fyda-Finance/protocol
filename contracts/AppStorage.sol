@@ -6,6 +6,7 @@ struct Strategy {
     address stableToken;
     uint256 buyAt;
     uint256 amount;
+    address user;
 }
 
 struct AppStorage {
