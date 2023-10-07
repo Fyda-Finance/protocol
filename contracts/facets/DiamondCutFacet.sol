@@ -8,11 +8,13 @@ pragma solidity ^0.8.0;
 
 import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
+import { AppStorage } from "../AppStorage.sol";
+import { Modifiers } from "../utils/Modifiers.sol";
 
 // Remember to add the loupe functions from DiamondLoupeFacet to the diamond.
 // The loupe functions are required by the EIP2535 Diamonds standard
 
-contract DiamondCutFacet is IDiamondCut {
+contract DiamondCutFacet is IDiamondCut, Modifiers {
     /// @notice Add/replace/remove any number of functions and optionally execute
     ///         a function with delegatecall
     /// @param _diamondCut Contains the facet addresses and function selectors
@@ -23,10 +25,9 @@ contract DiamondCutFacet is IDiamondCut {
         FacetCut[] calldata _diamondCut,
         address _init,
         bytes calldata _calldata
-    ) external override {
-        LibDiamond.enforceIsContractOwner();
-        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        uint256 originalSelectorCount = ds.selectorCount;
+    ) external override onlyOwner() {
+        AppStorage storage s = LibDiamond.diamondStorage();
+        uint256 originalSelectorCount = s.selectorCount;
         uint256 selectorCount = originalSelectorCount;
         bytes32 selectorSlot;
         // Check if last selector slot is not full
@@ -34,7 +35,7 @@ contract DiamondCutFacet is IDiamondCut {
         if (selectorCount & 7 > 0) {
             // get last selectorSlot
             // "selectorCount >> 3" is a gas efficient division by 8 "selectorCount / 8"
-            selectorSlot = ds.selectorSlots[selectorCount >> 3];
+            selectorSlot = s.selectorSlots[selectorCount >> 3];
         }
         // loop through diamond cut
         for (uint256 facetIndex; facetIndex < _diamondCut.length; ) {
@@ -51,13 +52,13 @@ contract DiamondCutFacet is IDiamondCut {
             }
         }
         if (selectorCount != originalSelectorCount) {
-            ds.selectorCount = uint16(selectorCount);
+            s.selectorCount = uint16(selectorCount);
         }
         // If last selector slot is not full
         // "selectorCount & 7" is a gas efficient modulo by eight "selectorCount % 8" 
         if (selectorCount & 7 > 0) {
             // "selectorCount >> 3" is a gas efficient division by 8 "selectorCount / 8"
-            ds.selectorSlots[selectorCount >> 3] = selectorSlot;
+            s.selectorSlots[selectorCount >> 3] = selectorSlot;
         }
         emit DiamondCut(_diamondCut, _init, _calldata);
         LibDiamond.initializeDiamondCut(_init, _calldata);
