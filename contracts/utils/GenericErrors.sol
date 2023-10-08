@@ -5,3 +5,4 @@ error NoSwapFromZeroBalance();
 error InsufficientBalance(uint256 required, uint256 balance);
 error SwapFailed();
 error TransferFailed();
+error InvalidExchangeRate(uint256 required, uint256 actual);

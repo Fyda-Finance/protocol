@@ -21,4 +21,8 @@ contract StrategyFacet {
 
         emit StrategyCreated(_investToken, _stableToken, _buyAt, _amount);
     }
+
+    function nextStartegyId() external view returns (uint256) {
+        return s.nextStrategyId;
+    }
 }
