@@ -31,8 +31,6 @@ library LibSwap {
 
         LibAsset.transferFrom(_swap.fromAsset, _swap.user, address(this), fromAmount);
 
-    
-
         uint256 initialReceivingAssetBalance = LibAsset.balanceOf(
             _swap.toAsset, address(this)
         );
