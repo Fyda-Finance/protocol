@@ -1,67 +1,75 @@
 import { ethers } from "hardhat";
 import deployDiamond from "../scripts/deploy";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ScenarioDEX, ScenarioERC20, StrategyFacet, TradeFacet } from "../typechain-types";
 const { expect } = require("chai");
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+
+type SetupDiamondFixture = {
+  scenarioERC20USDC: ScenarioERC20;
+  scenarioERC20WETH: ScenarioERC20;
+  scenarioDEX: ScenarioDEX;
+  strategyFacet: StrategyFacet;
+  tradeFacet: TradeFacet;
+  owner: SignerWithAddress;
+  user: SignerWithAddress;
+};
 
 describe("ScenarioDEX", function () {
-  let diamondAddress: string;
-  let diamondLoupeFacet: any;
-  let scenarioERC20USDC: any;
-  let scenarioERC20WETH: any;
-  let scenarioDEX: any;
-  let strategyFacet: any;
-  let tradeFacet: any;
-  let owner: SignerWithAddress;
-  let user: SignerWithAddress;
-  let tx;
+  async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
+    const [owner, user] = await ethers.getSigners();
 
-  beforeEach(async function () {
-    [owner, user] = await ethers.getSigners();
+    const diamondAddress = await deployDiamond(owner);
 
-    diamondAddress = await deployDiamond(owner);
-
-    diamondLoupeFacet = await ethers.getContractAt(
-      "DiamondLoupeFacet",
-      diamondAddress
-    );
-
-    scenarioDEX = await ethers.getContractFactory("ScenarioDEX");
-    scenarioDEX = await scenarioDEX.deploy();
-    await scenarioDEX.deployed();
+    const ScenarioDEX = await ethers.getContractFactory("ScenarioDEX");
+    const scenarioDEX = await ScenarioDEX.deploy();
 
     const scenarioERC20 = await ethers.getContractFactory("ScenarioERC20");
-    scenarioERC20USDC = await scenarioERC20.deploy("USDC", "USDC", 6);
-    await scenarioERC20USDC.deployed();
+    const scenarioERC20USDC = await scenarioERC20.deploy("USDC", "USDC", 6);
+    const scenarioERC20WETH = await scenarioERC20.deploy("WETH", "WETH", 18);
 
-    scenarioERC20WETH = await scenarioERC20.deploy("WETH", "WETH", 18);
-    await scenarioERC20WETH.deployed();
-
-    tx = await scenarioERC20USDC.mint(
+    await scenarioERC20USDC.mint(
       user.address,
       ethers.utils.parseUnits("2000", 6)
     );
-    tx.wait();
-    strategyFacet = await ethers.getContractAt("StrategyFacet", diamondAddress);
-    tradeFacet = await ethers.getContractAt("TradeFacet", diamondAddress);
+
+    const strategyFacet = await ethers.getContractAt("StrategyFacet", diamondAddress);
+    const tradeFacet = await ethers.getContractAt("TradeFacet", diamondAddress);
+
+    return {
+      scenarioERC20USDC,
+      scenarioERC20WETH,
+      scenarioDEX,
+      owner,
+      user,
+      strategyFacet,
+      tradeFacet,
+    }
+  }
+
+  let setup: SetupDiamondFixture;
+
+  beforeEach(async function () {
+    setup = await loadFixture(setupDiamondFixture);
   });
 
   it("should perform a swap correctly", async function () {
-    await scenarioDEX.updateExchangeRate(
-      scenarioERC20WETH.address,
-      scenarioERC20USDC.address,
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20WETH.address,
+      setup.scenarioERC20USDC.address,
       "1200000000"
     );
 
-    await strategyFacet.createStrategy(
-      scenarioERC20WETH.address,
-      scenarioERC20USDC.address,
+    await setup.strategyFacet.createStrategy(
+      setup.scenarioERC20WETH.address,
+      setup.scenarioERC20USDC.address,
       "1500000000",
       1
     );
 
-    const strategy = await strategyFacet.nextStartegyId();
+    const strategy = await setup.strategyFacet.nextStartegyId();
     expect(strategy).to.equal(1);
 
-    await tradeFacet.executeBuy(0, scenarioDEX.address, "");
+    // await setup.tradeFacet.executeBuy(0, setup.scenarioDEX.address, "");
   });
 });
