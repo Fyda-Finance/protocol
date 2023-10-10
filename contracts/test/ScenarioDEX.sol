@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 contract ScenarioDEX {
 
     // total decimals for USD price
-    uint256 constant public USD_DECIMALS = 6;
+    uint256 constant public USD_DECIMALS = 8;
 
     // asset => exchangeRate in USD 
     mapping (address => uint256) public exchangeRate;

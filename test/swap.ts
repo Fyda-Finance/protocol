@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import deployDiamond from "../scripts/deploy";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ScenarioDEX, ScenarioERC20, StrategyFacet, TradeFacet } from "../typechain-types";
+import { ScenarioDEX, ScenarioERC20, ScenarioFeedRegistry, StrategyFacet, TradeFacet } from "../typechain-types";
 const { expect } = require("chai");
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
@@ -13,6 +13,7 @@ type SetupDiamondFixture = {
   tradeFacet: TradeFacet;
   owner: SignerWithAddress;
   user: SignerWithAddress;
+  scenarioFeedRegistry: ScenarioFeedRegistry
 };
 
 describe("ScenarioDEX", function () {
@@ -36,6 +37,11 @@ describe("ScenarioDEX", function () {
     const strategyFacet = await ethers.getContractAt("StrategyFacet", diamondAddress);
     const tradeFacet = await ethers.getContractAt("TradeFacet", diamondAddress);
 
+    const ScenarioFeedRegistry = await ethers.getContractFactory("ScenarioFeedRegistry");
+    const scenarioFeedRegistry = await ScenarioFeedRegistry.deploy()
+
+    await tradeFacet.setChainlinkFeedRegistry(scenarioFeedRegistry.address)
+
     return {
       scenarioERC20USDC,
       scenarioERC20WETH,
@@ -44,6 +50,7 @@ describe("ScenarioDEX", function () {
       user,
       strategyFacet,
       tradeFacet,
+      scenarioFeedRegistry
     }
   }
 
@@ -65,7 +72,8 @@ describe("ScenarioDEX", function () {
       setup.scenarioERC20WETH.address,
       setup.scenarioERC20USDC.address,
       "1500000000", // price: 1,500 usd
-      budget
+      budget,
+      1000
     );
 
     const strategy = await setup.strategyFacet.nextStartegyId();
@@ -80,14 +88,24 @@ describe("ScenarioDEX", function () {
     // 1 WETH = 1200 USD
     await setup.scenarioDEX.updateExchangeRate(
       setup.scenarioERC20WETH.address,
-      "1200000000"
+      "120000000000"
     );
 
     // 1 USDC = 1 USD
     await setup.scenarioDEX.updateExchangeRate(
       setup.scenarioERC20USDC.address,
-      "1000000"
+      "100000000"
     );
+
+    await setup.scenarioFeedRegistry.updatePrice(
+      setup.scenarioERC20WETH.address,
+      "120000000000"
+    )
+
+    await setup.scenarioFeedRegistry.updatePrice(
+      setup.scenarioERC20USDC.address,
+      "100000000"
+    )
 
     await setup.tradeFacet.executeBuy(0, setup.scenarioDEX.address, dexCalldata);
   });
@@ -104,7 +122,8 @@ describe("ScenarioDEX", function () {
       setup.scenarioERC20WETH.address,
       setup.scenarioERC20USDC.address,
       "1500000000", // price: 1,500 usd
-      budget
+      budget,
+      1000
     );
 
     const strategy = await setup.strategyFacet.nextStartegyId();
@@ -119,19 +138,19 @@ describe("ScenarioDEX", function () {
     // 1 WETH = 1900 USD
     await setup.scenarioDEX.updateExchangeRate(
       setup.scenarioERC20WETH.address,
-      "1900000000"
+      "190000000000"
     );
 
     // 1 USDC = 1 USD
     await setup.scenarioDEX.updateExchangeRate(
       setup.scenarioERC20USDC.address,
-      "1000000"
+      "100000000"
     );
 
     await expect(setup.tradeFacet.executeBuy(0, setup.scenarioDEX.address, dexCalldata)).to.be.reverted
   });
 
-  it.only("exchange rate", async function () {
+  it("exchange rate", async function () {
     const scenarioERC20 = await ethers.getContractFactory("ScenarioERC20");
     const scenarioERC20WBTC = await scenarioERC20.deploy("WBTC", "WBTC", 8);
 
@@ -170,5 +189,59 @@ describe("ScenarioDEX", function () {
 
     // 1 BTC is 25k USDC
     expect(rate.toString()).to.equal("25000000000")
+  })
+
+  it("slippage", async function () {
+    // buy with better rate example
+    // price = 1500,000000
+    // exchangeRate = 1450,000000
+    // slippage = (1500 * 10000) / 1450 = 103.44%
+    await expect(
+      setup.tradeFacet.validateSlippage(
+        1450000000,
+        1500000000,
+        500,
+        true
+      )
+    ).to.not.be.reverted;
+    
+    // buy with bad rate example
+    // price = 1500,000000
+    // exchangeRate = 1550,000000
+    // slippage = (1500 * 10000) / 1550 = 96.77%
+    await expect(
+      setup.tradeFacet.validateSlippage(
+        1550000000,
+        1500000000,
+        200,
+        true
+      )
+    ).to.be.reverted;
+
+    // sell with better rate example
+    // price = 1500,000000
+    // exchangeRate = 1600,000000
+    // slippage = (1500 * 10000) / 1600 = 93.75%
+    await expect(
+      setup.tradeFacet.validateSlippage(
+        1600000000,
+        1500000000,
+        500,
+        false
+      )
+    ).to.not.be.reverted;
+
+    // sell with bad rate example
+    // price = 1500,000000
+    // exchangeRate = 1300,000000
+    // slippage = (1500 * 10000) / 1300 = 115.38%
+    await expect(
+      setup.tradeFacet.validateSlippage(
+        1300000000,
+        1500000000,
+        500,
+        false
+      )
+    ).to.be.reverted;
   })
 });

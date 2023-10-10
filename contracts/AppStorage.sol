@@ -7,6 +7,7 @@ struct Strategy {
     uint256 buyAt;
     uint256 amount;
     address user;
+    uint256 slippage;
 }
 
 struct AppStorage {
@@ -34,4 +35,7 @@ struct AppStorage {
 
     // array of strategies
     mapping(uint256 => Strategy) strategies;
+
+    // chainlink feed registry
+    address chainlinkFeedRegistry;
 }
