@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import { AppStorage, Strategy } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 contract TradeFacet {
     AppStorage internal s;
 
-    event StrategyCreated(address indexed investToken, address indexed stableToken, uint256 buyAt, uint256 amount);
+   
 
     function executeBuy(uint256 strategyId, address dex, bytes calldata callData) external {
       Strategy storage strategy = s.strategies[strategyId];
@@ -25,7 +25,7 @@ contract TradeFacet {
       );
 
       uint256 toTokenAmount = LibSwap.swap(swap);
-      uint256 rate = calculateExchangeRate(strategy.investToken, strategy.stableToken, strategy.amount, toTokenAmount);
+      uint256 rate = calculateExchangeRate(strategy.investToken, strategy.amount, toTokenAmount);
 
       if (rate > strategy.buyAt) {
         revert InvalidExchangeRate(
@@ -39,15 +39,12 @@ contract TradeFacet {
 
     function calculateExchangeRate(
       address fromAsset,
-      address toAsset,
       uint256 fromAmount,
       uint256 toAmount
     ) internal view returns (uint256) {
       IERC20Metadata _fromToken = IERC20Metadata(fromAsset);
-      IERC20Metadata _toToken = IERC20Metadata(toAsset);
 
       uint256 fromDecimals = _fromToken.decimals();
-      uint256 toDecimals = _toToken.decimals();
 
       // Let's take an example:
       // 2 ETHER or 2.2e18 (From Token Amount) = 3244,000000 USDC (To Token Amount)

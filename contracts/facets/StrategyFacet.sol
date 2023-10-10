@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import { AppStorage, Strategy } from "../AppStorage.sol";
 
@@ -21,6 +21,8 @@ contract StrategyFacet {
 
         emit StrategyCreated(_investToken, _stableToken, _buyAt, _amount);
     }
+
+
 
     function nextStartegyId() external view returns (uint256) {
         return s.nextStrategyId;
