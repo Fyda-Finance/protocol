@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 import { LibAsset } from "./LibAsset.sol";
 import { LibUtil } from "./LibUtil.sol";
@@ -30,10 +30,6 @@ library LibSwap {
         if (fromAmount == 0) revert NoSwapFromZeroBalance();
 
         LibAsset.transferFrom(_swap.fromAsset, _swap.user, address(this), fromAmount);
-
-        uint256 initialSendingAssetBalance = LibAsset.balanceOf(
-            _swap.fromAsset, address(this)
-        );
 
         uint256 initialReceivingAssetBalance = LibAsset.balanceOf(
             _swap.toAsset, address(this)

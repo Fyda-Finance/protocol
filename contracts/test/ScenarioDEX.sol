@@ -1,30 +1,39 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import { ScenarioERC20 } from "./ScenarioERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract ScenarioDEX {
 
-  // fromAsset => toAsset => exchangeRate
-  mapping (address => mapping (address => uint256)) public exchangeRate;
+    // total decimals for USD price
+    uint256 constant public USD_DECIMALS = 6;
 
-  constructor() {}
+    // asset => exchangeRate in USD 
+    mapping (address => uint256) public exchangeRate;
 
-  function updateExchangeRate(address fromAsset, address toAsset, uint256 rate) external {
-    exchangeRate[fromAsset][toAsset] = rate;
-  }
+    constructor() {}
 
-  function swap(
-    address fromAsset,
-    address toAsset,
-    uint256 fromAmount
-  ) external {
-    require(exchangeRate[fromAsset][toAsset] > 0, "ScenarioDEX: exchange rate not set");
-    require(fromAmount > 0, "ScenarioDEX: fromAmount must be greater than 0");
+    function updateExchangeRate(address asset, uint256 rate) external {
+        exchangeRate[asset] = rate;
+    }
 
-    uint256 toAmount = fromAmount * exchangeRate[fromAsset][toAsset];
+    function swap(
+        address fromAsset,
+        address toAsset,
+        uint256 fromAmount
+    ) external {
+        require(exchangeRate[fromAsset] > 0, "ScenarioDEX: exchange rate not set");
+        require(exchangeRate[toAsset] > 0, "ScenarioDEX: exchange rate not set");
+        require(fromAmount > 0, "ScenarioDEX: fromAmount must be greater than 0");
 
-    ScenarioERC20(toAsset).mint(address(this), toAmount);
-    ScenarioERC20(fromAsset).transfer(msg.sender, toAmount);
+        IERC20Metadata _fromToken = IERC20Metadata(fromAsset);
+        IERC20Metadata _toToken = IERC20Metadata(toAsset);
+
+        uint256 fromAmountInUSD = (fromAmount * exchangeRate[fromAsset]) / (10**_fromToken.decimals());
+        uint256 toAmount = (fromAmountInUSD * 10**_toToken.decimals()) / exchangeRate[toAsset];
+
+        ScenarioERC20(toAsset).mint(address(this), toAmount);
+        ScenarioERC20(toAsset).transfer(msg.sender, toAmount);
   }
 }
