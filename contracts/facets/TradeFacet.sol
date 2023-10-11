@@ -65,7 +65,7 @@ contract TradeFacet is Modifiers {
 
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-        uint256 rate = calculateExchangeRate(strategy.parameters._stableToken, toTokenAmount, strategy.parameters._investAmount);
+      uint256 rate = calculateExchangeRate(strategy.parameters._investToken, toTokenAmount, strategy.parameters._stableAmount);
 
         if (rate > strategy.parameters._sellAt) {
             revert InvalidExchangeRate(
