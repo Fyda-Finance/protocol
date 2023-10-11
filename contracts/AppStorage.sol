@@ -1,13 +1,94 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+enum Status {
+        ACTIVE,
+        CANCELLED,
+        COMPLETED
+}
+
+enum FloorLegType {
+  NO_TYPE,
+  LIMIT_PRICE,
+  DECREASE_BY
+}
+
+enum BuyLegType {
+  NO_TYPE,
+  LIMIT_PRICE,
+  CURRENT_PRICE 
+}
+enum SellLegType {
+  NO_TYPE,
+  LIMIT_PRICE,
+  INCREASE_BY,
+  CURRENT_PRICE
+}
+
+enum DIP_SPIKE {
+  NO_SPIKE,  
+  DECREASE_BY,
+  INCREASE_BY,
+  FIXED_INCREASE,
+  FIXED_DECREASE
+}
+
+enum DCA_UNIT {
+  NO_UNIT,
+  PERCENTAGE,
+  FIXED
+}
+
+enum CURRENT_PRICE {
+  NOT_SELECTED,
+  BUY_CURRENT,
+  SELL_CURRENT
+}
+
+enum TimeUnit {
+  NO_UNIT,
+  HOURS,
+  DAYS
+}
+
 struct Strategy {
+    address user;
     address investToken;
     address stableToken;
-    uint256 buyAt;
-    uint256 amount;
-    address user;
+    uint256 stableAmount;
+    uint256 investAmount;
     uint256 slippage;
+    Status status;
+    bool floor;
+    FloorLegType floorType;
+    uint256 floorValue;
+    bool liquidateOnFloor;
+    bool cancelOnFloor;
+    bool buy;
+    BuyLegType buyType;
+    uint256 buyAt;
+    uint256 buyValue;
+    bool sell;
+    SellLegType sellType;
+    uint256 sellValue;
+    uint256 highSellValue;
+    bool str;
+    uint256 strValue;
+    DIP_SPIKE strType;
+    DCA_UNIT sellDCAUnit;
+    uint256 sellDCAValue;
+    bool sellTwap;
+    uint256 sellTwapTime;
+    TimeUnit sellTwapTimeUnit;
+    bool completeOnSell;
+    bool buyTwap;
+    uint256 buyTwapTime;
+    TimeUnit buyTwapTimeUnit;
+    bool btd;
+    uint256 btdValue;
+    DIP_SPIKE btdType;
+    DCA_UNIT buyDCAUnit;
+    uint256 buyDCAValue;
 }
 
 struct AppStorage {

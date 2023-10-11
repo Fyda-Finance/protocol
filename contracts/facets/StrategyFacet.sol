@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidSlippage } from "../utils/GenericErrors.sol";
 
@@ -15,14 +15,15 @@ contract StrategyFacet is Modifiers {
             revert InvalidSlippage();
         }
 
-        s.strategies[s.nextStrategyId] = Strategy({
-            investToken: _investToken,
-            stableToken: _stableToken,
-            buyAt: _buyAt,
-            amount: _amount,
-            user: msg.sender,
-            slippage: _slippage
-        });
+        // s.strategies[s.nextStrategyId] = Strategy({
+        //     investToken: _investToken,
+        //     stableToken: _stableToken,
+        //     buyAt: _buyAt,
+        //     amount: _amount,
+        //     user: msg.sender,
+        //     slippage: _slippage,
+        //     status: Status.ACTIVE
+        // });
 
         s.nextStrategyId++;
 
