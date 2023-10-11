@@ -69,7 +69,7 @@ struct StrategyParameters{
     uint256 _buyValue;
     bool _sell;
     SellLegType _sellType;
-    uint256 _sellValue;
+    uint256 _sellAt;
     uint256 _highSellValue;
     bool _str;
     uint256 _strValue;

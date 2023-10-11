@@ -12,32 +12,73 @@ contract TradeFacet is Modifiers {
     AppStorage internal s;
 
     function executeBuy(uint256 strategyId, address dex, bytes calldata callData) external {
+        
         Strategy storage strategy = s.strategies[strategyId];
-
+        if(!strategy.parameters._buy){
+            revert();
+        }
+        if(strategy.parameters._btd||strategy.parameters._buyTwap){
+            revert();
+        }
         LibSwap.SwapData memory swap = LibSwap.SwapData(
             dex,
-            strategy.stableToken,
-            strategy.investToken,
-            strategy.amount,
+            strategy.parameters._stableToken,
+            strategy.parameters._investToken,
+            strategy.parameters._stableAmount,
             callData,
             strategy.user
         );
 
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-        uint256 rate = calculateExchangeRate(strategy.investToken, toTokenAmount, strategy.amount);
+        uint256 rate = calculateExchangeRate(strategy.parameters._investToken, toTokenAmount, strategy.parameters._stableAmount);
 
-        if (rate > strategy.buyAt) {
+        if (rate > strategy.parameters._buyAt) {
             revert InvalidExchangeRate(
-                strategy.buyAt,
+                strategy.parameters._buyAt,
                 rate
             );
         }
 
         //   now compare with chainlink
-        uint256 price = LibPrice.getPrice(strategy.investToken, strategy.stableToken);
-        validateSlippage(rate, price, strategy.slippage, true);
+        uint256 price = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
+        validateSlippage(rate, price, strategy.parameters._slippage, true);
     }
+
+    function executeSell(uint256 strategyId, address dex, bytes calldata callData) external {
+        Strategy storage strategy = s.strategies[strategyId];
+         if(!strategy.parameters._sell){
+            revert();
+        }
+        if(strategy.parameters._str||strategy.parameters._sellTwap){
+            revert();
+        }
+
+        LibSwap.SwapData memory swap = LibSwap.SwapData(
+            dex,
+            strategy.parameters._investToken,
+            strategy.parameters._stableToken,
+            strategy.parameters._investAmount,
+            callData,
+            strategy.user
+        );
+
+        uint256 toTokenAmount = LibSwap.swap(swap);
+
+        uint256 rate = calculateExchangeRate(strategy.parameters._stableToken, toTokenAmount, strategy.parameters._investAmount);
+
+        if (rate > strategy.parameters._sellAt) {
+            revert InvalidExchangeRate(
+                strategy.parameters._sellAt,
+                rate
+            );
+        }
+
+        //   now compare with chainlink
+        uint256 price = LibPrice.getPrice(strategy.parameters._stableToken, strategy.parameters._investToken);
+        validateSlippage(rate, price, strategy.parameters._slippage, false);
+    }
+
 
     /**
     @dev Calculate exchange rate given input and output amounts
@@ -69,7 +110,7 @@ contract TradeFacet is Modifiers {
         uint256 price,
         uint256 maxSlippage,
         bool isBuy
-    ) public pure {
+        ) public pure {
         uint256 slippage = (price * MAX_PERCENTAGE) / exchangeRate;
 
         if (isBuy && slippage < MAX_PERCENTAGE && MAX_PERCENTAGE - slippage > maxSlippage) revert HighSlippage();
