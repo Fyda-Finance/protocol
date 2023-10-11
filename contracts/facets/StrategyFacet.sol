@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy, Status } from "../AppStorage.sol";
+import { AppStorage, Strategy,StrategyParameters } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidSlippage } from "../utils/GenericErrors.sol";
 
@@ -10,8 +10,8 @@ contract StrategyFacet is Modifiers {
 
     event StrategyCreated(address indexed investToken, address indexed stableToken, uint256 buyAt, uint256 amount);
 
-    function createStrategy(address _investToken, address _stableToken, uint256 _buyAt, uint256 _amount, uint256 _slippage) external {
-        if (_slippage > MAX_PERCENTAGE) {
+    function createStrategy(StrategyParameters memory _parameter) external {
+        if (_parameter._slippage > MAX_PERCENTAGE) {
             revert InvalidSlippage();
         }
 
@@ -27,7 +27,7 @@ contract StrategyFacet is Modifiers {
 
         s.nextStrategyId++;
 
-        emit StrategyCreated(_investToken, _stableToken, _buyAt, _amount);
+       // emit StrategyCreated(_investToken, _stableToken, but, _amount);
     }
 
     function nextStartegyId() external view returns (uint256) {

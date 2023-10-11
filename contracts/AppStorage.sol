@@ -51,45 +51,53 @@ enum TimeUnit {
   DAYS
 }
 
+struct StrategyParameters{
+   address _investToken;
+    address _stableToken;
+    uint256 _stableAmount;
+    uint256 _investAmount;
+    uint256 _slippage;
+    Status _status;
+    bool _floor;
+    FloorLegType _floorType;
+    uint256 _floorValue;
+    bool _liquidateOnFloor;
+    bool _cancelOnFloor;
+    bool _buy;
+    BuyLegType _buyType;
+    uint256 _buyAt;
+    uint256 _buyValue;
+    bool _sell;
+    SellLegType _sellType;
+    uint256 _sellValue;
+    uint256 _highSellValue;
+    bool _str;
+    uint256 _strValue;
+    DIP_SPIKE _strType;
+    DCA_UNIT _sellDCAUnit;
+    uint256 _sellDCAValue;
+    bool _sellTwap;
+    uint256 _sellTwapTime;
+    TimeUnit _sellTwapTimeUnit;
+    bool _completeOnSell;
+    bool _buyTwap;
+    uint256 _buyTwapTime;
+    TimeUnit _buyTwapTimeUnit;
+    bool _btd;
+    uint256 _btdValue;
+    DIP_SPIKE _btdType;
+    DCA_UNIT _buyDCAUnit;
+    uint256 _buyDCAValue;
+}
+
+
 struct Strategy {
     address user;
-    address investToken;
-    address stableToken;
-    uint256 stableAmount;
-    uint256 investAmount;
-    uint256 slippage;
+    StrategyParameters parameters;
     Status status;
-    bool floor;
-    FloorLegType floorType;
-    uint256 floorValue;
-    bool liquidateOnFloor;
-    bool cancelOnFloor;
-    bool buy;
-    BuyLegType buyType;
-    uint256 buyAt;
-    uint256 buyValue;
-    bool sell;
-    SellLegType sellType;
-    uint256 sellValue;
-    uint256 highSellValue;
-    bool str;
-    uint256 strValue;
-    DIP_SPIKE strType;
-    DCA_UNIT sellDCAUnit;
-    uint256 sellDCAValue;
-    bool sellTwap;
-    uint256 sellTwapTime;
-    TimeUnit sellTwapTimeUnit;
-    bool completeOnSell;
-    bool buyTwap;
-    uint256 buyTwapTime;
-    TimeUnit buyTwapTimeUnit;
-    bool btd;
-    uint256 btdValue;
-    DIP_SPIKE btdType;
-    DCA_UNIT buyDCAUnit;
-    uint256 buyDCAValue;
+
 }
+
 
 struct AppStorage {
     // maps function selectors to the facets that execute the functions.
