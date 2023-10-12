@@ -57,10 +57,9 @@ struct StrategyParameters{
     uint256 _stableAmount;
     uint256 _investAmount;
     uint256 _slippage;
-    Status _status;
     bool _floor;
     FloorLegType _floorType;
-    uint256 _floorValue;
+    uint256 _floorAt;
     bool _liquidateOnFloor;
     bool _cancelOnFloor;
     bool _buy;
@@ -88,12 +87,15 @@ struct StrategyParameters{
     DIP_SPIKE _btdType;
     DCA_UNIT _buyDCAUnit;
     uint256 _buyDCAValue;
+    Status _status;
+
 }
 
 
 struct Strategy {
     address user;
     StrategyParameters parameters;
+    uint256 implementationTime;
     Status status;
 
 }
