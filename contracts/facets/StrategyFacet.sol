@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy,StrategyParameters, SellLegType, FloorLegType, DCA_UNIT,DIP_SPIKE } from "../AppStorage.sol";
+import { AppStorage, Strategy,StrategyParameters, SellLegType, FloorLegType, DCA_UNIT,DIP_SPIKE, Status } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidSlippage } from "../utils/GenericErrors.sol";
 
@@ -11,10 +11,7 @@ contract StrategyFacet is Modifiers {
     event StrategyCreated(address indexed investToken, address indexed stableToken, uint256 buyAt, uint256 amount);
 
     function createStrategy(StrategyParameters memory _parameter) external {
-        if (_parameter._slippage > MAX_PERCENTAGE) {
-            revert InvalidSlippage();
-        }
-
+       
         require(_parameter._investToken != address(0), "InvestToken cannot be null");
         require(_parameter._stableToken != address(0), "StableToken cannot be null");
         require(_parameter._investToken != _parameter._stableToken, "InvestToken and StableToken must be different");
@@ -117,18 +114,16 @@ contract StrategyFacet is Modifiers {
         revert("With DCA, DCA value must be provided");
     }
 
+    if (_parameter._slippage > MAX_PERCENTAGE) {
+            revert InvalidSlippage();
+    }
 
-
-
-        // s.strategies[s.nextStrategyId] = Strategy({
-        //     investToken: _investToken,
-        //     stableToken: _stableToken,
-        //     buyAt: _buyAt,
-        //     amount: _amount,
-        //     user: msg.sender,
-        //     slippage: _slippage,
-        //     status: Status.ACTIVE
-        // });
+        s.strategies[s.nextStrategyId] = Strategy({
+           user: msg.sender,
+           parameters: _parameter,
+           timestamp:block.timestamp,
+           status: Status.ACTIVE
+        });
 
         s.nextStrategyId++;
 

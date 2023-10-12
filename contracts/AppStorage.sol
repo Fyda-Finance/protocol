@@ -95,7 +95,7 @@ struct StrategyParameters{
 struct Strategy {
     address user;
     StrategyParameters parameters;
-    uint256 implementationTime;
+    uint256 timestamp;
     Status status;
 
 }

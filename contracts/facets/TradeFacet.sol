@@ -2,11 +2,12 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { AppStorage, Strategy } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
-import { InvalidExchangeRate, HighSlippage } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, HighSlippage, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
+
 
 contract TradeFacet is Modifiers {
     AppStorage internal s;
@@ -20,6 +21,9 @@ contract TradeFacet is Modifiers {
         if(strategy.parameters._btd||strategy.parameters._buyTwap){
             revert();
         }
+        if(strategy.parameters._stableAmount==0){
+            revert NoSwapFromZeroBalance();
+        }
         LibSwap.SwapData memory swap = LibSwap.SwapData(
             dex,
             strategy.parameters._stableToken,
@@ -31,7 +35,7 @@ contract TradeFacet is Modifiers {
 
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-        uint256 rate = calculateExchangeRate(strategy.parameters._investToken, toTokenAmount, strategy.parameters._stableAmount);
+        uint256 rate = calculateExchangeRate(strategy.parameters._stableToken, toTokenAmount, strategy.parameters._stableAmount);
 
         if (rate > strategy.parameters._buyAt) {
             revert InvalidExchangeRate(
@@ -43,6 +47,51 @@ contract TradeFacet is Modifiers {
         //   now compare with chainlink
         uint256 price = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
         validateSlippage(rate, price, strategy.parameters._slippage, true);
+        if (!strategy.parameters._sell && !strategy.parameters._floor) {
+             strategy.status = Status.COMPLETED;
+        }
+        
+    }
+
+    function executeFloor(uint256 strategyId, address dex, bytes calldata callData) external {
+        Strategy storage strategy = s.strategies[strategyId];
+         if(!strategy.parameters._floor){
+            revert();
+        }
+
+         if(strategy.parameters._investAmount==0){
+            revert NoSwapFromZeroBalance();
+        }
+      
+if(strategy.parameters._liquidateOnFloor){
+    LibSwap.SwapData memory swap = LibSwap.SwapData(
+            dex,
+            strategy.parameters._investToken,
+            strategy.parameters._stableToken,
+            strategy.parameters._investAmount,
+            callData,
+            strategy.user
+        );
+
+        uint256 toTokenAmount = LibSwap.swap(swap);
+
+       uint256 rate = calculateExchangeRate(strategy.parameters._investToken, strategy.parameters._investAmount, toTokenAmount);
+
+        if (rate > strategy.parameters._floorAt) {
+            revert InvalidExchangeRate(
+                strategy.parameters._floorAt,
+                rate
+            );
+        }
+
+        //   now compare with chainlink
+        uint256 price = LibPrice.getPrice(strategy.parameters._stableToken, strategy.parameters._investToken);
+        validateSlippage(rate, price, strategy.parameters._slippage, false);
+        if(strategy.parameters._cancelOnFloor){
+            strategy.status=Status.CANCELLED;
+        }
+}
+        
     }
 
     function executeSell(uint256 strategyId, address dex, bytes calldata callData) external {
@@ -65,9 +114,9 @@ contract TradeFacet is Modifiers {
 
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-      uint256 rate = calculateExchangeRate(strategy.parameters._investToken, toTokenAmount, strategy.parameters._stableAmount);
+      uint256 rate = calculateExchangeRate(strategy.parameters._investToken, strategy.parameters._investAmount, toTokenAmount);
 
-        if (rate > strategy.parameters._sellAt) {
+        if (rate < strategy.parameters._sellAt) {
             revert InvalidExchangeRate(
                 strategy.parameters._sellAt,
                 rate
@@ -77,7 +126,12 @@ contract TradeFacet is Modifiers {
         //   now compare with chainlink
         uint256 price = LibPrice.getPrice(strategy.parameters._stableToken, strategy.parameters._investToken);
         validateSlippage(rate, price, strategy.parameters._slippage, false);
+        if (!strategy.parameters._buy) {
+             strategy.status = Status.COMPLETED;
+        }
+        
     }
+
 
 
     /**
