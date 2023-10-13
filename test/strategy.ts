@@ -71,8 +71,8 @@ describe("ScenarioDEX", function () {
     setup = await loadFixture(setupDiamondFixture);
   });
 
-  it("All buy based", async function () {
-    const strategy = await setup.strategyFacet.getStrategies();
+  it("All strategy based", async function () {
+    let strategy = await setup.strategyFacet.getStrategies();
     console.log(strategy);
     const budget = "1000000000"; // $1k
 
@@ -84,26 +84,26 @@ describe("ScenarioDEX", function () {
       _investToken: setup.scenarioERC20WETH.address,
       _stableToken: setup.scenarioERC20USDC.address,
       _stableAmount: budget,
-      _investAmount: 0,
+      _investAmount: "0",
       _slippage: 1000,
       _floor: false,
       _floorType: 0,
-      _floorAt: 0,
+      _floorAt: "0",
       _liquidateOnFloor: false,
       _cancelOnFloor: false,
       _buy: true,
       _buyType: 1,
-      _buyAt: "1500000000000000000000",
+      _buyAt: "1500000000",
       _buyValue: 1,
       _sell: false,
       _sellType: 0,
-      _sellAt: 0,
+      _sellAt: "0",
       _highSellValue: 0,
       _str: false,
       _strValue: 0,
       _strType: 0,
       _sellDCAUnit: 0,
-      _sellDCAValue: 0,
+      _sellDCAValue: "0",
       _sellTwap: false,
       _sellTwapTime: 0,
       _sellTwapTimeUnit: 0,
@@ -112,88 +112,68 @@ describe("ScenarioDEX", function () {
       _buyTwapTime: 0,
       _buyTwapTimeUnit: 0,
       _btd: false,
-      _btdValue: 0,
+      _btdValue: "0",
       _btdType: 0,
       _buyDCAUnit: 0,
-      _buyDCAValue: 0,
+      _buyDCAValue: "0",
     };
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
     await expect(await setup.strategyFacet.nextStartegyId()).to.equal(1);
     await expect(await setup.strategyFacet.getStrategyBasedOnId(5)).to.be
       .reverted;
+
+    parameters._floor = true;
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.revertedWith("FloorValue must be greater than zero");
+    parameters._floorAt = "1000000000";
+
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.revertedWith("Floor Type must be provided");
+    parameters._floorType = 1;
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await expect(await setup.strategyFacet.nextStartegyId()).to.equal(2);
+    strategy = await setup.strategyFacet.getStrategies();
+    console.log(strategy);
+    parameters._floor = false;
+    parameters._floorAt = "0";
+    parameters._btd = true;
+    parameters._buyTwap = true;
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.revertedWith("Both buy twap and BTD cannot be set together");
+    parameters._buyTwap = false;
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.revertedWith("With BTD, type must be provided");
+    parameters._btdType = 1;
+    parameters._btdValue = "15000";
+    parameters._buyDCAUnit = 1;
+    parameters._buyDCAValue = "12";
+
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await expect(await setup.strategyFacet.nextStartegyId()).to.equal(3);
+
+    parameters._buy = false;
+    parameters._buyAt = "0";
+    parameters._btd = false;
+    parameters._sellTwap = true;
+    parameters._sell = true;
+    parameters._sellType = 1;
+    parameters._sellAt = "120000000";
+    parameters._investAmount = "100000";
+
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.revertedWith("Sell Twap time unit should be selected");
+
+    parameters._sellTwapTime = 1;
+    parameters._sellTwapTimeUnit = 1;
+    parameters._sellDCAUnit = 1;
+    parameters._sellDCAValue = "12";
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await expect(await setup.strategyFacet.nextStartegyId()).to.equal(4);
   });
-
-  //   it("should fail swap due to higher price impact", async function () {
-  //     const budget = "1000000000"; // $1k
-
-  //     await setup.scenarioERC20USDC
-  //       .connect(setup.user)
-  //       .approve(setup.strategyFacet.address, budget);
-
-  //     let parameters = {
-  //       _investToken: setup.scenarioERC20WETH.address,
-  //       _stableToken: setup.scenarioERC20USDC.address,
-  //       _stableAmount: budget,
-  //       _investAmount: 0,
-  //       _slippage: 1000,
-  //       _floor: false,
-  //       _floorType: 0,
-  //       _floorAt: 0,
-  //       _liquidateOnFloor: false,
-  //       _cancelOnFloor: false,
-  //       _buy: true,
-  //       _buyType: 1,
-  //       _buyAt: 1500000000,
-  //       _buyValue: 1,
-  //       _sell: false,
-  //       _sellType: 0,
-  //       _sellAt: 0,
-  //       _highSellValue: 0,
-  //       _str: false,
-  //       _strValue: 0,
-  //       _strType: 0,
-  //       _sellDCAUnit: 0,
-  //       _sellDCAValue: 0,
-  //       _sellTwap: false,
-  //       _sellTwapTime: 0,
-  //       _sellTwapTimeUnit: 0,
-  //       _completeOnSell: false,
-  //       _buyTwap: false,
-  //       _buyTwapTime: 0,
-  //       _buyTwapTimeUnit: 0,
-  //       _btd: false,
-  //       _btdValue: 0,
-  //       _btdType: 0,
-  //       _buyDCAUnit: 0,
-  //       _buyDCAValue: 0,
-  //     };
-
-  //     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
-
-  //     const strategy = await setup.strategyFacet.nextStartegyId();
-  //     expect(strategy).to.equal(1);
-
-  //     const dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
-  //       setup.scenarioERC20USDC.address,
-  //       setup.scenarioERC20WETH.address,
-  //       budget,
-  //     ]);
-
-  //     // 1 WETH = 1900 USD
-  //     await setup.scenarioDEX.updateExchangeRate(
-  //       setup.scenarioERC20WETH.address,
-  //       "190000000000"
-  //     );
-
-  //     // 1 USDC = 1 USD
-  //     await setup.scenarioDEX.updateExchangeRate(
-  //       setup.scenarioERC20USDC.address,
-  //       "100000000"
-  //     );
-
-  //     await expect(
-  //       setup.tradeFacet.executeBuy(0, setup.scenarioDEX.address, dexCalldata)
-  //     ).to.be.reverted;
-  //   });
 });

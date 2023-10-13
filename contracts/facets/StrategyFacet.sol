@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy,StrategyParameters, SellLegType, FloorLegType, DCA_UNIT,DIP_SPIKE, Status } from "../AppStorage.sol";
+import { AppStorage, Strategy,StrategyParameters, SellLegType, BuyLegType,FloorLegType, DCA_UNIT,DIP_SPIKE, TimeUnit,Status } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidSlippage } from "../utils/GenericErrors.sol";
 
@@ -12,24 +12,27 @@ contract StrategyFacet is Modifiers {
 
     function createStrategy(StrategyParameters memory _parameter) external {
        
-        require(_parameter._investToken != address(0), "InvestToken cannot be null");
-        require(_parameter._stableToken != address(0), "StableToken cannot be null");
-        require(_parameter._investToken != _parameter._stableToken, "InvestToken and StableToken must be different");
+        require(_parameter._investToken != address(0), "Invest Token should be properly set");
+        require(_parameter._stableToken != address(0), "Stable  Token should be properly set");
+        require(_parameter._investToken != _parameter._stableToken, "Invest Token and Stable Token must be different");
         require(_parameter._floor || _parameter._sell || _parameter._buy, "At least one of floor, sell, or buy must be true");
 
         if (_parameter._buy) {
         require(_parameter._buyAt > 0, "BuyAt must be greater than zero");
+        require(_parameter._buyType != BuyLegType.NO_TYPE, "Buy Type must be provided");
+
         }
 
        // Check if floor is chosen
        if (_parameter._floor) {
         require(_parameter._floorAt > 0, "FloorValue must be greater than zero");
+        require(_parameter._floorType != FloorLegType.NO_TYPE, "Floor Type must be provided");
        }
-
-    // Check if sell is chosen
-        if ((_parameter._sell || _parameter._str || _parameter._sellTwap) &&_parameter._sellAt == 0) {
-           revert("sellValue must be provided if DCA or non-DCA sell is chosen.");
+       if (_parameter._sell || _parameter._str || _parameter._sellTwap) {
+        require(_parameter._sellType !=SellLegType.NO_TYPE, "Sell type must be provided");
+        require(_parameter._sellAt !=0, "sellValue must be provided if DCA or non-DCA sell is chosen.");
         }
+
         // Check if both buy and sell are chosen
         if (_parameter._buy && _parameter._sell) {
         require(_parameter._stableAmount > 0 || _parameter._investAmount > 0, "You should provide stableAmount or investAmount because you have chosen both buy and sell");
@@ -37,39 +40,31 @@ contract StrategyFacet is Modifiers {
     }
 // Check if only buy is chosen
     if (_parameter._buy && !_parameter._sell &&  !_parameter._floor) {
-        require(_parameter._stableAmount > 0, "StableAmount must be greater than zero when only buy is chosen");
+        require(_parameter._stableAmount > 0, "Stable Amount must be greater than zero when only buy is chosen");
   
     }
 
-    if (
-    _parameter._buy &&
-    !_parameter._sell &&
-    !_parameter._floor &&
-    _parameter._investAmount > 0
-) {
-    revert("You should not provide invest amount when only buy");
-}
+    if (_parameter._buy &&!_parameter._sell &&!_parameter._floor &&_parameter._investAmount > 0) {
+        revert("You should not provide invest amount when only buy");
+    }
 
     // Check if only sell is chosen
     if ((_parameter._sell||_parameter._floor) && !_parameter._buy) {
-        require(_parameter._investAmount > 0, "InvestAmount must be greater than zero when only sell is chosen");
+        require(_parameter._investAmount > 0, "Invest Amount must be greater than zero when only sell is chosen");
         
     }
     
         // Check if floor and sell are chosen
-        if (_parameter._floor && _parameter._sell) {
-            require(_parameter._floorAt < _parameter._sellAt, "FloorValue must be less than SellAt");
-        }
+    if (_parameter._floor && _parameter._sell) {
+            require(_parameter._floorAt < _parameter._sellAt, "Floor Value must be less than SellAt");
+    }
 
         // Check if floor and buy are chosen
         if (_parameter._floor && _parameter._buy) {
-            require(_parameter._floorAt < _parameter._buyAt, "FloorValue must be less than BuyAt");
+            require(_parameter._floorAt < _parameter._buyAt, "Floor Value must be less than BuyAt");
         }
 
-        if (_parameter._buy && _parameter._sell && _parameter._stableAmount == 0 && _parameter._investAmount == 0) {
-        revert("You should provide stableAmount or investAmount because you have chosen both buy and sell");
-    }
-
+   
     if (_parameter._sellType == SellLegType.INCREASE_BY &&(_parameter._str || _parameter._sellTwap)) {
         revert("With sell percentage, we cannot have DCA for sell");
     }
@@ -82,9 +77,32 @@ contract StrategyFacet is Modifiers {
         revert("Both buy twap and BTD cannot be set together");
     }
 
+    if((_parameter._buyTwap ||_parameter._btd)&&!_parameter._buy){
+        revert("With Buy Twap and BTD, Buy must be selected");
+    }
+
+    if(_parameter._buyTwap&&_parameter._buyTwapTime<=0){
+        revert("Buy Twap time should be greater than 0");
+    }
+    if(_parameter._buyTwap&&_parameter._buyTwapTimeUnit==TimeUnit.NO_UNIT){
+        revert("Buy Twap time unit should be selected");
+    }
+
     if (_parameter._sellTwap && _parameter._str) {
         revert("Both sell twap and str cannot be set together");
     }
+
+    if((_parameter._sellTwap ||_parameter._str)&&!_parameter._sell){
+        revert("With sell Twap and STR, Sell must be selected");
+    }
+    if(_parameter._sellTwap&&_parameter._sellTwapTimeUnit==TimeUnit.NO_UNIT){
+        revert("Sell Twap time unit should be selected");
+    }
+
+      if(_parameter._sellTwap&&_parameter._sellTwapTime<=0){
+        revert("sell Twap time should be greater than 0");
+    }
+    
 
     if ((_parameter._sellTwap || _parameter._str) &&_parameter._sellDCAUnit == DCA_UNIT.NO_UNIT) {
         revert("For sell twap and str, sell DCA unit must be provided");
