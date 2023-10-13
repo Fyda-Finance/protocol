@@ -87,8 +87,6 @@ struct StrategyParameters{
     DIP_SPIKE _btdType;
     DCA_UNIT _buyDCAUnit;
     uint256 _buyDCAValue;
-    Status _status;
-
 }
 
 

@@ -8,7 +8,7 @@ import { InvalidSlippage } from "../utils/GenericErrors.sol";
 contract StrategyFacet is Modifiers {
     AppStorage internal s;
 
-    event StrategyCreated(address indexed investToken, address indexed stableToken, uint256 buyAt, uint256 amount);
+    event StrategyCreated(address indexed investToken, address indexed stableToken, StrategyParameters parameter);
 
     function createStrategy(StrategyParameters memory _parameter) external {
        
@@ -127,7 +127,7 @@ contract StrategyFacet is Modifiers {
 
         s.nextStrategyId++;
 
-        // emit StrategyCreated(_investToken, _stableToken, but, _amount);
+        emit StrategyCreated(_parameter._investToken, _parameter._stableToken, _parameter);
     }
 
     function nextStartegyId() external view returns (uint256) {

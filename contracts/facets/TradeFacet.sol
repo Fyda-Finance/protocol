@@ -35,7 +35,7 @@ contract TradeFacet is Modifiers {
 
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-        uint256 rate = calculateExchangeRate(strategy.parameters._stableToken, toTokenAmount, strategy.parameters._stableAmount);
+        uint256 rate = calculateExchangeRate(strategy.parameters._investToken, strategy.parameters._stableAmount, toTokenAmount);
 
         if (rate > strategy.parameters._buyAt) {
             revert InvalidExchangeRate(
@@ -63,8 +63,8 @@ contract TradeFacet is Modifiers {
             revert NoSwapFromZeroBalance();
         }
       
-if(strategy.parameters._liquidateOnFloor){
-    LibSwap.SwapData memory swap = LibSwap.SwapData(
+        if(strategy.parameters._liquidateOnFloor){
+            LibSwap.SwapData memory swap = LibSwap.SwapData(
             dex,
             strategy.parameters._investToken,
             strategy.parameters._stableToken,
@@ -75,7 +75,7 @@ if(strategy.parameters._liquidateOnFloor){
 
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-       uint256 rate = calculateExchangeRate(strategy.parameters._investToken, strategy.parameters._investAmount, toTokenAmount);
+       uint256 rate = calculateExchangeRate(strategy.parameters._investToken, toTokenAmount, strategy.parameters._investAmount);
 
         if (rate > strategy.parameters._floorAt) {
             revert InvalidExchangeRate(
@@ -114,7 +114,7 @@ if(strategy.parameters._liquidateOnFloor){
 
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-      uint256 rate = calculateExchangeRate(strategy.parameters._investToken, strategy.parameters._investAmount, toTokenAmount);
+       uint256 rate = calculateExchangeRate(strategy.parameters._investToken, toTokenAmount, strategy.parameters._investAmount);
 
         if (rate < strategy.parameters._sellAt) {
             revert InvalidExchangeRate(
