@@ -7,6 +7,7 @@ import { LibSwap } from "../libraries/LibSwap.sol";
 import { InvalidExchangeRate, HighSlippage, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
+import "hardhat/console.sol";
 
 
 contract TradeFacet is Modifiers {
@@ -75,7 +76,7 @@ contract TradeFacet is Modifiers {
 
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-       uint256 rate = calculateExchangeRate(strategy.parameters._investToken, toTokenAmount, strategy.parameters._investAmount);
+       uint256 rate = calculateExchangeRate(strategy.parameters._investToken, strategy.parameters._investAmount, toTokenAmount);
 
         if (rate > strategy.parameters._floorAt) {
             revert InvalidExchangeRate(
@@ -114,7 +115,7 @@ contract TradeFacet is Modifiers {
 
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-       uint256 rate = calculateExchangeRate(strategy.parameters._investToken, toTokenAmount, strategy.parameters._investAmount);
+       uint256 rate = calculateExchangeRate(strategy.parameters._investToken, strategy.parameters._investAmount, toTokenAmount);
 
         if (rate < strategy.parameters._sellAt) {
             revert InvalidExchangeRate(

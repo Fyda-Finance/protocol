@@ -133,4 +133,19 @@ contract StrategyFacet is Modifiers {
     function nextStartegyId() external view returns (uint256) {
         return s.nextStrategyId;
     }
+
+    function getStrategyBasedOnId(uint256 id) external view returns (Strategy memory){
+        return s.strategies[id];
+    }
+
+   function getStrategies() external view returns (Strategy[] memory) {
+    uint256 maxStrategy = s.nextStrategyId;
+    Strategy[] memory strategies = new Strategy[](maxStrategy);
+
+    for (uint256 i = 0; i < maxStrategy; i++) {
+        strategies[i] = s.strategies[i];
+    }
+
+    return strategies;
+}
 }
