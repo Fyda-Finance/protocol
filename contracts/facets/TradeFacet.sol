@@ -47,6 +47,9 @@ contract TradeFacet is Modifiers {
 
         //   now compare with chainlink
         uint256 price = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
+        if(strategy.parameters._floor&&strategy.parameters._floorAt>price){
+            revert();
+        }
         validateSlippage(rate, price, strategy.parameters._slippage, true);
         if (!strategy.parameters._sell && !strategy.parameters._floor) {
              strategy.status = Status.COMPLETED;

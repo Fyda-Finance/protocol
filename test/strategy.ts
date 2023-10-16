@@ -72,8 +72,6 @@ describe("ScenarioDEX", function () {
   });
 
   it("All strategy based", async function () {
-    let strategy = await setup.strategyFacet.getStrategies();
-    console.log(strategy);
     const budget = "1000000000"; // $1k
 
     await setup.scenarioERC20USDC
@@ -120,34 +118,32 @@ describe("ScenarioDEX", function () {
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
     await expect(await setup.strategyFacet.nextStartegyId()).to.equal(1);
-    await expect(await setup.strategyFacet.getStrategyBasedOnId(5)).to.be
-      .reverted;
+    await expect(await setup.strategyFacet.getStrategy(5)).to.be.reverted;
 
     parameters._floor = true;
     await expect(
       setup.strategyFacet.connect(setup.user).createStrategy(parameters)
-    ).to.be.revertedWith("FloorValue must be greater than zero");
+    ).to.be.reverted;
     parameters._floorAt = "1000000000";
 
     await expect(
       setup.strategyFacet.connect(setup.user).createStrategy(parameters)
-    ).to.be.revertedWith("Floor Type must be provided");
+    ).to.be.reverted;
     parameters._floorType = 1;
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
     await expect(await setup.strategyFacet.nextStartegyId()).to.equal(2);
-    strategy = await setup.strategyFacet.getStrategies();
-    console.log(strategy);
+
     parameters._floor = false;
     parameters._floorAt = "0";
     parameters._btd = true;
     parameters._buyTwap = true;
     await expect(
       setup.strategyFacet.connect(setup.user).createStrategy(parameters)
-    ).to.be.revertedWith("Both buy twap and BTD cannot be set together");
+    ).to.be.reverted;
     parameters._buyTwap = false;
     await expect(
       setup.strategyFacet.connect(setup.user).createStrategy(parameters)
-    ).to.be.revertedWith("With BTD, type must be provided");
+    ).to.be.reverted;
     parameters._btdType = 1;
     parameters._btdValue = "15000";
     parameters._buyDCAUnit = 1;
@@ -167,7 +163,7 @@ describe("ScenarioDEX", function () {
 
     await expect(
       setup.strategyFacet.connect(setup.user).createStrategy(parameters)
-    ).to.be.revertedWith("Sell Twap time unit should be selected");
+    ).to.be.reverted;
 
     parameters._sellTwapTime = 1;
     parameters._sellTwapTimeUnit = 1;

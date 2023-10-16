@@ -1,9 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy,StrategyParameters, SellLegType, BuyLegType,FloorLegType, DCA_UNIT,DIP_SPIKE, TimeUnit,Status } from "../AppStorage.sol";
+import { AppStorage, Strategy,StrategyParameters, SellLegType, BuyLegType,FloorLegType, 
+         DCA_UNIT,DIP_SPIKE, TimeUnit,Status } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidSlippage } from "../utils/GenericErrors.sol";
+import { InvalidSlippage, InvalidInvestToken,InvalidStableToken,TokensMustDiffer,
+        AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, 
+        InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount,
+        BuyAndSellAtMisorder, BuySellAndZeroAmount,InvalidInvestAmount, FloorValueGreaterThanBuyValue,
+        FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA,
+        BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected,BothSellTwapAndSTR,
+        SellDCAWithoutSell, SellTwapTimeUnitNotSelected,SellTwapTimeInvalid,SellTwapOrStrWithoutSellDCAUnit,
+        SellDCAUnitWithoutSellDCAValue,StrWithoutStrValueOrType,BTDWithoutBTDType,BTDTypeWithoutBTDValue,
+        BuyDCAWithoutBuyDCAUnit,BuyDCAUnitWithoutBuyDCAValue } from "../utils/GenericErrors.sol";
 
 contract StrategyFacet is Modifiers {
     AppStorage internal s;
@@ -12,124 +21,150 @@ contract StrategyFacet is Modifiers {
 
     function createStrategy(StrategyParameters memory _parameter) external {
        
-        require(_parameter._investToken != address(0), "Invest Token should be properly set");
-        require(_parameter._stableToken != address(0), "Stable  Token should be properly set");
-        require(_parameter._investToken != _parameter._stableToken, "Invest Token and Stable Token must be different");
-        require(_parameter._floor || _parameter._sell || _parameter._buy, "At least one of floor, sell, or buy must be true");
+       if (_parameter._investToken == address(0)) {
+        revert InvalidInvestToken();
+    }
 
-        if (_parameter._buy) {
-        require(_parameter._buyAt > 0, "BuyAt must be greater than zero");
-        require(_parameter._buyType != BuyLegType.NO_TYPE, "Buy Type must be provided");
+    if (_parameter._stableToken == address(0)) {
+        revert InvalidStableToken();
+    }
 
-        }
+    if (_parameter._investToken == _parameter._stableToken) {
+        revert TokensMustDiffer();
+    }
+
+    if (!(_parameter._floor || _parameter._sell || _parameter._buy)) {
+        revert AtLeastOneOptionRequired();
+    }
+      if (_parameter._buy) {
+    if (_parameter._buyAt == 0) {
+        revert InvalidBuyValue();
+    }
+    if (_parameter._buyType == BuyLegType.NO_TYPE) {
+        revert InvalidBuyType();
+    }
+}
 
        // Check if floor is chosen
        if (_parameter._floor) {
-        require(_parameter._floorAt > 0, "FloorValue must be greater than zero");
-        require(_parameter._floorType != FloorLegType.NO_TYPE, "Floor Type must be provided");
-       }
+    if (_parameter._floorAt == 0) {
+        revert InvalidFloorValue();
+    }
+    if (_parameter._floorType == FloorLegType.NO_TYPE) {
+        revert InvalidFloorType();
+}}
+
        if (_parameter._sell || _parameter._str || _parameter._sellTwap) {
-        require(_parameter._sellType !=SellLegType.NO_TYPE, "Sell type must be provided");
-        require(_parameter._sellAt !=0, "sellValue must be provided if DCA or non-DCA sell is chosen.");
-        }
+    if (_parameter._sellType == SellLegType.NO_TYPE) {
+        revert InvalidSellType();
+    }
+    if (_parameter._sellAt == 0) {
+        revert InvalidSellValue();
+}
+       }
 
         // Check if both buy and sell are chosen
-        if (_parameter._buy && _parameter._sell) {
-        require(_parameter._stableAmount > 0 || _parameter._investAmount > 0, "You should provide stableAmount or investAmount because you have chosen both buy and sell");
-        require(_parameter._buyAt < _parameter._sellAt, "BuyAt must be less than SellAt");
+      if (_parameter._buy && _parameter._sell) {
+    if (!(_parameter._stableAmount > 0 || _parameter._investAmount > 0)) {
+        revert BuySellAndZeroAmount();
     }
+    if (!(_parameter._buyAt < _parameter._sellAt)) {
+        revert BuyAndSellAtMisorder();
+}
+      }
 // Check if only buy is chosen
-    if (_parameter._buy && !_parameter._sell &&  !_parameter._floor) {
-        require(_parameter._stableAmount > 0, "Stable Amount must be greater than zero when only buy is chosen");
-  
-    }
-
-    if (_parameter._buy &&!_parameter._sell &&!_parameter._floor &&_parameter._investAmount > 0) {
-        revert("You should not provide invest amount when only buy");
-    }
-
-    // Check if only sell is chosen
-    if ((_parameter._sell||_parameter._floor) && !_parameter._buy) {
-        require(_parameter._investAmount > 0, "Invest Amount must be greater than zero when only sell is chosen");
-        
-    }
-    
-        // Check if floor and sell are chosen
-    if (_parameter._floor && _parameter._sell) {
-            require(_parameter._floorAt < _parameter._sellAt, "Floor Value must be less than SellAt");
-    }
-
-        // Check if floor and buy are chosen
-        if (_parameter._floor && _parameter._buy) {
-            require(_parameter._floorAt < _parameter._buyAt, "Floor Value must be less than BuyAt");
-        }
+   if (_parameter._buy && !_parameter._sell && !_parameter._floor) {
+    if (!(_parameter._stableAmount > 0)) {
+        revert InvalidStableAmount();
+}}
 
    
+    // Check if only sell is chosen
+    if ((_parameter._sell || _parameter._floor) && !_parameter._buy) {
+    if (!(_parameter._investAmount > 0)) {
+        revert InvalidInvestAmount();
+    }
+}
+
+// Check if floor and sell are chosen
+if (_parameter._floor && _parameter._sell) {
+    if (!(_parameter._floorAt < _parameter._sellAt)) {
+        revert FloorValueGreaterThanSellValue();
+    }
+}
+
+// Check if floor and buy are chosen
+if (_parameter._floor && _parameter._buy) {
+    if (!(_parameter._floorAt < _parameter._buyAt)) {
+        revert FloorValueGreaterThanBuyValue();
+    }
+}
+
     if (_parameter._sellType == SellLegType.INCREASE_BY &&(_parameter._str || _parameter._sellTwap)) {
-        revert("With sell percentage, we cannot have DCA for sell");
+        revert SellPercentageWithDCA();
     }
 
     if ( _parameter._floorType == FloorLegType.DECREASE_BY &&(_parameter._buyTwap || _parameter._btd)) {
-        revert("With floor percentage, we cannot have DCA for buy");
+        revert FloorPercentageWithDCA();
     }
 
     if ( _parameter._buy && _parameter._buyTwap &&_parameter._btd) {
-        revert("Both buy twap and BTD cannot be set together");
+        revert BothBuyTwapAndBTD();
     }
 
     if((_parameter._buyTwap ||_parameter._btd)&&!_parameter._buy){
-        revert("With Buy Twap and BTD, Buy must be selected");
+        revert BuyDCAWithoutBuy()       ;
     }
 
     if(_parameter._buyTwap&&_parameter._buyTwapTime<=0){
-        revert("Buy Twap time should be greater than 0");
+        revert BuyTwapTimeInvalid();
     }
     if(_parameter._buyTwap&&_parameter._buyTwapTimeUnit==TimeUnit.NO_UNIT){
-        revert("Buy Twap time unit should be selected");
+        revert BuyTwapTimeUnitNotSelected();
     }
 
     if (_parameter._sellTwap && _parameter._str) {
-        revert("Both sell twap and str cannot be set together");
+        revert BothSellTwapAndSTR();
     }
 
     if((_parameter._sellTwap ||_parameter._str)&&!_parameter._sell){
-        revert("With sell Twap and STR, Sell must be selected");
+        revert SellDCAWithoutSell();
     }
     if(_parameter._sellTwap&&_parameter._sellTwapTimeUnit==TimeUnit.NO_UNIT){
-        revert("Sell Twap time unit should be selected");
+        revert SellTwapTimeUnitNotSelected();
     }
 
       if(_parameter._sellTwap&&_parameter._sellTwapTime<=0){
-        revert("sell Twap time should be greater than 0");
+        revert SellTwapTimeInvalid();
     }
     
 
     if ((_parameter._sellTwap || _parameter._str) &&_parameter._sellDCAUnit == DCA_UNIT.NO_UNIT) {
-        revert("For sell twap and str, sell DCA unit must be provided");
+        revert SellTwapOrStrWithoutSellDCAUnit();
     }
 
     if (_parameter._sellDCAUnit != DCA_UNIT.NO_UNIT && _parameter._sellDCAValue == 0) {
-        revert("For sell DCA unit, sell DCA value must be provided");
+        revert SellDCAUnitWithoutSellDCAValue();
     }
 
     if (_parameter._str && (_parameter._strValue == 0 || _parameter._strType == DIP_SPIKE.NO_SPIKE)) {
-        revert("For str, str value and type must be provided");
+        revert StrWithoutStrValueOrType();
     }
 
     if (_parameter._btd  && _parameter._btdType == DIP_SPIKE.NO_SPIKE) {
-        revert("With BTD, type must be provided");
+        revert BTDWithoutBTDType();
     }
 
     if (_parameter._btdType != DIP_SPIKE.NO_SPIKE && _parameter._btdValue == 0) {
-        revert("With BTD type, BTD value must be provided");
+        revert BTDTypeWithoutBTDValue();
     }
 
     if ((_parameter._btd || _parameter._buyTwap) && _parameter._buyDCAUnit == DCA_UNIT.NO_UNIT) {
-        revert("With DCA buy, stable amount type must be provided. Whether fixed or percentage");
+        revert BuyDCAWithoutBuyDCAUnit();
     }
 
     if (_parameter._buyDCAUnit != DCA_UNIT.NO_UNIT && _parameter._buyDCAValue == 0) {
-        revert("With DCA, DCA value must be provided");
+        revert BuyDCAUnitWithoutBuyDCAValue();
     }
 
     if (_parameter._slippage > MAX_PERCENTAGE) {
@@ -152,18 +187,9 @@ contract StrategyFacet is Modifiers {
         return s.nextStrategyId;
     }
 
-    function getStrategyBasedOnId(uint256 id) external view returns (Strategy memory){
+    function getStrategy(uint256 id) external view returns (Strategy memory){
         return s.strategies[id];
     }
 
-   function getStrategies() external view returns (Strategy[] memory) {
-    uint256 maxStrategy = s.nextStrategyId;
-    Strategy[] memory strategies = new Strategy[](maxStrategy);
-
-    for (uint256 i = 0; i < maxStrategy; i++) {
-        strategies[i] = s.strategies[i];
-    }
-
-    return strategies;
-}
+   
 }

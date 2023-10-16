@@ -91,7 +91,7 @@ describe("ScenarioDEX", function () {
       _cancelOnFloor: false,
       _buy: true,
       _buyType: 1,
-      _buyAt: "1500000000000000000000",
+      _buyAt: "150000000000",
       _buyValue: 1,
       _sell: false,
       _sellType: 0,
