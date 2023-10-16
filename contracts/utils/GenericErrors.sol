@@ -44,6 +44,12 @@ error BTDWithoutBTDType();
 error BTDTypeWithoutBTDValue();
 error BuyDCAWithoutBuyDCAUnit();
 error BuyDCAUnitWithoutBuyDCAValue();
+error InvalidHighSellValue();
+error SellDCAValueRangeIsNotValid();
+error SellDCAValueGreaterThanInvestAmount();
+error BuyDCAValueRangeIsNotValid();
+error BuyDCAValueGreaterThanStableAmount();
+
 
 
 

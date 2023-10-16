@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { AppStorage, Strategy,StrategyParameters, SellLegType, BuyLegType,FloorLegType, 
-         DCA_UNIT,DIP_SPIKE, TimeUnit,Status } from "../AppStorage.sol";
+         DCA_UNIT,DIP_SPIKE, TimeUnit,Status, CURRENT_PRICE } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidSlippage, InvalidInvestToken,InvalidStableToken,TokensMustDiffer,
         AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, 
@@ -12,7 +12,9 @@ import { InvalidSlippage, InvalidInvestToken,InvalidStableToken,TokensMustDiffer
         BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected,BothSellTwapAndSTR,
         SellDCAWithoutSell, SellTwapTimeUnitNotSelected,SellTwapTimeInvalid,SellTwapOrStrWithoutSellDCAUnit,
         SellDCAUnitWithoutSellDCAValue,StrWithoutStrValueOrType,BTDWithoutBTDType,BTDTypeWithoutBTDValue,
-        BuyDCAWithoutBuyDCAUnit,BuyDCAUnitWithoutBuyDCAValue } from "../utils/GenericErrors.sol";
+        BuyDCAWithoutBuyDCAUnit,BuyDCAUnitWithoutBuyDCAValue,InvalidHighSellValue, SellDCAValueRangeIsNotValid,
+        SellDCAValueGreaterThanInvestAmount, BuyDCAValueRangeIsNotValid, BuyDCAValueGreaterThanStableAmount} from "../utils/GenericErrors.sol";
+import { LibPrice } from "../libraries/LibPrice.sol";
 
 contract StrategyFacet is Modifiers {
     AppStorage internal s;
@@ -36,18 +38,38 @@ contract StrategyFacet is Modifiers {
     if (!(_parameter._floor || _parameter._sell || _parameter._buy)) {
         revert AtLeastOneOptionRequired();
     }
-      if (_parameter._buy) {
-    if (_parameter._buyAt == 0) {
+    uint256 buyAt=_parameter._buyValue;
+
+    if (_parameter._buy) {
+    if (buyAt == 0) {
         revert InvalidBuyValue();
     }
     if (_parameter._buyType == BuyLegType.NO_TYPE) {
         revert InvalidBuyType();
     }
 }
+    uint256 price=LibPrice.getPrice(_parameter._stableToken, _parameter._investToken);
 
+    
+    uint256 floorAt=0;
+    if(_parameter._floor&&_parameter._floorType==FloorLegType.LIMIT_PRICE){
+      floorAt=_parameter._floorValue;
+    }
+    else if (_parameter._floor&&_parameter._floorType == FloorLegType.DECREASE_BY) {
+    uint256 floorPercentage = 100 - _parameter._floorValue;
+    floorAt = (price * floorPercentage) / 100;
+    }
+    uint256 sellAt=0;
+    if( _parameter._sell&&_parameter._sellType == SellLegType.LIMIT_PRICE){
+     sellAt=_parameter._sellValue;   
+    }
+    else if ( _parameter._sell&& _parameter._sellType == SellLegType.INCREASE_BY) {
+       uint256 sellPercentage = 100 +  _parameter._sellValue;
+       sellAt = (price * sellPercentage) / 100;
+    }
        // Check if floor is chosen
-       if (_parameter._floor) {
-    if (_parameter._floorAt == 0) {
+    if (_parameter._floor) {
+    if (floorAt == 0) {
         revert InvalidFloorValue();
     }
     if (_parameter._floorType == FloorLegType.NO_TYPE) {
@@ -55,20 +77,26 @@ contract StrategyFacet is Modifiers {
 }}
 
        if (_parameter._sell || _parameter._str || _parameter._sellTwap) {
-    if (_parameter._sellType == SellLegType.NO_TYPE) {
-        revert InvalidSellType();
+            if (_parameter._sellType == SellLegType.NO_TYPE) {
+                revert InvalidSellType();
+            }
+            if (sellAt == 0) {
+                revert InvalidSellValue();
+            }
+        if(_parameter._highSellValue != 0&&(_parameter._str || _parameter._sellTwap)){
+            if (sellAt >_parameter._highSellValue) {
+                revert InvalidHighSellValue();
+            }
+       
+        }
     }
-    if (_parameter._sellAt == 0) {
-        revert InvalidSellValue();
-}
-       }
 
         // Check if both buy and sell are chosen
       if (_parameter._buy && _parameter._sell) {
     if (!(_parameter._stableAmount > 0 || _parameter._investAmount > 0)) {
         revert BuySellAndZeroAmount();
     }
-    if (!(_parameter._buyAt < _parameter._sellAt)) {
+    if (buyAt > sellAt) {
         revert BuyAndSellAtMisorder();
 }
       }
@@ -88,14 +116,14 @@ contract StrategyFacet is Modifiers {
 
 // Check if floor and sell are chosen
 if (_parameter._floor && _parameter._sell) {
-    if (!(_parameter._floorAt < _parameter._sellAt)) {
+    if (floorAt >= sellAt) {
         revert FloorValueGreaterThanSellValue();
     }
 }
 
 // Check if floor and buy are chosen
 if (_parameter._floor && _parameter._buy) {
-    if (!(_parameter._floorAt < _parameter._buyAt)) {
+    if (floorAt >= buyAt) {
         revert FloorValueGreaterThanBuyValue();
     }
 }
@@ -171,15 +199,60 @@ if (_parameter._floor && _parameter._buy) {
             revert InvalidSlippage();
     }
 
+    uint256 sellPercentageAmount=0;
+
+    if ((_parameter._sellTwap||_parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
+    if ( _parameter._sellDCAValue < 0 || _parameter._sellDCAValue > 100 ) {
+        revert SellDCAValueRangeIsNotValid();
+    }
+        sellPercentageAmount = (_parameter._sellDCAValue * _parameter._investAmount) / 100;
+    }
+
+    if ((_parameter._sellTwap||_parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.FIXED) {
+    if ( _parameter._sellDCAValue >_parameter._investAmount ) {
+        revert SellDCAValueGreaterThanInvestAmount();
+    }
+}
+
+   uint256 buyPercentageAmount=0;
+
+    if ((_parameter._buyTwap||_parameter._btd) && _parameter._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
+    if ( _parameter._buyDCAValue < 0 || _parameter._buyDCAValue > 100 ) {
+        revert SellDCAValueRangeIsNotValid();
+    }
+        buyPercentageAmount = (_parameter._buyDCAValue * _parameter._stableAmount) / 100;
+    }
+
+    if ((_parameter._buyTwap||_parameter._btd) && _parameter._buyDCAUnit == DCA_UNIT.FIXED) {
+    if ( _parameter._buyDCAValue >_parameter._stableAmount ) {
+        revert SellDCAValueGreaterThanInvestAmount();
+    }
+}
+    
+
+
+
         s.strategies[s.nextStrategyId] = Strategy({
            user: msg.sender,
-           parameters: _parameter,
+           sellAt:sellAt,
+           floorAt:floorAt,
+           buyAt:buyAt,
+           sellPercentageAmount:sellPercentageAmount,
+           strLastTrackedPrice:0,
+           sellTwapExecutedAt:0,
+           btdLastTrackedPrice:0,
+           buyPercentageAmount:buyPercentageAmount,
+           buyTwapExecutedAt:0,
            timestamp:block.timestamp,
+           roundID:0,
+           parameters: _parameter,
            status: Status.ACTIVE
         });
 
         s.nextStrategyId++;
+        if(_parameter.current_price!=CURRENT_PRICE.NOT_SELECTED){
 
+        }
         emit StrategyCreated(_parameter._investToken, _parameter._stableToken, _parameter);
     }
 

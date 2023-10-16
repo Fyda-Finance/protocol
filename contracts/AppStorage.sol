@@ -59,16 +59,15 @@ struct StrategyParameters{
     uint256 _slippage;
     bool _floor;
     FloorLegType _floorType;
-    uint256 _floorAt;
+    uint256 _floorValue;
     bool _liquidateOnFloor;
     bool _cancelOnFloor;
     bool _buy;
     BuyLegType _buyType;
-    uint256 _buyAt;
     uint256 _buyValue;
     bool _sell;
     SellLegType _sellType;
-    uint256 _sellAt;
+    uint256 _sellValue;
     uint256 _highSellValue;
     bool _str;
     uint256 _strValue;
@@ -87,15 +86,25 @@ struct StrategyParameters{
     DIP_SPIKE _btdType;
     DCA_UNIT _buyDCAUnit;
     uint256 _buyDCAValue;
+    CURRENT_PRICE current_price;
 }
 
 
 struct Strategy {
     address user;
     StrategyParameters parameters;
+    uint256 sellAt;
+    uint256 floorAt;
+    uint256 buyAt;
+    uint256 sellPercentageAmount;
+    uint256 strLastTrackedPrice;
+    uint256 sellTwapExecutedAt;
+    uint256 btdLastTrackedPrice;
+    uint256 buyPercentageAmount;
+    uint256 buyTwapExecutedAt;
     uint256 timestamp;
+    uint256 roundID;
     Status status;
-
 }
 
 

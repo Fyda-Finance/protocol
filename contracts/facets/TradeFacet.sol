@@ -103,7 +103,11 @@ contract TradeFacet is Modifiers {
          if(!strategy.parameters._sell){
             revert();
         }
-        if(strategy.parameters._str||strategy.parameters._sellTwap){
+
+        if(strategy.parameters._highSellValue!=0){
+
+        }
+         else if(strategy.parameters._str||strategy.parameters._sellTwap){
             revert();
         }
 
@@ -120,7 +124,15 @@ contract TradeFacet is Modifiers {
 
        uint256 rate = calculateExchangeRate(strategy.parameters._investToken, strategy.parameters._investAmount, toTokenAmount);
 
-        if (rate < strategy.parameters._sellAt) {
+        if(strategy.parameters._highSellValue!=0){
+            if (rate < strategy.parameters._highSellValue){
+                revert InvalidExchangeRate(
+                strategy.parameters._highSellValue,
+                rate
+            );
+            }
+        }
+        else if (rate < strategy.parameters._sellAt) {
             revert InvalidExchangeRate(
                 strategy.parameters._sellAt,
                 rate
