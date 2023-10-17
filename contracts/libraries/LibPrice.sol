@@ -15,12 +15,12 @@ library LibPrice {
     function getPrice(
         address asset,
         address unit
-    ) internal view returns (uint256) {
+    ) internal view returns (uint256, uint80) {
         AppStorage storage s = LibDiamond.diamondStorage();
 
         FeedRegistryInterface registry = FeedRegistryInterface(s.chainlinkFeedRegistry);
 
-        (,int assetPrice,,,) = registry.latestRoundData(asset, Denominations.USD);
+        (uint80 roundId,int assetPrice,,,) = registry.latestRoundData(asset, Denominations.USD);
         (,int unitPrice,,,) = registry.latestRoundData(unit, Denominations.USD);
 
         if (assetPrice == 0 || unitPrice == 0) {
@@ -30,6 +30,26 @@ library LibPrice {
         uint unitDecimals = IERC20Metadata(unit).decimals();
         uint256 price = (uint256(assetPrice) * (10**unitDecimals)) / uint256(unitPrice);
 
-        return price;
+        return (price, roundId);
     }
+
+    function getRoundData(uint80 roundId,
+        address asset,
+        address unit)internal view returns (uint256){
+        AppStorage storage s = LibDiamond.diamondStorage();
+
+        FeedRegistryInterface registry = FeedRegistryInterface(s.chainlinkFeedRegistry);
+
+        (,int assetPrice,,,) = registry.getRoundData(asset, Denominations.USD, roundId);
+        (,int unitPrice,,,) = registry.getRoundData(unit, Denominations.USD,roundId);
+
+        if (assetPrice == 0 || unitPrice == 0) {
+            revert InvalidPrice();
+        }
+
+        uint unitDecimals = IERC20Metadata(unit).decimals();
+        uint256 price = (uint256(assetPrice) * (10**unitDecimals)) / uint256(unitPrice);
+
+        return price; 
+        }
 }

@@ -52,7 +52,7 @@ enum TimeUnit {
 }
 
 struct StrategyParameters{
-   address _investToken;
+    address _investToken;
     address _stableToken;
     uint256 _stableAmount;
     uint256 _investAmount;
@@ -103,7 +103,8 @@ struct Strategy {
     uint256 buyPercentageAmount;
     uint256 buyTwapExecutedAt;
     uint256 timestamp;
-    uint256 roundID;
+    uint80 roundId;
+    uint256 investPrice;
     Status status;
 }
 

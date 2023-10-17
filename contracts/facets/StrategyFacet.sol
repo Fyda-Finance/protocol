@@ -13,7 +13,7 @@ import { InvalidSlippage, InvalidInvestToken,InvalidStableToken,TokensMustDiffer
         SellDCAWithoutSell, SellTwapTimeUnitNotSelected,SellTwapTimeInvalid,SellTwapOrStrWithoutSellDCAUnit,
         SellDCAUnitWithoutSellDCAValue,StrWithoutStrValueOrType,BTDWithoutBTDType,BTDTypeWithoutBTDValue,
         BuyDCAWithoutBuyDCAUnit,BuyDCAUnitWithoutBuyDCAValue,InvalidHighSellValue, SellDCAValueRangeIsNotValid,
-        SellDCAValueGreaterThanInvestAmount, BuyDCAValueRangeIsNotValid, BuyDCAValueGreaterThanStableAmount} from "../utils/GenericErrors.sol";
+         BuyDCAValueRangeIsNotValid,DCAValueShouldBeLessThanIntitialAmount } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 
 contract StrategyFacet is Modifiers {
@@ -48,8 +48,7 @@ contract StrategyFacet is Modifiers {
         revert InvalidBuyType();
     }
 }
-    uint256 price=LibPrice.getPrice(_parameter._stableToken, _parameter._investToken);
-
+    (uint256 price,uint80 roundId)=LibPrice.getPrice( _parameter._investToken,_parameter._stableToken);
     
     uint256 floorAt=0;
     if(_parameter._floor&&_parameter._floorType==FloorLegType.LIMIT_PRICE){
@@ -208,9 +207,9 @@ if (_parameter._floor && _parameter._buy) {
         sellPercentageAmount = (_parameter._sellDCAValue * _parameter._investAmount) / 100;
     }
 
-    if ((_parameter._sellTwap||_parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.FIXED) {
-    if ( _parameter._sellDCAValue >_parameter._investAmount ) {
-        revert SellDCAValueGreaterThanInvestAmount();
+    if (((_parameter._sellTwap||_parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.FIXED)||((_parameter._buyTwap||_parameter._btd) && _parameter._buyDCAUnit == DCA_UNIT.FIXED)) {
+    if ( (_parameter._sellDCAValue >_parameter._investAmount)&&(_parameter._buyDCAValue >_parameter._stableAmount)) {
+        revert DCAValueShouldBeLessThanIntitialAmount();
     }
 }
 
@@ -218,16 +217,10 @@ if (_parameter._floor && _parameter._buy) {
 
     if ((_parameter._buyTwap||_parameter._btd) && _parameter._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
     if ( _parameter._buyDCAValue < 0 || _parameter._buyDCAValue > 100 ) {
-        revert SellDCAValueRangeIsNotValid();
+        revert BuyDCAValueRangeIsNotValid();
     }
         buyPercentageAmount = (_parameter._buyDCAValue * _parameter._stableAmount) / 100;
     }
-
-    if ((_parameter._buyTwap||_parameter._btd) && _parameter._buyDCAUnit == DCA_UNIT.FIXED) {
-    if ( _parameter._buyDCAValue >_parameter._stableAmount ) {
-        revert SellDCAValueGreaterThanInvestAmount();
-    }
-}
     
 
 
@@ -239,13 +232,14 @@ if (_parameter._floor && _parameter._buy) {
            buyAt:buyAt,
            sellPercentageAmount:sellPercentageAmount,
            strLastTrackedPrice:0,
-           sellTwapExecutedAt:0,
+           sellTwapExecutedAt:block.timestamp,
            btdLastTrackedPrice:0,
            buyPercentageAmount:buyPercentageAmount,
-           buyTwapExecutedAt:0,
+           buyTwapExecutedAt:block.timestamp,
            timestamp:block.timestamp,
-           roundID:0,
+           roundId:roundId,
            parameters: _parameter,
+           investPrice:price,
            status: Status.ACTIVE
         });
 

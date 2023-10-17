@@ -46,9 +46,8 @@ error BuyDCAWithoutBuyDCAUnit();
 error BuyDCAUnitWithoutBuyDCAValue();
 error InvalidHighSellValue();
 error SellDCAValueRangeIsNotValid();
-error SellDCAValueGreaterThanInvestAmount();
+error DCAValueShouldBeLessThanIntitialAmount();
 error BuyDCAValueRangeIsNotValid();
-error BuyDCAValueGreaterThanStableAmount();
 
 
 
