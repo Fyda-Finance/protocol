@@ -1,15 +1,11 @@
-import { ethers } from "hardhat";
-import deployDiamond from "../scripts/deploy";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import {
-  ScenarioDEX,
-  ScenarioERC20,
-  ScenarioFeedRegistry,
-  StrategyFacet,
-  TradeFacet,
-} from "../typechain-types";
-const { expect } = require("chai");
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
+
+import deployDiamond from "../scripts/deploy";
+import { ScenarioDEX, ScenarioERC20, ScenarioFeedRegistry, StrategyFacet, TradeFacet } from "../typechain";
+
+const { expect } = require("chai");
 
 type SetupDiamondFixture = {
   scenarioERC20USDC: ScenarioERC20;
@@ -35,20 +31,12 @@ describe("ScenarioDEX", function () {
     const scenarioERC20USDC = await scenarioERC20.deploy("USDC", "USDC", 6);
     const scenarioERC20WETH = await scenarioERC20.deploy("WETH", "WETH", 18);
 
-    await scenarioERC20USDC.mint(
-      user.address,
-      ethers.utils.parseUnits("20000000000", 6)
-    );
+    await scenarioERC20USDC.mint(user.address, ethers.utils.parseUnits("20000000000", 6));
 
-    const strategyFacet = await ethers.getContractAt(
-      "StrategyFacet",
-      diamondAddress
-    );
+    const strategyFacet = await ethers.getContractAt("StrategyFacet", diamondAddress);
     const tradeFacet = await ethers.getContractAt("TradeFacet", diamondAddress);
 
-    const ScenarioFeedRegistry = await ethers.getContractFactory(
-      "ScenarioFeedRegistry"
-    );
+    const ScenarioFeedRegistry = await ethers.getContractFactory("ScenarioFeedRegistry");
     const scenarioFeedRegistry = await ScenarioFeedRegistry.deploy();
 
     await tradeFacet.setChainlinkFeedRegistry(scenarioFeedRegistry.address);
@@ -74,9 +62,7 @@ describe("ScenarioDEX", function () {
   it("All strategy based", async function () {
     const budget = "1000000000"; // $1k
 
-    await setup.scenarioERC20USDC
-      .connect(setup.user)
-      .approve(setup.strategyFacet.address, budget);
+    await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
 
     let parameters = {
       _investToken: setup.scenarioERC20WETH.address,
@@ -121,14 +107,10 @@ describe("ScenarioDEX", function () {
     await expect(await setup.strategyFacet.getStrategy(5)).to.be.reverted;
 
     parameters._floor = true;
-    await expect(
-      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
-    ).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
     parameters._floorAt = "1000000000";
 
-    await expect(
-      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
-    ).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
     parameters._floorType = 1;
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
     await expect(await setup.strategyFacet.nextStartegyId()).to.equal(2);
@@ -137,13 +119,9 @@ describe("ScenarioDEX", function () {
     parameters._floorAt = "0";
     parameters._btd = true;
     parameters._buyTwap = true;
-    await expect(
-      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
-    ).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
     parameters._buyTwap = false;
-    await expect(
-      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
-    ).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
     parameters._btdType = 1;
     parameters._btdValue = "15000";
     parameters._buyDCAUnit = 1;
@@ -161,9 +139,7 @@ describe("ScenarioDEX", function () {
     parameters._sellAt = "120000000";
     parameters._investAmount = "100000";
 
-    await expect(
-      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
-    ).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
 
     parameters._sellTwapTime = 1;
     parameters._sellTwapTimeUnit = 1;

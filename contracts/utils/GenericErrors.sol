@@ -48,8 +48,3 @@ error InvalidHighSellValue();
 error SellDCAValueRangeIsNotValid();
 error DCAValueShouldBeLessThanIntitialAmount();
 error BuyDCAValueRangeIsNotValid();
-
-
-
-
-
