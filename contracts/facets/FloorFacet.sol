@@ -7,9 +7,8 @@ import { AppStorage, Strategy, Status  } from "../AppStorage.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
-import {  NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
 import {LibTrade} from "../libraries/LibTrade.sol";
-import { InvalidExchangeRate, HighSlippage, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate,  NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
 
 
 
@@ -50,7 +49,7 @@ contract FloorFacet is Modifiers {
 
         //   now compare with chainlink
         (uint256 price,uint80 roundId) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
-        validateSlippage(rate, price, strategy.parameters._slippage, false);
+        LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, false);
         strategy.timestamp=block.timestamp;
         strategy.parameters._investAmount=0;
         strategy.parameters._stableAmount+=toTokenAmount;
@@ -62,16 +61,5 @@ contract FloorFacet is Modifiers {
         
     }
 
-    function validateSlippage(
-        uint256 exchangeRate,
-        uint256 price,
-        uint256 maxSlippage,
-        bool isBuy
-    ) public pure {
-        uint256 slippage = (price * MAX_PERCENTAGE) / exchangeRate;
-
-        if (isBuy && slippage < MAX_PERCENTAGE && MAX_PERCENTAGE - slippage > maxSlippage) revert HighSlippage();
-        if (!isBuy && slippage > MAX_PERCENTAGE && slippage - MAX_PERCENTAGE > maxSlippage) revert HighSlippage();
-    }
-
+   
 }

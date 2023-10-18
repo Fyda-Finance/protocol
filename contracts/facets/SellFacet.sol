@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE  } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidExchangeRate, HighSlippage, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import {LibTrade} from "../libraries/LibTrade.sol";
@@ -198,7 +198,7 @@ contract SellFacet is Modifiers {
             );
         }
         if(!strategy.parameters._str){
-            validateSlippage(rate, price, strategy.parameters._slippage, false);
+            LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, false);
         }
         
 
@@ -240,17 +240,5 @@ contract SellFacet is Modifiers {
       }
      }
 }
-
-    function validateSlippage(
-        uint256 exchangeRate,
-        uint256 price,
-        uint256 maxSlippage,
-        bool isBuy
-        ) public pure {
-        uint256 slippage = (price * MAX_PERCENTAGE) / exchangeRate;
-
-        if (isBuy && slippage < MAX_PERCENTAGE && MAX_PERCENTAGE - slippage > maxSlippage) revert HighSlippage();
-        if (!isBuy && slippage > MAX_PERCENTAGE && slippage - MAX_PERCENTAGE > maxSlippage) revert HighSlippage();
-    }
-
+   
 }

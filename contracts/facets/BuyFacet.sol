@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE  } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
-import { InvalidExchangeRate, HighSlippage, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate,  NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
@@ -197,7 +197,7 @@ function executeBTD(uint256 strategyId, address dex, bytes calldata callData,uin
          strategy.sellPercentageAmount = (strategy.parameters._sellDCAValue * strategy.parameters._investAmount) / 100;
      }
         
-        validateSlippage(rate, price, strategy.parameters._slippage, true);
+        LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, true);
 
     }
 
@@ -230,18 +230,4 @@ function executeBTD(uint256 strategyId, address dex, bytes calldata callData,uin
      }
 }
 
-
-
-
-    function validateSlippage(
-        uint256 exchangeRate,
-        uint256 price,
-        uint256 maxSlippage,
-        bool isBuy
-        ) public pure {
-        uint256 slippage = (price * MAX_PERCENTAGE) / exchangeRate;
-
-        if (isBuy && slippage < MAX_PERCENTAGE && MAX_PERCENTAGE - slippage > maxSlippage) revert HighSlippage();
-        if (!isBuy && slippage > MAX_PERCENTAGE && slippage - MAX_PERCENTAGE > maxSlippage) revert HighSlippage();
-    }
 }

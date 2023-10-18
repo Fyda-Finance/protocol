@@ -15,6 +15,7 @@ import { InvalidSlippage, InvalidInvestToken,InvalidStableToken,TokensMustDiffer
         BuyDCAWithoutBuyDCAUnit,BuyDCAUnitWithoutBuyDCAValue,InvalidHighSellValue, SellDCAValueRangeIsNotValid,
          BuyDCAValueRangeIsNotValid,DCAValueShouldBeLessThanIntitialAmount } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
+import {LibTrade} from "../libraries/LibTrade.sol";
 
 contract StrategyFacet is Modifiers {
     AppStorage internal s;
@@ -194,7 +195,7 @@ if (_parameter._floor && _parameter._buy) {
         revert BuyDCAUnitWithoutBuyDCAValue();
     }
 
-    if (_parameter._slippage > MAX_PERCENTAGE) {
+    if (_parameter._slippage > LibTrade.MAX_PERCENTAGE) {
             revert InvalidSlippage();
     }
 

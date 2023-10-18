@@ -6,7 +6,7 @@ contract ScenarioFeedRegistry {
   // asset => price in USD -> 8 decimals
   mapping (address => int) public price;
 
-  function latestRoundData(address base, address quote) external view
+  function latestRoundData(address base) external view
     returns (
         uint80 roundId,
         int256 answer,
