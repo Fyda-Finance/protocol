@@ -257,6 +257,14 @@ if (_parameter._floor && _parameter._buy) {
     function getStrategy(uint256 id) external view returns (Strategy memory){
         return s.strategies[id];
     }
+    
+ /**
+    @dev Set the chainlink feed registry address
+    @param _chainlinkFeedRegistry Address of the chainlink feed registry
+     */
+    function setChainlinkFeedRegistry(address _chainlinkFeedRegistry) external onlyOwner {
+        s.chainlinkFeedRegistry = _chainlinkFeedRegistry;
+    }
 
    
 }
