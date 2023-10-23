@@ -4,7 +4,7 @@
   "version": "1.0.0-dev.7",
   "author": "Fyda",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=16.0.0"
   },
   "files": [
     "artifacts",

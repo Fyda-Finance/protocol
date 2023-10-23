@@ -50,6 +50,4 @@ error DCAValueShouldBeLessThanIntitialAmount();
 error BuyDCAValueRangeIsNotValid();
 error OrphandStrategy();
 error BuyNeverExecute();
-
-
-
+error FloorGreaterThanPrice();
