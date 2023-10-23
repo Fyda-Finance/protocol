@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy,StrategyParameters, SellLegType, BuyLegType,FloorLegType, 
-         DCA_UNIT,DIP_SPIKE, TimeUnit,Status, CURRENT_PRICE } from "../AppStorage.sol";
+import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidSlippage, InvalidInvestToken,InvalidStableToken,TokensMustDiffer,
         AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, 
@@ -16,7 +15,7 @@ import { InvalidSlippage, InvalidInvestToken,InvalidStableToken,TokensMustDiffer
         BuyDCAValueRangeIsNotValid,DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy,
         BuyNeverExecute } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
-import {LibTrade} from "../libraries/LibTrade.sol";
+import { LibTrade } from "../libraries/LibTrade.sol";
 
 
 contract StrategyFacet is Modifiers {
@@ -30,85 +29,84 @@ contract StrategyFacet is Modifiers {
         revert InvalidInvestToken();
     }
 
-    if (_parameter._stableToken == address(0)) {
-        revert InvalidStableToken();
-    }
+        if (_parameter._stableToken == address(0)) {
+            revert InvalidStableToken();
+        }
 
-    if (_parameter._investToken == _parameter._stableToken) {
-        revert TokensMustDiffer();
-    }
+        if (_parameter._investToken == _parameter._stableToken) {
+            revert TokensMustDiffer();
+        }
 
     if (!(_parameter._floor || _parameter._sell || _parameter._buy)) {
         revert AtLeastOneOptionRequired();
     }
     
 
-    if (_parameter._sellType == SellLegType.INCREASE_BY &&(_parameter._str || _parameter._sellTwap)) {
-        revert SellPercentageWithDCA();
-    }
+        if (_parameter._sellType == SellLegType.INCREASE_BY && (_parameter._str || _parameter._sellTwap)) {
+            revert SellPercentageWithDCA();
+        }
 
-    if ( _parameter._floorType == FloorLegType.DECREASE_BY &&(_parameter._buyTwap || _parameter._btd)) {
-        revert FloorPercentageWithDCA();
-    }
+        if (_parameter._floorType == FloorLegType.DECREASE_BY && (_parameter._buyTwap || _parameter._btd)) {
+            revert FloorPercentageWithDCA();
+        }
 
-    if ( _parameter._buy && _parameter._buyTwap &&_parameter._btd) {
-        revert BothBuyTwapAndBTD();
-    }
+        if (_parameter._buy && _parameter._buyTwap && _parameter._btd) {
+            revert BothBuyTwapAndBTD();
+        }
 
-    if((_parameter._buyTwap ||_parameter._btd)&&!_parameter._buy){
-        revert BuyDCAWithoutBuy()       ;
-    }
+        if ((_parameter._buyTwap || _parameter._btd) && !_parameter._buy) {
+            revert BuyDCAWithoutBuy();
+        }
 
-    if(_parameter._buyTwap&&_parameter._buyTwapTime<=0){
-        revert BuyTwapTimeInvalid();
-    }
-    if(_parameter._buyTwap&&_parameter._buyTwapTimeUnit==TimeUnit.NO_UNIT){
-        revert BuyTwapTimeUnitNotSelected();
-    }
+        if (_parameter._buyTwap && _parameter._buyTwapTime <= 0) {
+            revert BuyTwapTimeInvalid();
+        }
+        if (_parameter._buyTwap && _parameter._buyTwapTimeUnit == TimeUnit.NO_UNIT) {
+            revert BuyTwapTimeUnitNotSelected();
+        }
 
-    if (_parameter._sellTwap && _parameter._str) {
-        revert BothSellTwapAndSTR();
-    }
+        if (_parameter._sellTwap && _parameter._str) {
+            revert BothSellTwapAndSTR();
+        }
 
-    if((_parameter._sellTwap ||_parameter._str)&&!_parameter._sell){
-        revert SellDCAWithoutSell();
-    }
-    if(_parameter._sellTwap&&_parameter._sellTwapTimeUnit==TimeUnit.NO_UNIT){
-        revert SellTwapTimeUnitNotSelected();
-    }
+        if ((_parameter._sellTwap || _parameter._str) && !_parameter._sell) {
+            revert SellDCAWithoutSell();
+        }
+        if (_parameter._sellTwap && _parameter._sellTwapTimeUnit == TimeUnit.NO_UNIT) {
+            revert SellTwapTimeUnitNotSelected();
+        }
 
-      if(_parameter._sellTwap&&_parameter._sellTwapTime<=0){
-        revert SellTwapTimeInvalid();
-    }
-    
+        if (_parameter._sellTwap && _parameter._sellTwapTime <= 0) {
+            revert SellTwapTimeInvalid();
+        }
 
-    if ((_parameter._sellTwap || _parameter._str) &&_parameter._sellDCAUnit == DCA_UNIT.NO_UNIT) {
-        revert SellTwapOrStrWithoutSellDCAUnit();
-    }
+        if ((_parameter._sellTwap || _parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.NO_UNIT) {
+            revert SellTwapOrStrWithoutSellDCAUnit();
+        }
 
-    if (_parameter._sellDCAUnit != DCA_UNIT.NO_UNIT && _parameter._sellDCAValue == 0) {
-        revert SellDCAUnitWithoutSellDCAValue();
-    }
+        if (_parameter._sellDCAUnit != DCA_UNIT.NO_UNIT && _parameter._sellDCAValue == 0) {
+            revert SellDCAUnitWithoutSellDCAValue();
+        }
 
-    if (_parameter._str && (_parameter._strValue == 0 || _parameter._strType == DIP_SPIKE.NO_SPIKE)) {
-        revert StrWithoutStrValueOrType();
-    }
+        if (_parameter._str && (_parameter._strValue == 0 || _parameter._strType == DIP_SPIKE.NO_SPIKE)) {
+            revert StrWithoutStrValueOrType();
+        }
 
-    if (_parameter._btd  && _parameter._btdType == DIP_SPIKE.NO_SPIKE) {
-        revert BTDWithoutBTDType();
-    }
+        if (_parameter._btd && _parameter._btdType == DIP_SPIKE.NO_SPIKE) {
+            revert BTDWithoutBTDType();
+        }
 
-    if (_parameter._btdType != DIP_SPIKE.NO_SPIKE && _parameter._btdValue == 0) {
-        revert BTDTypeWithoutBTDValue();
-    }
+        if (_parameter._btdType != DIP_SPIKE.NO_SPIKE && _parameter._btdValue == 0) {
+            revert BTDTypeWithoutBTDValue();
+        }
 
-    if ((_parameter._btd || _parameter._buyTwap) && _parameter._buyDCAUnit == DCA_UNIT.NO_UNIT) {
-        revert BuyDCAWithoutBuyDCAUnit();
-    }
+        if ((_parameter._btd || _parameter._buyTwap) && _parameter._buyDCAUnit == DCA_UNIT.NO_UNIT) {
+            revert BuyDCAWithoutBuyDCAUnit();
+        }
 
-    if (_parameter._buyDCAUnit != DCA_UNIT.NO_UNIT && _parameter._buyDCAValue == 0) {
-        revert BuyDCAUnitWithoutBuyDCAValue();
-    }
+        if (_parameter._buyDCAUnit != DCA_UNIT.NO_UNIT && _parameter._buyDCAValue == 0) {
+            revert BuyDCAUnitWithoutBuyDCAValue();
+        }
 
     (uint256 price,uint80 roundId)=LibPrice.getPrice( _parameter._investToken,_parameter._stableToken);
 
@@ -229,16 +227,16 @@ if (_parameter._floor && _parameter._buy&&_parameter._floorType == FloorLegType.
     
     if (_parameter._slippage > LibTrade.MAX_PERCENTAGE) {
             revert InvalidSlippage();
-    }
+        }
 
-    uint256 sellPercentageAmount=0;
+        uint256 sellPercentageAmount = 0;
 
-    if ((_parameter._sellTwap||_parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
-    if ( _parameter._sellDCAValue < 0 || _parameter._sellDCAValue > 100 ) {
-        revert SellDCAValueRangeIsNotValid();
-    }
-        sellPercentageAmount = (_parameter._sellDCAValue * _parameter._investAmount) / 100;
-    }
+        if ((_parameter._sellTwap || _parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
+            if (_parameter._sellDCAValue < 0 || _parameter._sellDCAValue > 100) {
+                revert SellDCAValueRangeIsNotValid();
+            }
+            sellPercentageAmount = (_parameter._sellDCAValue * _parameter._investAmount) / 100;
+        }
 
     if (((_parameter._sellTwap||_parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.FIXED)||((_parameter._buyTwap||_parameter._btd) && _parameter._buyDCAUnit == DCA_UNIT.FIXED)) {
     if ( (_parameter._sellDCAValue >_parameter._investAmount)&&(_parameter._buyDCAValue >_parameter._stableAmount)) {
@@ -297,7 +295,7 @@ if (_parameter._floor && _parameter._buy&&_parameter._floorType == FloorLegType.
         return s.nextStrategyId;
     }
 
-    function getStrategy(uint256 id) external view returns (Strategy memory){
+    function getStrategy(uint256 id) external view returns (Strategy memory) {
         return s.strategies[id];
     }
 
@@ -313,6 +311,4 @@ if (_parameter._floor && _parameter._buy&&_parameter._floorType == FloorLegType.
     function setChainlinkFeedRegistry(address _chainlinkFeedRegistry) external onlyOwner {
         s.chainlinkFeedRegistry = _chainlinkFeedRegistry;
     }
-
-   
 }

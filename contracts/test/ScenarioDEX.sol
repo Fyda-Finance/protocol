@@ -5,12 +5,11 @@ import { ScenarioERC20 } from "./ScenarioERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract ScenarioDEX {
-
     // total decimals for USD price
-    uint256 constant public USD_DECIMALS = 8;
+    uint256 public constant USD_DECIMALS = 8;
 
-    // asset => exchangeRate in USD 
-    mapping (address => uint256) public exchangeRate;
+    // asset => exchangeRate in USD
+    mapping(address => uint256) public exchangeRate;
 
     constructor() {}
 
@@ -35,5 +34,5 @@ contract ScenarioDEX {
 
         ScenarioERC20(toAsset).mint(address(this), toAmount);
         ScenarioERC20(toAsset).transfer(msg.sender, toAmount);
-  }
+    }
 }

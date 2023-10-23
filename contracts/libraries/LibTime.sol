@@ -14,10 +14,12 @@ library LibTime {
         }
     }
 
-    function getTimeDifference(uint256 blockTime,uint256 presentTime, uint256 targetTime) public pure returns (bool) {
-        bool timeDifference = targetTime > blockTime-presentTime ? true : false;
+    function getTimeDifference(
+        uint256 blockTime,
+        uint256 presentTime,
+        uint256 targetTime
+    ) public pure returns (bool) {
+        bool timeDifference = targetTime > blockTime - presentTime ? true : false;
         return timeDifference;
     }
 }
-
-

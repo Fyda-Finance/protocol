@@ -4,10 +4,8 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { HighSlippage } from "../utils/GenericErrors.sol";
 
-
 library LibTrade {
     uint256 constant MAX_PERCENTAGE = 10000;
-
 
     /**
     @dev Calculate exchange rate given input and output amounts
@@ -23,7 +21,7 @@ library LibTrade {
     ) public view returns (uint256) {
         IERC20Metadata _fromToken = IERC20Metadata(fromAsset);
         uint256 fromDecimals = _fromToken.decimals();
-        return (toAmount * (10 ** fromDecimals) / fromAmount); 
+        return ((toAmount * (10**fromDecimals)) / fromAmount);
     }
 
     function validateSlippage(
@@ -31,11 +29,10 @@ library LibTrade {
         uint256 price,
         uint256 maxSlippage,
         bool isBuy
-        ) public pure {
+    ) public pure {
         uint256 slippage = (price * MAX_PERCENTAGE) / exchangeRate;
 
         if (isBuy && slippage < MAX_PERCENTAGE && MAX_PERCENTAGE - slippage > maxSlippage) revert HighSlippage();
         if (!isBuy && slippage > MAX_PERCENTAGE && slippage - MAX_PERCENTAGE > maxSlippage) revert HighSlippage();
     }
-
 }

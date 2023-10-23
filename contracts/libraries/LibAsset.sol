@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { TransferFailed } from "../utils/GenericErrors.sol";
 
 library LibAsset {
-  uint256 private constant MAX_UINT = type(uint256).max;
+    uint256 private constant MAX_UINT = type(uint256).max;
 
     function balanceOf(address asset, address account) internal view returns (uint256) {
         return IERC20(asset).balanceOf(account);
