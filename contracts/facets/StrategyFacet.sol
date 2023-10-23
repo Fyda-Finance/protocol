@@ -156,10 +156,24 @@ contract StrategyFacet is Modifiers {
       _parameter._floor && _parameter._floorType == FloorLegType.LIMIT_PRICE
     ) {
       floorAt = _parameter._floorValue;
+    } else if (
+      _parameter._floor &&
+      _parameter._floorType == FloorLegType.DECREASE_BY &&
+      _parameter._investAmount > 0
+    ) {
+      uint256 floorPercentage = 100 - _parameter._floorValue;
+      floorAt = (price * floorPercentage) / 100;
     }
 
     if (_parameter._sell && _parameter._sellType == SellLegType.LIMIT_PRICE) {
       sellAt = _parameter._sellValue;
+    } else if (
+      _parameter._sell &&
+      _parameter._sellType == SellLegType.INCREASE_BY &&
+      _parameter._investAmount > 0
+    ) {
+      uint256 sellPercentage = 100 + _parameter._sellValue;
+      sellAt = (price * sellPercentage) / 100;
     }
 
     // Check if floor is chosen
