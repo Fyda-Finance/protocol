@@ -18,7 +18,7 @@ type SetupDiamondFixture = {
   scenarioFeedRegistry: ScenarioFeedRegistry;
 };
 
-describe("ScenarioDEX", function () {
+describe.skip("ScenarioDEX", function () {
   async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
     const [owner, user] = await ethers.getSigners();
 

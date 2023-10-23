@@ -3,7 +3,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 
 import deployDiamond from "../scripts/deploy";
-import { ScenarioDEX, ScenarioERC20, ScenarioFeedRegistry, StrategyFacet, TradeFacet } from "../typechain";
+import { ScenarioDEX, ScenarioERC20, ScenarioFeedAggregator, StrategyFacet, TradeFacet } from "../typechain";
 
 const { expect } = require("chai");
 
@@ -15,7 +15,8 @@ type SetupDiamondFixture = {
   tradeFacet: TradeFacet;
   owner: SignerWithAddress;
   user: SignerWithAddress;
-  scenarioFeedRegistry: ScenarioFeedRegistry;
+  usdcScenarioFeedAggregator: ScenarioFeedAggregator;
+  wethScenarioFeedAggregator: ScenarioFeedAggregator;
 };
 
 describe("ScenarioDEX", function () {
@@ -35,11 +36,14 @@ describe("ScenarioDEX", function () {
 
     const strategyFacet = await ethers.getContractAt("StrategyFacet", diamondAddress);
     const tradeFacet = await ethers.getContractAt("TradeFacet", diamondAddress);
+    const priceOracleFacet = await ethers.getContractAt("PriceOracleFacet", diamondAddress);
 
-    const ScenarioFeedRegistry = await ethers.getContractFactory("ScenarioFeedRegistry");
-    const scenarioFeedRegistry = await ScenarioFeedRegistry.deploy();
+    const ScenarioFeedAggregator = await ethers.getContractFactory("ScenarioFeedAggregator");
+    const usdcScenarioFeedAggregator = await ScenarioFeedAggregator.deploy();
+    const wethScenarioFeedAggregator = await ScenarioFeedAggregator.deploy();
 
-    await tradeFacet.setChainlinkFeedRegistry(scenarioFeedRegistry.address);
+    await priceOracleFacet.setAssetFeed(scenarioERC20USDC.address, usdcScenarioFeedAggregator.address);
+    await priceOracleFacet.setAssetFeed(scenarioERC20WETH.address, wethScenarioFeedAggregator.address);
 
     return {
       scenarioERC20USDC,
@@ -49,7 +53,8 @@ describe("ScenarioDEX", function () {
       user,
       strategyFacet,
       tradeFacet,
-      scenarioFeedRegistry,
+      usdcScenarioFeedAggregator,
+      wethScenarioFeedAggregator,
     };
   }
 
@@ -119,9 +124,9 @@ describe("ScenarioDEX", function () {
     // 1 USDC = 1 USD
     await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
 
-    await setup.scenarioFeedRegistry.updatePrice(setup.scenarioERC20WETH.address, "120000000000");
+    await setup.wethScenarioFeedAggregator.setPrice("120000000000");
 
-    await setup.scenarioFeedRegistry.updatePrice(setup.scenarioERC20USDC.address, "100000000");
+    await setup.usdcScenarioFeedAggregator.setPrice("100000000");
 
     await setup.tradeFacet.executeBuy(0, setup.scenarioDEX.address, dexCalldata);
   });

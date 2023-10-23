@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@chainlink/contracts/src/v0.8/interfaces/FeedRegistryInterface.sol";
 import "@chainlink/contracts/src/v0.8/Denominations.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
 
 import { LibDiamond } from "./LibDiamond.sol";
-import { InvalidPrice } from "../utils/GenericErrors.sol";
+import { InvalidPrice, FeedNotFound } from "../utils/GenericErrors.sol";
 import { AppStorage } from "../AppStorage.sol";
 
 library LibPrice {
@@ -15,10 +15,12 @@ library LibPrice {
     function getPrice(address asset, address unit) internal view returns (uint256, uint80) {
         AppStorage storage s = LibDiamond.diamondStorage();
 
-        FeedRegistryInterface registry = FeedRegistryInterface(s.chainlinkFeedRegistry);
+        if (s.feeds[asset] == address(0) || s.feeds[unit] == address(0)) {
+            revert FeedNotFound();
+        }
 
-        (uint80 roundId, int256 assetPrice, , , ) = registry.latestRoundData(asset, Denominations.USD);
-        (, int256 unitPrice, , , ) = registry.latestRoundData(unit, Denominations.USD);
+        (uint80 roundId, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).latestRoundData();
+        (, int256 unitPrice, , , ) = AggregatorV2V3Interface(s.feeds[unit]).latestRoundData();
 
         if (assetPrice == 0 || unitPrice == 0) {
             revert InvalidPrice();
@@ -37,10 +39,12 @@ library LibPrice {
     ) internal view returns (uint256) {
         AppStorage storage s = LibDiamond.diamondStorage();
 
-        FeedRegistryInterface registry = FeedRegistryInterface(s.chainlinkFeedRegistry);
+        if (s.feeds[asset] == address(0) || s.feeds[unit] == address(0)) {
+            revert FeedNotFound();
+        }
 
-        (, int256 assetPrice, , , ) = registry.getRoundData(asset, Denominations.USD, roundId);
-        (, int256 unitPrice, , , ) = registry.getRoundData(unit, Denominations.USD, roundId);
+        (, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).getRoundData(roundId);
+        (, int256 unitPrice, , , ) = AggregatorV2V3Interface(s.feeds[unit]).getRoundData(roundId);
 
         if (assetPrice == 0 || unitPrice == 0) {
             revert InvalidPrice();

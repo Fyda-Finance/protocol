@@ -51,3 +51,4 @@ error BuyDCAValueRangeIsNotValid();
 error OrphandStrategy();
 error BuyNeverExecute();
 error FloorGreaterThanPrice();
+error FeedNotFound();
