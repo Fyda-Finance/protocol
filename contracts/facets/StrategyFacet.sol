@@ -13,9 +13,11 @@ import { InvalidSlippage, InvalidInvestToken,InvalidStableToken,TokensMustDiffer
         SellDCAWithoutSell, SellTwapTimeUnitNotSelected,SellTwapTimeInvalid,SellTwapOrStrWithoutSellDCAUnit,
         SellDCAUnitWithoutSellDCAValue,StrWithoutStrValueOrType,BTDWithoutBTDType,BTDTypeWithoutBTDValue,
         BuyDCAWithoutBuyDCAUnit,BuyDCAUnitWithoutBuyDCAValue,InvalidHighSellValue, SellDCAValueRangeIsNotValid,
-         BuyDCAValueRangeIsNotValid,DCAValueShouldBeLessThanIntitialAmount } from "../utils/GenericErrors.sol";
+        BuyDCAValueRangeIsNotValid,DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy,
+        BuyNeverExecute } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import {LibTrade} from "../libraries/LibTrade.sol";
+
 
 contract StrategyFacet is Modifiers {
     AppStorage internal s;
@@ -24,7 +26,7 @@ contract StrategyFacet is Modifiers {
 
     function createStrategy(StrategyParameters memory _parameter) external {
        
-       if (_parameter._investToken == address(0)) {
+    if (_parameter._investToken == address(0)) {
         revert InvalidInvestToken();
     }
 
@@ -39,94 +41,7 @@ contract StrategyFacet is Modifiers {
     if (!(_parameter._floor || _parameter._sell || _parameter._buy)) {
         revert AtLeastOneOptionRequired();
     }
-    uint256 buyAt=_parameter._buyValue;
-
-    if (_parameter._buy) {
-    if (buyAt == 0) {
-        revert InvalidBuyValue();
-    }
-    if (_parameter._buyType == BuyLegType.NO_TYPE) {
-        revert InvalidBuyType();
-    }
-}
-    (uint256 price,uint80 roundId)=LibPrice.getPrice( _parameter._investToken,_parameter._stableToken);
     
-    uint256 floorAt=0;
-    if(_parameter._floor&&_parameter._floorType==FloorLegType.LIMIT_PRICE){
-      floorAt=_parameter._floorValue;
-    }
-    else if (_parameter._floor&&_parameter._floorType == FloorLegType.DECREASE_BY) {
-    uint256 floorPercentage = 100 - _parameter._floorValue;
-    floorAt = (price * floorPercentage) / 100;
-    }
-    uint256 sellAt=0;
-    if( _parameter._sell&&_parameter._sellType == SellLegType.LIMIT_PRICE){
-     sellAt=_parameter._sellValue;   
-    }
-    else if ( _parameter._sell&& _parameter._sellType == SellLegType.INCREASE_BY) {
-       uint256 sellPercentage = 100 +  _parameter._sellValue;
-       sellAt = (price * sellPercentage) / 100;
-    }
-       // Check if floor is chosen
-    if (_parameter._floor) {
-    if (floorAt == 0) {
-        revert InvalidFloorValue();
-    }
-    if (_parameter._floorType == FloorLegType.NO_TYPE) {
-        revert InvalidFloorType();
-}}
-
-       if (_parameter._sell || _parameter._str || _parameter._sellTwap) {
-            if (_parameter._sellType == SellLegType.NO_TYPE) {
-                revert InvalidSellType();
-            }
-            if (sellAt == 0) {
-                revert InvalidSellValue();
-            }
-        if(_parameter._highSellValue != 0&&(_parameter._str || _parameter._sellTwap)){
-            if (sellAt >_parameter._highSellValue) {
-                revert InvalidHighSellValue();
-            }
-       
-        }
-    }
-
-        // Check if both buy and sell are chosen
-      if (_parameter._buy && _parameter._sell) {
-    if (!(_parameter._stableAmount > 0 || _parameter._investAmount > 0)) {
-        revert BuySellAndZeroAmount();
-    }
-    if (buyAt > sellAt) {
-        revert BuyAndSellAtMisorder();
-}
-      }
-// Check if only buy is chosen
-   if (_parameter._buy && !_parameter._sell && !_parameter._floor) {
-    if (!(_parameter._stableAmount > 0)) {
-        revert InvalidStableAmount();
-}}
-
-   
-    // Check if only sell is chosen
-    if ((_parameter._sell || _parameter._floor) && !_parameter._buy) {
-    if (!(_parameter._investAmount > 0)) {
-        revert InvalidInvestAmount();
-    }
-}
-
-// Check if floor and sell are chosen
-if (_parameter._floor && _parameter._sell) {
-    if (floorAt >= sellAt) {
-        revert FloorValueGreaterThanSellValue();
-    }
-}
-
-// Check if floor and buy are chosen
-if (_parameter._floor && _parameter._buy) {
-    if (floorAt >= buyAt) {
-        revert FloorValueGreaterThanBuyValue();
-    }
-}
 
     if (_parameter._sellType == SellLegType.INCREASE_BY &&(_parameter._str || _parameter._sellTwap)) {
         revert SellPercentageWithDCA();
@@ -195,6 +110,123 @@ if (_parameter._floor && _parameter._buy) {
         revert BuyDCAUnitWithoutBuyDCAValue();
     }
 
+    (uint256 price,uint80 roundId)=LibPrice.getPrice( _parameter._investToken,_parameter._stableToken);
+
+   
+
+    
+    uint256 floorAt=0;
+    uint256 sellAt=0;
+
+
+    if(_parameter.current_price==CURRENT_PRICE.BUY_CURRENT){
+       _parameter._buyValue=price;
+       _parameter._buyType=BuyLegType.LIMIT_PRICE;   
+    }
+    else if(_parameter.current_price==CURRENT_PRICE.SELL_CURRENT){
+        _parameter._sellValue=price;
+        _parameter._sellType=SellLegType.LIMIT_PRICE;
+    }
+
+    uint256 buyAt=_parameter._buyValue;
+
+
+    if (_parameter._buy) {
+    if (buyAt == 0) {
+        revert InvalidBuyValue();
+    }
+    if (_parameter._buyType == BuyLegType.NO_TYPE) {
+        revert InvalidBuyType();
+    }
+    }
+
+
+    if(_parameter._floor&&_parameter._floorType==FloorLegType.LIMIT_PRICE){
+      floorAt=_parameter._floorValue;
+    }
+    else if (_parameter._floor&&_parameter._floorType == FloorLegType.DECREASE_BY) {
+    uint256 floorPercentage = 100 - _parameter._floorValue;
+    floorAt = (price * floorPercentage) / 100;
+    }
+    if( _parameter._sell&&_parameter._sellType == SellLegType.LIMIT_PRICE){
+     sellAt=_parameter._sellValue;   
+    }
+    else if ( _parameter._sell&& _parameter._sellType == SellLegType.INCREASE_BY) {
+       uint256 sellPercentage = 100 +  _parameter._sellValue;
+       sellAt = (price * sellPercentage) / 100;
+    }
+       // Check if floor is chosen
+    if (_parameter._floor) {
+    if (floorAt == 0) {
+        revert InvalidFloorValue();
+    }
+    if (_parameter._floorType == FloorLegType.NO_TYPE) {
+        revert InvalidFloorType();
+    }
+    }
+
+    if (_parameter._sell || _parameter._str || _parameter._sellTwap) {
+            if (_parameter._sellType == SellLegType.NO_TYPE) {
+                revert InvalidSellType();
+            }
+            if (sellAt == 0) {
+                revert InvalidSellValue();
+            }
+        if(_parameter._highSellValue != 0&&(_parameter._str || _parameter._sellTwap)){
+            if (sellAt >_parameter._highSellValue) {
+                revert InvalidHighSellValue();
+            }
+       
+        }
+    }
+
+    // Check if both buy and sell are chosen
+    if (_parameter._buy && _parameter._sell) {
+    if (!(_parameter._stableAmount > 0 || _parameter._investAmount > 0)) {
+        revert BuySellAndZeroAmount();
+    }
+    if (buyAt > sellAt&&_parameter._sellType == SellLegType.LIMIT_PRICE) {
+        revert BuyAndSellAtMisorder();
+        }
+    }
+// Check if only buy is chosen
+   if (_parameter._buy && !_parameter._sell && !_parameter._floor) {
+    if (!(_parameter._stableAmount > 0)) {
+        revert InvalidStableAmount();
+}}
+
+if (_parameter._buy && !_parameter._sell && !_parameter._floor) {
+    if (_parameter._investAmount > 0) {
+        revert OrphandStrategy();
+}}
+if (!_parameter._buy && _parameter._sell && _parameter._floor) {
+    if (_parameter._stableAmount > 0) {
+        revert OrphandStrategy();
+}}
+
+
+
+   
+    // Check if only sell is chosen
+if ((_parameter._sell || _parameter._floor) && _parameter._investAmount>0&&(_parameter._completeOnSell||_parameter._cancelOnFloor)&&_parameter._buy) {
+            revert BuyNeverExecute();
+}
+
+// Check if floor and sell are chosen
+if (_parameter._floor && _parameter._sell&&_parameter._sellType == SellLegType.LIMIT_PRICE&&_parameter._floorType == FloorLegType.LIMIT_PRICE) {
+    if (floorAt >= sellAt) {
+        revert FloorValueGreaterThanSellValue();
+    }
+}
+
+// Check if floor and buy are chosen
+if (_parameter._floor && _parameter._buy&&_parameter._floorType == FloorLegType.LIMIT_PRICE) {
+    if (floorAt >= buyAt) {
+        revert FloorValueGreaterThanBuyValue();
+    }
+}
+
+    
     if (_parameter._slippage > LibTrade.MAX_PERCENTAGE) {
             revert InvalidSlippage();
     }
@@ -222,9 +254,16 @@ if (_parameter._floor && _parameter._buy) {
     }
         buyPercentageAmount = (_parameter._buyDCAValue * _parameter._stableAmount) / 100;
     }
-    
 
+    uint256 budget = 0;
 
+    if (_parameter._investAmount > 0) {
+        budget = _parameter._investAmount * price;
+    }
+
+    if (_parameter._stableAmount > 0) {
+        budget += _parameter._stableAmount;
+    }
 
         s.strategies[s.nextStrategyId] = Strategy({
            user: msg.sender,
@@ -241,13 +280,16 @@ if (_parameter._floor && _parameter._buy) {
            roundId:roundId,
            parameters: _parameter,
            investPrice:price,
+           profit:0,
+           budget:budget,
+           totalBuyDCAInvestment:0,
+           totalSellDCAInvestment:0,
            status: Status.ACTIVE
         });
 
         s.nextStrategyId++;
-        if(_parameter.current_price!=CURRENT_PRICE.NOT_SELECTED){
 
-        }
+  
         emit StrategyCreated(_parameter._investToken, _parameter._stableToken, _parameter);
     }
 
@@ -257,6 +299,11 @@ if (_parameter._floor && _parameter._buy) {
 
     function getStrategy(uint256 id) external view returns (Strategy memory){
         return s.strategies[id];
+    }
+
+    function cancelStrategy(uint256 id) external view{
+        Strategy memory strategy= s.strategies[id];
+        strategy.status=Status.CANCELLED;
     }
     
  /**

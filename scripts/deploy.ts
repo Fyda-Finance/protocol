@@ -41,7 +41,9 @@ async function deployDiamond(contractOwner?: SignerWithAddress) {
     "DiamondLoupeFacet",
     "OwnershipFacet",
     "StrategyFacet",
-    "TradeFacet",
+    "BuyFacet",
+    "SellFacet",
+    "FloorFacet",
   ];
   const cut = [];
   for (const FacetName of FacetNames) {

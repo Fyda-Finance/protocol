@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 enum Status {
-        ACTIVE,
-        CANCELLED,
-        COMPLETED
+    ACTIVE,
+    CANCELLED,
+    COMPLETED
 }
 
 enum FloorLegType {
@@ -15,14 +15,12 @@ enum FloorLegType {
 
 enum BuyLegType {
   NO_TYPE,
-  LIMIT_PRICE,
-  CURRENT_PRICE 
+  LIMIT_PRICE
 }
 enum SellLegType {
   NO_TYPE,
   LIMIT_PRICE,
-  INCREASE_BY,
-  CURRENT_PRICE
+  INCREASE_BY
 }
 
 enum DIP_SPIKE {
@@ -105,6 +103,10 @@ struct Strategy {
     uint256 timestamp;
     uint80 roundId;
     uint256 investPrice;
+    uint256 profit;
+    uint256 budget;
+    uint256 totalBuyDCAInvestment;
+    uint256 totalSellDCAInvestment;
     Status status;
 }
 

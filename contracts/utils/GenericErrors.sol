@@ -48,8 +48,8 @@ error InvalidHighSellValue();
 error SellDCAValueRangeIsNotValid();
 error DCAValueShouldBeLessThanIntitialAmount();
 error BuyDCAValueRangeIsNotValid();
-
-
+error OrphandStrategy();
+error BuyNeverExecute();
 
 
 

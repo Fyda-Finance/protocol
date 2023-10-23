@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE  } from "../AppStorage.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE,SellLegType, CURRENT_PRICE  } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
@@ -22,6 +23,13 @@ contract SellFacet is Modifiers {
         }
       
         (uint256 price,uint80 roundId) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
+        if(strategy.parameters.current_price==CURRENT_PRICE.SELL_CURRENT){
+            strategy.parameters._sellValue=price;
+            strategy.sellAt=price;
+            strategy.parameters._sellType=SellLegType.LIMIT_PRICE;
+            strategy.parameters.current_price=CURRENT_PRICE.NOT_SELECTED;
+               
+        }
         uint256 sellValue=strategy.sellAt;
 
         if(strategy.parameters._highSellValue!=0&&(strategy.parameters._str||strategy.parameters._sellTwap)){
@@ -58,7 +66,13 @@ contract SellFacet is Modifiers {
             revert();
         }
         (uint256 price,uint80 roundId) = LibPrice.getPrice(strategy.parameters._stableToken, strategy.parameters._investToken);
-        
+        if(strategy.parameters.current_price==CURRENT_PRICE.SELL_CURRENT){
+            strategy.parameters._sellValue=price;
+            strategy.sellAt=price;
+            strategy.parameters._sellType=SellLegType.LIMIT_PRICE;
+            strategy.parameters.current_price=CURRENT_PRICE.NOT_SELECTED;
+               
+        }
         uint256 value=0;
         if(strategy.parameters._sellDCAUnit==DCA_UNIT.FIXED){
            if(strategy.parameters._investAmount>strategy.parameters._sellValue){
@@ -88,6 +102,15 @@ contract SellFacet is Modifiers {
         if(strategy.parameters._investAmount==0){
                revert NoSwapFromZeroBalance();
         }
+   (uint256 price,uint80 roundId) = LibPrice.getPrice(strategy.parameters._investToken,strategy.parameters._stableToken);
+      
+       if(strategy.parameters.current_price==CURRENT_PRICE.SELL_CURRENT){
+            strategy.parameters._sellValue=price;
+            strategy.sellAt=price;
+            strategy.parameters._sellType=SellLegType.LIMIT_PRICE;
+            strategy.parameters.current_price=CURRENT_PRICE.NOT_SELECTED;
+               
+        }
          
         uint256 highSellValue=strategy.parameters._highSellValue;
         if(strategy.parameters._highSellValue==0){
@@ -95,7 +118,6 @@ contract SellFacet is Modifiers {
         }
         checkRoundDataMistmatch(strategy,fromRoundId,toRoundId);
         // uint256 botPrice=LibPrice.getRoundData(botRoundId, strategy.parameters._investToken,strategy.parameters._stableToken);
-        (uint256 price,uint80 roundId) = LibPrice.getPrice(strategy.parameters._investToken,strategy.parameters._stableToken);
         uint256 sellValue=strategy.sellAt;
         if(strategy.strLastTrackedPrice!=0){
            sellValue=strategy.strLastTrackedPrice;
@@ -200,6 +222,24 @@ contract SellFacet is Modifiers {
         if(!strategy.parameters._str){
             LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, false);
         }
+
+      strategy.totalSellDCAInvestment = strategy.totalSellDCAInvestment + toTokenAmount;
+      strategy.parameters._investAmount = strategy.parameters._investAmount - value;
+      strategy.parameters._stableAmount = strategy.parameters._stableAmount + toTokenAmount;
+
+      uint256 totalInvestAmount = strategy.parameters._investAmount * strategy.investPrice;
+      uint256 sum = strategy.parameters._stableAmount + totalInvestAmount;
+
+    if (strategy.budget < sum) {
+        strategy.parameters._stableAmount = strategy.budget - totalInvestAmount;
+
+        if (strategy.profit == 0) {
+            strategy.profit = 0;
+        }
+
+        strategy.profit = sum - strategy.budget + strategy.profit;
+    }
+
         
 
         strategy.timestamp=block.timestamp;
@@ -216,6 +256,9 @@ contract SellFacet is Modifiers {
      if(fromRoundId==0||toRoundId==0||strategy.strLastTrackedPrice==0){
         return;
      }
+
+     uint8 decimals = IERC20Metadata(strategy.parameters._stableToken).decimals();
+     int256 priceDecimals = int256(100*(10 ** uint256(decimals)));
      uint256 fromPrice=LibPrice.getRoundData(fromRoundId, strategy.parameters._investToken,strategy.parameters._stableToken);
      uint256 toPrice=LibPrice.getRoundData(toRoundId, strategy.parameters._investToken,strategy.parameters._stableToken);
      if(strategy.parameters._strType==DIP_SPIKE.FIXED_INCREASE){
@@ -230,12 +273,12 @@ contract SellFacet is Modifiers {
          }    
      }
      else if(strategy.parameters._strType==DIP_SPIKE.INCREASE_BY){
-      if(!(int(strategy.parameters._strValue)>=(int(toPrice-fromPrice)/int(fromPrice)))){
+      if(!(int(strategy.parameters._strValue)>=(int256(toPrice - fromPrice) * priceDecimals / int256(fromPrice)))){
         revert();
       }
      }
      else if(strategy.parameters._strType==DIP_SPIKE.DECREASE_BY){
-          if(!(int(strategy.parameters._strValue)>=(int(fromPrice-toPrice)/int(fromPrice)))){
+          if(!(int(strategy.parameters._strValue)>=(int256(fromPrice-toPrice) * priceDecimals / int256(fromPrice)))){
         revert();
       }
      }
