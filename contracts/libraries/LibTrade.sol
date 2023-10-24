@@ -18,7 +18,7 @@ library LibTrade {
         address fromAsset,
         uint256 fromAmount,
         uint256 toAmount
-    ) public view returns (uint256) {
+    ) internal view returns (uint256) {
         IERC20Metadata _fromToken = IERC20Metadata(fromAsset);
         uint256 fromDecimals = _fromToken.decimals();
         return ((toAmount * (10**fromDecimals)) / fromAmount);
@@ -29,7 +29,7 @@ library LibTrade {
         uint256 price,
         uint256 maxSlippage,
         bool isBuy
-    ) public pure {
+    ) internal pure {
         uint256 slippage = (price * MAX_PERCENTAGE) / exchangeRate;
 
         if (isBuy && slippage < MAX_PERCENTAGE && MAX_PERCENTAGE - slippage > maxSlippage) revert HighSlippage();
