@@ -25,6 +25,10 @@ error RoundDataDoesNotMatch();
  */
 
 contract BuyFacet is Modifiers {
+    struct Swap {
+        address dex;
+        bytes callData;
+    }
   /**
    * @notice The `AppStorage` state variable serves as the central data repository for this contract. Please
    * please look at AppStorage.sol for more detail
@@ -257,23 +261,21 @@ contract BuyFacet is Modifiers {
    * @notice Executes a Buy-The-Dip (BTD) trading strategy action within a specified price range.
    * This function allows the strategy to buy the invest token when its price decreases to a certain target value, following a specified DIP strategy type.
    * @param strategyId The unique ID of the trading strategy where the BTD action is executed.
-   * @param dex The address of the decentralized exchange (DEX) used for the execution.
-   * @param callData The calldata containing data for interacting with the DEX during the execution.
    * @param fromInvestRoundId The starting invest round ID for monitoring price fluctuations.
    * @param toInvestRoundId The ending invest round ID for monitoring price fluctuations.
    * @param fromStableRoundId The starting stable round ID for monitoring price fluctuations.
    * @param toStableRoundId The ending stable round ID for monitoring price fluctuations.
+    * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    
    */
 
   function executeBTD(
     uint256 strategyId,
-    address dex,
-    bytes calldata callData,
     uint80 fromInvestRoundId,
     uint80 fromStableRoundId,
     uint80 toInvestRoundId,
-    uint80 toStableRoundId
+    uint80 toStableRoundId,
+    Swap calldata swap
   ) external {
     Strategy storage strategy = s.strategies[strategyId];
     if (!strategy.parameters._btd) {
@@ -322,8 +324,8 @@ contract BuyFacet is Modifiers {
         transferBuy(
           strategy,
           value,
-          dex,
-          callData,
+          swap.dex,
+          swap.callData,
           price,
           investRoundId,
           stableRoundId,
@@ -347,8 +349,8 @@ contract BuyFacet is Modifiers {
             transferBuy(
               strategy,
               value,
-              dex,
-              callData,
+              swap.dex,
+              swap.callData,
               price,
               investRoundId,
               stableRoundId,
@@ -364,8 +366,8 @@ contract BuyFacet is Modifiers {
             transferBuy(
               strategy,
               value,
-              dex,
-              callData,
+              swap.dex,
+              swap.callData,
               price,
               investRoundId,
               stableRoundId,
@@ -390,8 +392,8 @@ contract BuyFacet is Modifiers {
             transferBuy(
               strategy,
               value,
-              dex,
-              callData,
+              swap.dex,
+              swap.callData,
               price,
               investRoundId,
               stableRoundId,
@@ -411,8 +413,8 @@ contract BuyFacet is Modifiers {
             transferBuy(
               strategy,
               value,
-              dex,
-              callData,
+              swap.dex,
+              swap.callData,
               price,
               investRoundId,
               stableRoundId,
@@ -465,7 +467,7 @@ contract BuyFacet is Modifiers {
       uint256 sellPercentage = 100 + strategy.parameters._sellValue;
       strategy.sellAt = (strategy.investPrice * sellPercentage) / 100;
     }
-    emit BTDExecuted(strategyId, dex, callData, price, block.timestamp);
+    emit BTDExecuted(strategyId, swap.dex, swap.callData, price, block.timestamp);
   }
 
   /**
