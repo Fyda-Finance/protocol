@@ -10,49 +10,66 @@ import { InvalidPrice, FeedNotFound } from "../utils/GenericErrors.sol";
 import { AppStorage } from "../AppStorage.sol";
 
 library LibPrice {
-    address constant USD_QUOTE = 0x0000000000000000000000000000000000000348;
+  address constant USD_QUOTE = 0x0000000000000000000000000000000000000348;
 
-    function getPrice(address asset, address unit) internal view returns (uint256, uint80) {
-        AppStorage storage s = LibDiamond.diamondStorage();
+  function getPrice(address asset, address unit)
+    internal
+    view
+    returns (
+      uint256,
+      uint80,
+      uint80
+    )
+  {
+    AppStorage storage s = LibDiamond.diamondStorage();
 
-        if (s.feeds[asset] == address(0) || s.feeds[unit] == address(0)) {
-            revert FeedNotFound();
-        }
-
-        (uint80 roundId, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).latestRoundData();
-        (, int256 unitPrice, , , ) = AggregatorV2V3Interface(s.feeds[unit]).latestRoundData();
-
-        if (assetPrice == 0 || unitPrice == 0) {
-            revert InvalidPrice();
-        }
-
-        uint256 unitDecimals = IERC20Metadata(unit).decimals();
-        uint256 price = (uint256(assetPrice) * (10**unitDecimals)) / uint256(unitPrice);
-
-        return (price, roundId);
+    if (s.feeds[asset] == address(0) || s.feeds[unit] == address(0)) {
+      revert FeedNotFound();
     }
 
-    function getRoundData(
-        uint80 roundId,
-        address asset,
-        address unit
-    ) internal view returns (uint256) {
-        AppStorage storage s = LibDiamond.diamondStorage();
+    (uint80 investRoundId, int256 assetPrice, , , ) = AggregatorV2V3Interface(
+      s.feeds[asset]
+    ).latestRoundData();
+    (uint80 stableRoundId, int256 unitPrice, , , ) = AggregatorV2V3Interface(
+      s.feeds[unit]
+    ).latestRoundData();
 
-        if (s.feeds[asset] == address(0) || s.feeds[unit] == address(0)) {
-            revert FeedNotFound();
-        }
-
-        (, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).getRoundData(roundId);
-        (, int256 unitPrice, , , ) = AggregatorV2V3Interface(s.feeds[unit]).getRoundData(roundId);
-
-        if (assetPrice == 0 || unitPrice == 0) {
-            revert InvalidPrice();
-        }
-
-        uint256 unitDecimals = IERC20Metadata(unit).decimals();
-        uint256 price = (uint256(assetPrice) * (10**unitDecimals)) / uint256(unitPrice);
-
-        return price;
+    if (assetPrice == 0 || unitPrice == 0) {
+      revert InvalidPrice();
     }
+
+    uint256 unitDecimals = IERC20Metadata(unit).decimals();
+    uint256 price = (uint256(assetPrice) * (10**unitDecimals)) /
+      uint256(unitPrice);
+
+    return (price, investRoundId, stableRoundId);
+  }
+
+  function getRoundData(
+    uint80 investRoundId,
+    uint80 stableRoundId,
+    address asset,
+    address unit
+  ) internal view returns (uint256) {
+    AppStorage storage s = LibDiamond.diamondStorage();
+
+    if (s.feeds[asset] == address(0) || s.feeds[unit] == address(0)) {
+      revert FeedNotFound();
+    }
+
+    (, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset])
+    .getRoundData(investRoundId);
+    (, int256 unitPrice, , , ) = AggregatorV2V3Interface(s.feeds[unit])
+    .getRoundData(stableRoundId);
+
+    if (assetPrice == 0 || unitPrice == 0) {
+      revert InvalidPrice();
+    }
+
+    uint256 unitDecimals = IERC20Metadata(unit).decimals();
+    uint256 price = (uint256(assetPrice) * (10**unitDecimals)) /
+      uint256(unitPrice);
+
+    return price;
+  }
 }

@@ -158,10 +158,8 @@ contract StrategyFacet is Modifiers {
       revert BuyDCAUnitWithoutBuyDCAValue();
     }
 
-    (uint256 price, uint80 roundId) = LibPrice.getPrice(
-      _parameter._investToken,
-      _parameter._stableToken
-    );
+    (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+    .getPrice(_parameter._investToken, _parameter._stableToken);
 
     if (_parameter.current_price == CURRENT_PRICE.BUY_CURRENT) {
       _parameter._buyValue = price;
@@ -364,7 +362,8 @@ contract StrategyFacet is Modifiers {
       buyPercentageAmount: buyPercentageAmount,
       buyTwapExecutedAt: block.timestamp,
       timestamp: block.timestamp,
-      roundId: roundId,
+      investRoundId: investRoundId,
+      stableRoundId: stableRoundId,
       parameters: _parameter,
       investPrice: price,
       profit: 0,

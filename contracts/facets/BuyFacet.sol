@@ -101,7 +101,8 @@ contract BuyFacet is Modifiers {
     if (strategy.parameters._stableAmount == 0) {
       revert NoSwapFromZeroBalance();
     }
-    (uint256 price, uint80 roundId) = LibPrice.getPrice(
+    (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+    .getPrice(
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
@@ -118,7 +119,8 @@ contract BuyFacet is Modifiers {
       dex,
       callData,
       price,
-      roundId,
+      investRoundId,
+      stableRoundId,
       strategy.buyAt
     );
 
@@ -164,7 +166,8 @@ contract BuyFacet is Modifiers {
       revert NoSwapFromZeroBalance();
     }
 
-    (uint256 price, uint80 roundId) = LibPrice.getPrice(
+    (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+    .getPrice(
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
@@ -179,12 +182,13 @@ contract BuyFacet is Modifiers {
       strategy.parameters._buyTwapTime,
       strategy.parameters._buyTwapTimeUnit
     );
-    bool canExecute = LibTime.getTimeDifference(
-      block.timestamp,
-      strategy.buyTwapExecutedAt,
-      timeToExecute
-    );
-    if (!canExecute) {
+    if (
+      !LibTime.getTimeDifference(
+        block.timestamp,
+        strategy.buyTwapExecutedAt,
+        timeToExecute
+      )
+    ) {
       revert ExpectedTimeNotElapsed();
     }
 
@@ -198,7 +202,16 @@ contract BuyFacet is Modifiers {
     } else if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
       value = strategy.buyPercentageAmount;
     }
-    transferBuy(strategy, value, dex, callData, price, roundId, strategy.buyAt);
+    transferBuy(
+      strategy,
+      value,
+      dex,
+      callData,
+      price,
+      investRoundId,
+      stableRoundId,
+      strategy.buyAt
+    );
     strategy.buyTwapExecutedAt = block.timestamp;
     if (
       !strategy.parameters._sell &&
@@ -210,14 +223,11 @@ contract BuyFacet is Modifiers {
 
     strategy.totalBuyDCAInvestment = strategy.totalBuyDCAInvestment + value;
 
-    uint256 prevInvestAmount = strategy.parameters._investAmount;
+    uint256 previousValue = strategy.parameters._investAmount *
+      strategy.investPrice;
     strategy.parameters._investAmount =
       strategy.parameters._investAmount +
       value;
-
-    uint256 prevInvestPrice = strategy.investPrice;
-
-    uint256 previousValue = prevInvestAmount * prevInvestPrice;
     uint256 newValue = value * price;
 
     uint8 decimals = IERC20Metadata(strategy.parameters._stableToken)
@@ -249,16 +259,21 @@ contract BuyFacet is Modifiers {
    * @param strategyId The unique ID of the trading strategy where the BTD action is executed.
    * @param dex The address of the decentralized exchange (DEX) used for the execution.
    * @param callData The calldata containing data for interacting with the DEX during the execution.
-   * @param fromRoundId The starting round ID for monitoring price fluctuations.
-   * @param toRoundId The ending round ID for monitoring price fluctuations.
+   * @param fromInvestRoundId The starting invest round ID for monitoring price fluctuations.
+   * @param toInvestRoundId The ending invest round ID for monitoring price fluctuations.
+   * @param fromStableRoundId The starting stable round ID for monitoring price fluctuations.
+   * @param toStableRoundId The ending stable round ID for monitoring price fluctuations.
+   
    */
 
   function executeBTD(
     uint256 strategyId,
     address dex,
     bytes calldata callData,
-    uint80 fromRoundId,
-    uint80 toRoundId
+    uint80 fromInvestRoundId,
+    uint80 fromStableRoundId,
+    uint80 toInvestRoundId,
+    uint80 toStableRoundId
   ) external {
     Strategy storage strategy = s.strategies[strategyId];
     if (!strategy.parameters._btd) {
@@ -267,8 +282,15 @@ contract BuyFacet is Modifiers {
     if (strategy.parameters._stableAmount == 0) {
       revert NoSwapFromZeroBalance();
     }
-    checkRoundDataMistmatch(strategy, fromRoundId, toRoundId);
-    (uint256 price, uint80 roundId) = LibPrice.getPrice(
+    checkRoundDataMistmatch(
+      strategy,
+      fromInvestRoundId,
+      fromStableRoundId,
+      toInvestRoundId,
+      toStableRoundId
+    );
+    (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+    .getPrice(
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
@@ -293,10 +315,20 @@ contract BuyFacet is Modifiers {
         value = strategy.parameters._stableAmount;
       }
     }
+    uint256 priceToBTD;
     if (strategy.btdLastTrackedPrice == 0) {
       if (price < strategy.buyAt) {
         strategy.btdLastTrackedPrice = price;
-        transferBuy(strategy, value, dex, callData, price, roundId, buyValue);
+        transferBuy(
+          strategy,
+          value,
+          dex,
+          callData,
+          price,
+          investRoundId,
+          stableRoundId,
+          buyValue
+        );
       }
     } else {
       if (
@@ -306,8 +338,9 @@ contract BuyFacet is Modifiers {
         if (strategy.btdLastTrackedPrice > price) {
           strategy.btdLastTrackedPrice = price;
         } else if (strategy.parameters._btdType == DIP_SPIKE.DECREASE_BY) {
-          uint256 buyPercentage = 100 - strategy.parameters._btdValue;
-          uint256 priceToBTD = (buyPercentage * strategy.btdLastTrackedPrice) /
+          priceToBTD =
+            ((100 - strategy.parameters._btdValue) *
+              strategy.btdLastTrackedPrice) /
             100;
           if (priceToBTD <= price) {
             strategy.btdLastTrackedPrice = price;
@@ -317,12 +350,14 @@ contract BuyFacet is Modifiers {
               dex,
               callData,
               price,
-              roundId,
+              investRoundId,
+              stableRoundId,
               buyValue
             );
           }
         } else if (strategy.parameters._btdType == DIP_SPIKE.FIXED_DECREASE) {
-          uint256 priceToBTD = strategy.btdLastTrackedPrice -
+          priceToBTD =
+            strategy.btdLastTrackedPrice -
             strategy.parameters._btdValue;
           if (priceToBTD <= price) {
             strategy.btdLastTrackedPrice = price;
@@ -332,7 +367,8 @@ contract BuyFacet is Modifiers {
               dex,
               callData,
               price,
-              roundId,
+              investRoundId,
+              stableRoundId,
               buyValue
             );
           }
@@ -344,8 +380,9 @@ contract BuyFacet is Modifiers {
         if (strategy.btdLastTrackedPrice < price) {
           strategy.btdLastTrackedPrice = price;
         } else if (strategy.parameters._btdType == DIP_SPIKE.INCREASE_BY) {
-          uint256 buyPercentage = 100 + strategy.parameters._btdValue;
-          uint256 priceToBTD = (buyPercentage * strategy.strLastTrackedPrice) /
+          priceToBTD =
+            ((100 + strategy.parameters._btdValue) *
+              strategy.strLastTrackedPrice) /
             100;
           if (price > strategy.buyAt) {
             strategy.btdLastTrackedPrice = price;
@@ -356,13 +393,15 @@ contract BuyFacet is Modifiers {
               dex,
               callData,
               price,
-              roundId,
+              investRoundId,
+              stableRoundId,
               buyValue
             );
             strategy.btdLastTrackedPrice = price;
           }
         } else if (strategy.parameters._btdType == DIP_SPIKE.FIXED_INCREASE) {
-          uint256 priceToBTD = strategy.btdLastTrackedPrice +
+          priceToBTD =
+            strategy.btdLastTrackedPrice +
             strategy.parameters._btdValue;
 
           if (price > strategy.buyAt) {
@@ -375,7 +414,8 @@ contract BuyFacet is Modifiers {
               dex,
               callData,
               price,
-              roundId,
+              investRoundId,
+              stableRoundId,
               buyValue
             );
           }
@@ -399,14 +439,11 @@ contract BuyFacet is Modifiers {
 
     strategy.totalBuyDCAInvestment = strategy.totalBuyDCAInvestment + value;
 
-    uint256 prevInvestAmount = strategy.parameters._investAmount;
+    uint256 previousValue = strategy.parameters._investAmount *
+      strategy.investPrice;
     strategy.parameters._investAmount =
       strategy.parameters._investAmount +
       value;
-
-    uint256 prevInvestPrice = strategy.investPrice;
-
-    uint256 previousValue = prevInvestAmount * prevInvestPrice;
     uint256 newValue = value * price;
 
     uint8 decimals = IERC20Metadata(strategy.parameters._stableToken)
@@ -439,7 +476,8 @@ contract BuyFacet is Modifiers {
    * @param dex The address of the decentralized exchange (DEX) used for the execution.
    * @param callData The calldata for interacting with the DEX during the execution.
    * @param price The current price of the investment token.
-   * @param roundId The round ID associated with the current price data.
+   * @param investRoundId The invest round ID associated with the current price data.
+   * @param stableRoundId The stable round ID associated with the current price data.
    * @param buyValue The target price at which the "Buy" action should be executed.
    */
 
@@ -449,7 +487,8 @@ contract BuyFacet is Modifiers {
     address dex,
     bytes calldata callData,
     uint256 price,
-    uint80 roundId,
+    uint80 investRoundId,
+    uint80 stableRoundId,
     uint256 buyValue
   ) internal {
     if (
@@ -482,7 +521,8 @@ contract BuyFacet is Modifiers {
     strategy.timestamp = block.timestamp;
     strategy.parameters._investAmount += toTokenAmount;
     strategy.parameters._stableAmount -= value;
-    strategy.roundId = roundId;
+    strategy.investRoundId = investRoundId;
+    strategy.stableRoundId = stableRoundId;
     if (
       (strategy.parameters._sellTwap || strategy.parameters._str) &&
       strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE
@@ -498,11 +538,15 @@ contract BuyFacet is Modifiers {
 
   function checkRoundDataMistmatch(
     Strategy memory strategy,
-    uint80 fromRoundId,
-    uint80 toRoundId
+    uint80 fromInvestRoundId,
+    uint80 fromStableRoundId,
+    uint80 toInvestRoundId,
+    uint80 toStableRoundId
   ) internal view {
     if (
-      fromRoundId == 0 || toRoundId == 0 || strategy.strLastTrackedPrice == 0
+      fromInvestRoundId == 0 ||
+      toInvestRoundId == 0 ||
+      strategy.strLastTrackedPrice == 0
     ) {
       return;
     }
@@ -511,12 +555,14 @@ contract BuyFacet is Modifiers {
     int256 priceDecimals = int256(100 * (10**uint256(decimals)));
 
     uint256 fromPrice = LibPrice.getRoundData(
-      fromRoundId,
+      fromInvestRoundId,
+      fromStableRoundId,
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
     uint256 toPrice = LibPrice.getRoundData(
-      toRoundId,
+      toInvestRoundId,
+      toStableRoundId,
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );

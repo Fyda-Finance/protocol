@@ -225,8 +225,10 @@ struct Strategy {
   uint256 buyTwapExecutedAt;
   //  @param timestamp The timestamp of the strategy's creation or last update.
   uint256 timestamp;
-  // @param roundId The Chainlink VRF (Verifiable Random Function) round ID.
-  uint80 roundId;
+  // @param invest roundId The Chainlink VRF (Verifiable Random Function) round ID.
+  uint80 investRoundId;
+  // @param stable roundId The Chainlink VRF (Verifiable Random Function) round ID.
+  uint80 stableRoundId;
   // @param investPrice The price at which investment is made.
   //While creating strategy it is set to the current price
   uint256 investPrice;

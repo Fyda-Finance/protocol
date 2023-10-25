@@ -103,7 +103,8 @@ contract SellFacet is Modifiers {
     }
 
     // Retrieve the latest price and round ID from Chainlink.
-    (uint256 price, uint80 roundId) = LibPrice.getPrice(
+    (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+    .getPrice(
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
@@ -141,7 +142,8 @@ contract SellFacet is Modifiers {
       dex,
       callData,
       price,
-      roundId,
+      investRoundId,
+      stableRoundId,
       sellValue
     );
 
@@ -180,7 +182,8 @@ contract SellFacet is Modifiers {
     }
 
     // Retrieve the latest price and round ID from Chainlink.
-    (uint256 price, uint80 roundId) = LibPrice.getPrice(
+    (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+    .getPrice(
       strategy.parameters._stableToken,
       strategy.parameters._investToken
     );
@@ -218,13 +221,14 @@ contract SellFacet is Modifiers {
       strategy.parameters._sellTwapTime,
       strategy.parameters._sellTwapTimeUnit
     );
-    bool canExecute = LibTime.getTimeDifference(
-      block.timestamp,
-      strategy.sellTwapExecutedAt,
-      timeToExecute
-    );
 
-    if (!canExecute) {
+    if (
+      !LibTime.getTimeDifference(
+        block.timestamp,
+        strategy.sellTwapExecutedAt,
+        timeToExecute
+      )
+    ) {
       revert();
     }
 
@@ -236,7 +240,8 @@ contract SellFacet is Modifiers {
       dex,
       callData,
       price,
-      roundId,
+      investRoundId,
+      stableRoundId,
       strategy.sellAt
     );
 
@@ -254,15 +259,20 @@ contract SellFacet is Modifiers {
    * @param strategyId The unique ID of the strategy to execute the STR actions for.
    * @param dex The address of the DEX (Decentralized Exchange) to use for the STR actions.
    * @param callData The calldata for interacting with the DEX.
-   * @param fromRoundId The starting round ID for price data.
-   * @param toRoundId The ending round ID for price data.
+   * @param fromInvestRoundId The starting invest round ID for price data.
+   * @param toInvestRoundId The ending invest round ID for price data.
+   * @param fromStableRoundId The starting stable round ID for price data.
+   * @param toStableRoundId The ending stable round ID for price data.
+   
    */
   function executeSTR(
     uint256 strategyId,
     address dex,
     bytes calldata callData,
-    uint80 fromRoundId,
-    uint80 toRoundId
+    uint80 fromInvestRoundId,
+    uint80 fromStableRoundId,
+    uint80 toInvestRoundId,
+    uint80 toStableRoundId
   ) public {
     // Retrieve the strategy details.
     Strategy storage strategy = s.strategies[strategyId];
@@ -278,7 +288,8 @@ contract SellFacet is Modifiers {
     }
 
     // Retrieve the latest price and round ID from Chainlink.
-    (uint256 price, uint80 roundId) = LibPrice.getPrice(
+    (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+    .getPrice(
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
@@ -296,7 +307,13 @@ contract SellFacet is Modifiers {
     if (strategy.parameters._highSellValue == 0) {
       highSellValue = type(uint256).max;
     }
-    checkRoundDataMistmatch(strategy, fromRoundId, toRoundId);
+    checkRoundDataMistmatch(
+      strategy,
+      fromInvestRoundId,
+      fromStableRoundId,
+      toInvestRoundId,
+      toStableRoundId
+    );
     // uint256 botPrice=LibPrice.getRoundData(botRoundId, strategy.parameters._investToken,strategy.parameters._stableToken);
     uint256 sellValue = strategy.sellAt;
     if (strategy.strLastTrackedPrice != 0) {
@@ -313,9 +330,19 @@ contract SellFacet is Modifiers {
       value = strategy.sellPercentageAmount;
     }
 
+    uint256 priceToSTR;
     if (strategy.strLastTrackedPrice == 0) {
       if (price >= strategy.sellAt && price < highSellValue) {
-        transferSell(strategy, value, dex, callData, price, roundId, sellValue);
+        transferSell(
+          strategy,
+          value,
+          dex,
+          callData,
+          price,
+          investRoundId,
+          stableRoundId,
+          sellValue
+        );
         strategy.strLastTrackedPrice = price;
       }
     } else {
@@ -326,8 +353,9 @@ contract SellFacet is Modifiers {
         if (strategy.strLastTrackedPrice > price) {
           strategy.strLastTrackedPrice = price;
         } else if (strategy.parameters._strType == DIP_SPIKE.DECREASE_BY) {
-          uint256 sellPercentage = 100 - strategy.parameters._strValue;
-          uint256 priceToSTR = (sellPercentage * strategy.strLastTrackedPrice) /
+          priceToSTR =
+            ((100 - strategy.parameters._strValue) *
+              strategy.strLastTrackedPrice) /
             100;
           if (priceToSTR <= price) {
             transferSell(
@@ -336,13 +364,15 @@ contract SellFacet is Modifiers {
               dex,
               callData,
               price,
-              roundId,
+              investRoundId,
+              stableRoundId,
               sellValue
             );
             strategy.strLastTrackedPrice = price;
           }
         } else if (strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE) {
-          uint256 priceToSTR = strategy.strLastTrackedPrice -
+          priceToSTR =
+            strategy.strLastTrackedPrice -
             strategy.parameters._strValue;
           if (priceToSTR <= price) {
             transferSell(
@@ -351,7 +381,8 @@ contract SellFacet is Modifiers {
               dex,
               callData,
               price,
-              roundId,
+              investRoundId,
+              stableRoundId,
               sellValue
             );
             strategy.strLastTrackedPrice = price;
@@ -364,8 +395,9 @@ contract SellFacet is Modifiers {
         if (strategy.strLastTrackedPrice < price) {
           strategy.strLastTrackedPrice = price;
         } else if (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY) {
-          uint256 sellPercentage = 100 + strategy.parameters._strValue;
-          uint256 priceToSTR = (sellPercentage * strategy.strLastTrackedPrice) /
+          priceToSTR =
+            ((100 + strategy.parameters._strValue) *
+              strategy.strLastTrackedPrice) /
             100;
           if (price > highSellValue) {
             strategy.strLastTrackedPrice = price;
@@ -376,13 +408,15 @@ contract SellFacet is Modifiers {
               dex,
               callData,
               price,
-              roundId,
+              investRoundId,
+              stableRoundId,
               sellValue
             );
             strategy.strLastTrackedPrice = price;
           }
         } else if (strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE) {
-          uint256 priceToSTR = strategy.strLastTrackedPrice +
+          priceToSTR =
+            strategy.strLastTrackedPrice +
             strategy.parameters._strValue;
 
           if (price > highSellValue) {
@@ -394,7 +428,8 @@ contract SellFacet is Modifiers {
               dex,
               callData,
               price,
-              roundId,
+              investRoundId,
+              stableRoundId,
               sellValue
             );
             strategy.strLastTrackedPrice = price;
@@ -418,7 +453,8 @@ contract SellFacet is Modifiers {
    * @param dex The address of the DEX to use for the swap.
    * @param callData The calldata for interacting with the DEX.
    * @param price The current market price of the investment token.
-   * @param roundId The round ID for price data.
+   * @param investRoundId The round ID for invest price data.
+   * @param stableRoundId The round ID for stable price data.
    * @param sellValue The value at which the sell action was executed.
    */
   function transferSell(
@@ -427,7 +463,8 @@ contract SellFacet is Modifiers {
     address dex,
     bytes calldata callData,
     uint256 price,
-    uint80 roundId,
+    uint80 investRoundId,
+    uint80 stableRoundId,
     uint256 sellValue
   ) internal {
     // Create a swap data structure for the DEX trade.
@@ -494,7 +531,8 @@ contract SellFacet is Modifiers {
     strategy.timestamp = block.timestamp;
     strategy.parameters._investAmount -= value;
     strategy.parameters._stableAmount += toTokenAmount;
-    strategy.roundId = roundId;
+    strategy.investRoundId = investRoundId;
+    strategy.stableRoundId = stableRoundId;
     // Calculate the buy percentage amount if buy actions are based on TWAP or BTD.
     if (
       (strategy.parameters._buyTwap || strategy.parameters._btd) &&
@@ -508,11 +546,15 @@ contract SellFacet is Modifiers {
 
   function checkRoundDataMistmatch(
     Strategy memory strategy,
-    uint80 fromRoundId,
-    uint80 toRoundId
+    uint80 fromInvestRoundId,
+    uint80 fromStableRoundId,
+    uint80 toInvestRoundId,
+    uint80 toStableRoundId
   ) internal view {
     if (
-      fromRoundId == 0 || toRoundId == 0 || strategy.strLastTrackedPrice == 0
+      fromInvestRoundId == 0 ||
+      toInvestRoundId == 0 ||
+      strategy.strLastTrackedPrice == 0
     ) {
       return;
     }
@@ -521,12 +563,14 @@ contract SellFacet is Modifiers {
     .decimals();
     int256 priceDecimals = int256(100 * (10**uint256(decimals)));
     uint256 fromPrice = LibPrice.getRoundData(
-      fromRoundId,
+      fromInvestRoundId,
+      fromStableRoundId,
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
     uint256 toPrice = LibPrice.getRoundData(
-      toRoundId,
+      toInvestRoundId,
+      toStableRoundId,
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );

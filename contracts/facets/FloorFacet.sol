@@ -94,7 +94,8 @@ contract FloorFacet is Modifiers {
       }
 
       // Retrieve the latest price and round ID from Chainlink.
-      (uint256 price, uint80 roundId) = LibPrice.getPrice(
+      (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+      .getPrice(
         strategy.parameters._investToken,
         strategy.parameters._stableToken
       );
@@ -111,7 +112,8 @@ contract FloorFacet is Modifiers {
       strategy.timestamp = block.timestamp;
       strategy.parameters._investAmount = 0;
       strategy.parameters._stableAmount += toTokenAmount;
-      strategy.roundId = roundId;
+      strategy.investRoundId = investRoundId;
+      strategy.stableRoundId = stableRoundId;
       strategy.investPrice = 0;
 
       // Check if the strategy should be canceled on reaching the floor price.
