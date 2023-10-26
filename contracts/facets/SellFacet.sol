@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
@@ -31,15 +31,11 @@ contract SellFacet is Modifiers {
   /**
    * @notice Emitted when a sell action is executed for a trading strategy using a specific DEX and call data.
    * @param strategyId The unique ID of the strategy where the sell action is executed.
-   * @param dex The address of the DEX used for the execution.
-   * @param callData The calldata for interacting with the DEX.
    * @param sellValue The value at which the  sell action was executed.
    * @param executedAt Timestamp when the sell action was executed.
    */
   event SellExecuted(
     uint256 indexed strategyId,
-    address dex,
-    bytes callData,
     uint256 sellValue,
     uint256 executedAt
   );
@@ -47,15 +43,11 @@ contract SellFacet is Modifiers {
   /**
    * @notice Emitted when a Time-Weighted Average Price (TWAP) sell action is executed for a trading strategy using a specific DEX and call data.
    * @param strategyId The unique ID of the strategy where the TWAP sell action was executed.
-   * @param dex The address of the DEX used for the execution.
-   * @param callData The calldata for interacting with the DEX.
    * @param sellValue The value at which the TWAP sell action was executed.
    * @param executedAt Timestamp when the TWAP sell action was executed.
    */
   event SellTwapExecuted(
     uint256 indexed strategyId,
-    address dex,
-    bytes callData,
     uint256 sellValue,
     uint256 executedAt
   );
@@ -63,15 +55,11 @@ contract SellFacet is Modifiers {
   /**
    * @notice Emitted when a Spike Trigger (STR) event is executed for a trading strategy using a specific DEX and call data.
    * @param strategyId The unique ID of the strategy where the STR event was executed.
-   * @param dex The address of the DEX used for the execution.
-   * @param callData The calldata for interacting with the DEX.
    * @param sellValue The value at which the STR event was executed.
    * @param executedAt Timestamp when the STR event was executed.
    */
   event STRExecuted(
     uint256 indexed strategyId,
-    address dex,
-    bytes callData,
     uint256 sellValue,
     uint256 executedAt
   );
@@ -81,14 +69,11 @@ contract SellFacet is Modifiers {
    * @dev This function performs a sell action based on the specified strategy parameters and market conditions.
    *      It verifies whether the strategy's parameters meet the required conditions for executing a sell.
    * @param strategyId The unique ID of the strategy to execute the sell action for.
-   * @param dex The address of the DEX (Decentralized Exchange) to use for the sell action.
-   * @param callData The calldata for interacting with the DEX.
+  * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
+
+
    */
-  function executeSell(
-    uint256 strategyId,
-    address dex,
-    bytes calldata callData
-  ) external {
+  function executeSell(uint256 strategyId, Swap calldata swap) external {
     // Retrieve the strategy details.
     Strategy storage strategy = s.strategies[strategyId];
 
@@ -139,8 +124,7 @@ contract SellFacet is Modifiers {
     transferSell(
       strategy,
       strategy.parameters._investAmount,
-      dex,
-      callData,
+      swap,
       price,
       investRoundId,
       stableRoundId,
@@ -152,7 +136,7 @@ contract SellFacet is Modifiers {
       strategy.status = Status.COMPLETED;
     }
 
-    emit SellExecuted(strategyId, dex, callData, price, block.timestamp);
+    emit SellExecuted(strategyId, price, block.timestamp);
   }
 
   /**
@@ -160,14 +144,10 @@ contract SellFacet is Modifiers {
    * @dev This function performs a TWAP sell action based on the specified strategy parameters and market conditions.
    *      It verifies whether the strategy's parameters meet the required conditions for executing a TWAP sell.
    * @param strategyId The unique ID of the strategy to execute the TWAP sell action for.
-   * @param dex The address of the DEX (Decentralized Exchange) to use for the TWAP sell action.
-   * @param callData The calldata for interacting with the DEX.
+   * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
+
    */
-  function executeSellTwap(
-    uint256 strategyId,
-    address dex,
-    bytes calldata callData
-  ) external {
+  function executeSellTwap(uint256 strategyId, Swap calldata swap) external {
     // Retrieve the strategy details.
     Strategy storage strategy = s.strategies[strategyId];
 
@@ -237,8 +217,7 @@ contract SellFacet is Modifiers {
     transferSell(
       strategy,
       value,
-      dex,
-      callData,
+      swap,
       price,
       investRoundId,
       stableRoundId,
@@ -249,7 +228,7 @@ contract SellFacet is Modifiers {
     if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
       strategy.status = Status.COMPLETED;
     }
-    emit SellTwapExecuted(strategyId, dex, callData, price, block.timestamp);
+    emit SellTwapExecuted(strategyId, price, block.timestamp);
   }
 
   /**
@@ -257,8 +236,7 @@ contract SellFacet is Modifiers {
    * @dev This function performs actions based on the specified strategy parameters and market conditions to execute Sell The Rally (STR) events.
    *      It verifies whether the strategy's parameters meet the required conditions for executing STR events.
    * @param strategyId The unique ID of the strategy to execute the STR actions for.
-   * @param dex The address of the DEX (Decentralized Exchange) to use for the STR actions.
-   * @param callData The calldata for interacting with the DEX.
+   * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    * @param fromInvestRoundId The starting invest round ID for price data.
    * @param toInvestRoundId The ending invest round ID for price data.
    * @param fromStableRoundId The starting stable round ID for price data.
@@ -267,8 +245,7 @@ contract SellFacet is Modifiers {
    */
   function executeSTR(
     uint256 strategyId,
-    address dex,
-    bytes calldata callData,
+    Swap calldata swap,
     uint80 fromInvestRoundId,
     uint80 fromStableRoundId,
     uint80 toInvestRoundId,
@@ -336,8 +313,7 @@ contract SellFacet is Modifiers {
         transferSell(
           strategy,
           value,
-          dex,
-          callData,
+          swap,
           price,
           investRoundId,
           stableRoundId,
@@ -361,8 +337,7 @@ contract SellFacet is Modifiers {
             transferSell(
               strategy,
               value,
-              dex,
-              callData,
+              swap,
               price,
               investRoundId,
               stableRoundId,
@@ -378,8 +353,7 @@ contract SellFacet is Modifiers {
             transferSell(
               strategy,
               value,
-              dex,
-              callData,
+              swap,
               price,
               investRoundId,
               stableRoundId,
@@ -405,8 +379,7 @@ contract SellFacet is Modifiers {
             transferSell(
               strategy,
               value,
-              dex,
-              callData,
+              swap,
               price,
               investRoundId,
               stableRoundId,
@@ -425,8 +398,7 @@ contract SellFacet is Modifiers {
             transferSell(
               strategy,
               value,
-              dex,
-              callData,
+              swap,
               price,
               investRoundId,
               stableRoundId,
@@ -442,7 +414,7 @@ contract SellFacet is Modifiers {
     if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
       strategy.status = Status.COMPLETED;
     }
-    emit STRExecuted(strategyId, dex, callData, price, block.timestamp);
+    emit STRExecuted(strategyId, price, block.timestamp);
   }
 
   /**
@@ -450,8 +422,7 @@ contract SellFacet is Modifiers {
    * @dev This function swaps a specified amount of assets on a DEX (Decentralized Exchange) and updates the strategy's state accordingly.
    * @param strategy The strategy being executed.
    * @param value The amount to be sold on the DEX.
-   * @param dex The address of the DEX to use for the swap.
-   * @param callData The calldata for interacting with the DEX.
+   * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    * @param price The current market price of the investment token.
    * @param investRoundId The round ID for invest price data.
    * @param stableRoundId The round ID for stable price data.
@@ -460,25 +431,24 @@ contract SellFacet is Modifiers {
   function transferSell(
     Strategy memory strategy,
     uint256 value,
-    address dex,
-    bytes calldata callData,
+    Swap calldata swap,
     uint256 price,
     uint80 investRoundId,
     uint80 stableRoundId,
     uint256 sellValue
   ) internal {
     // Create a swap data structure for the DEX trade.
-    LibSwap.SwapData memory swap = LibSwap.SwapData(
-      dex,
+    LibSwap.SwapData memory swap1 = LibSwap.SwapData(
+      swap.dex,
       strategy.parameters._investToken,
       strategy.parameters._stableToken,
       value,
-      callData,
+      swap.callData,
       strategy.user
     );
 
     // Perform the asset swap on the DEX and calculate the exchange rate.
-    uint256 toTokenAmount = LibSwap.swap(swap);
+    uint256 toTokenAmount = LibSwap.swap(swap1);
 
     uint256 rate = LibTrade.calculateExchangeRate(
       strategy.parameters._investToken,
@@ -544,6 +514,15 @@ contract SellFacet is Modifiers {
     }
   }
 
+  /**
+   * @notice Internal function to check if there is a data mismatch between price rounds for a strategy.
+   * @dev This function ensures that the price fluctuations between specified rounds adhere to strategy parameters.
+   * @param strategy The Strategy struct containing strategy parameters.
+   * @param fromInvestRoundId The round ID for the investment token's price data to start checking from.
+   * @param fromStableRoundId The round ID for the stable token's price data to start checking from.
+   * @param toInvestRoundId The round ID for the investment token's price data to check up to.
+   * @param toStableRoundId The round ID for the stable token's price data to check up to.
+   */
   function checkRoundDataMistmatch(
     Strategy memory strategy,
     uint80 fromInvestRoundId,

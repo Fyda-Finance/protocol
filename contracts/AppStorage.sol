@@ -275,3 +275,14 @@ struct AppStorage {
   // chainlink feeds - asset => USD feed
   mapping(address => address) feeds;
 }
+
+/**
+ * @title Swap
+ * @dev A struct representing a swap or trade operation on a decentralized exchange (DEX).
+ *  @param dex: The address of the DEX where the swap is to be executed.
+ *  @param callData: Encoded data containing instructions for the swap on the specified DEX.
+ */
+struct Swap {
+  address dex;
+  bytes callData;
+}

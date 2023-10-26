@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
@@ -25,10 +25,6 @@ error RoundDataDoesNotMatch();
  */
 
 contract BuyFacet is Modifiers {
-    struct Swap {
-        address dex;
-        bytes callData;
-    }
   /**
    * @notice The `AppStorage` state variable serves as the central data repository for this contract. Please
    * please look at AppStorage.sol for more detail
@@ -38,15 +34,11 @@ contract BuyFacet is Modifiers {
   /**
    * @notice Emitted when a buy action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
    * @param strategyId The unique ID of the strategy where the buy action was executed.
-   * @param dex The address of the DEX used for the execution.
-   * @param callData The calldata for interacting with the DEX.
    * @param buyValue The value at which the buy action was executed.
    * @param executedAt Timestamp when the buy action was executed.
    */
   event BuyExecuted(
     uint256 indexed strategyId,
-    address dex,
-    bytes callData,
     uint256 buyValue,
     uint256 executedAt
   );
@@ -54,30 +46,22 @@ contract BuyFacet is Modifiers {
   /**
    * @notice Emitted when a Buy on Time-Weighted Average Price (TWAP) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
    * @param strategyId The unique ID of the strategy where the Buy on TWAP action was executed.
-   * @param dex The address of the DEX used for the execution.
-   * @param callData The calldata for interacting with the DEX.
    * @param buyValue The value at which the Buy on TWAP action was executed.
    * @param executedAt Timestamp when the Buy on TWAP action was executed.
    */
   event BuyTwapExecuted(
     uint256 indexed strategyId,
-    address dex,
-    bytes callData,
     uint256 buyValue,
     uint256 executedAt
   );
   /**
    * @notice Emitted when a Buy The Dip (BTD) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
    * @param strategyId The unique ID of the strategy where the BTD action was executed.
-   * @param dex The address of the DEX used for the execution.
-   * @param callData The calldata for interacting with the DEX.
    * @param buyValue The value at which the BTD action was executed.
    * @param executedAt Timestamp when the BTD action was executed.
    */
   event BTDExecuted(
     uint256 indexed strategyId,
-    address dex,
-    bytes callData,
     uint256 buyValue,
     uint256 executedAt
   );
@@ -86,14 +70,9 @@ contract BuyFacet is Modifiers {
    * @notice Executes a buy action for a trading strategy based on specified conditions.
    * @dev The function validates strategy parameters, executes the buy action, and updates the strategy state.
    * @param strategyId The unique ID of the strategy for which the buy action is executed.
-   * @param dex The address of the DEX used for the buy action.
-   * @param callData The calldata for interacting with the DEX.
+   * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    */
-  function executeBuy(
-    uint256 strategyId,
-    address dex,
-    bytes calldata callData
-  ) external {
+  function executeBuy(uint256 strategyId, Swap calldata swap) external {
     Strategy storage strategy = s.strategies[strategyId];
 
     if (!strategy.parameters._buy) {
@@ -120,8 +99,8 @@ contract BuyFacet is Modifiers {
     transferBuy(
       strategy,
       strategy.parameters._stableAmount,
-      dex,
-      callData,
+      swap.dex,
+      swap.callData,
       price,
       investRoundId,
       stableRoundId,
@@ -148,20 +127,17 @@ contract BuyFacet is Modifiers {
       uint256 sellPercentage = 100 + strategy.parameters._sellValue;
       strategy.sellAt = (strategy.investPrice * sellPercentage) / 100;
     }
-    emit BuyExecuted(strategyId, dex, callData, price, block.timestamp);
+    emit BuyExecuted(strategyId, price, block.timestamp);
   }
 
   /**
    * @notice Executes a Buy on Time-Weighted Average Price (TWAP) action for a trading strategy.
    * @param strategyId The unique ID of the strategy to execute the Buy on TWAP action.
-   * @param dex The address of the decentralized exchange (DEX) used for the execution.
-   * @param callData The calldata for interacting with the DEX during the execution.
+  * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
+
+ 
    */
-  function executeBuyTwap(
-    uint256 strategyId,
-    address dex,
-    bytes calldata callData
-  ) external {
+  function executeBuyTwap(uint256 strategyId, Swap calldata swap) external {
     Strategy storage strategy = s.strategies[strategyId];
     if (!strategy.parameters._buyTwap) {
       revert BuyTwapNotSelected();
@@ -209,8 +185,8 @@ contract BuyFacet is Modifiers {
     transferBuy(
       strategy,
       value,
-      dex,
-      callData,
+      swap.dex,
+      swap.callData,
       price,
       investRoundId,
       stableRoundId,
@@ -254,7 +230,7 @@ contract BuyFacet is Modifiers {
       strategy.sellAt = (strategy.investPrice * sellPercentage) / 100;
     }
 
-    emit BuyTwapExecuted(strategyId, dex, callData, price, block.timestamp);
+    emit BuyTwapExecuted(strategyId, price, block.timestamp);
   }
 
   /**
@@ -467,7 +443,7 @@ contract BuyFacet is Modifiers {
       uint256 sellPercentage = 100 + strategy.parameters._sellValue;
       strategy.sellAt = (strategy.investPrice * sellPercentage) / 100;
     }
-    emit BTDExecuted(strategyId, swap.dex, swap.callData, price, block.timestamp);
+    emit BTDExecuted(strategyId, price, block.timestamp);
   }
 
   /**
@@ -538,6 +514,15 @@ contract BuyFacet is Modifiers {
     LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, true);
   }
 
+  /**
+   * @notice Internal function to check if there is a data mismatch between price rounds for a strategy.
+   * @dev This function ensures that the price fluctuations between specified rounds adhere to strategy parameters.
+   * @param strategy The Strategy struct containing strategy parameters.
+   * @param fromInvestRoundId The round ID for the investment token's price data to start checking from.
+   * @param fromStableRoundId The round ID for the stable token's price data to start checking from.
+   * @param toInvestRoundId The round ID for the investment token's price data to check up to.
+   * @param toStableRoundId The round ID for the stable token's price data to check up to.
+   */
   function checkRoundDataMistmatch(
     Strategy memory strategy,
     uint80 fromInvestRoundId,

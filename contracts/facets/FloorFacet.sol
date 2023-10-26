@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { Modifiers } from "../utils/Modifiers.sol";
-import { AppStorage, Strategy, Status } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status, Swap } from "../AppStorage.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
@@ -28,15 +28,11 @@ contract FloorFacet is Modifiers {
   /**
    * @notice Emitted when a floor execution is initiated for a trading strategy.
    * @param strategyId The unique ID of the strategy where the floor execution is initiated.
-   * @param dex The address of the DEX used for the execution.
-   * @param callData The calldata for interacting with the DEX.
    * @param floorValue The value at which the floor action was executed.
    * @param executedAt Timestamp when the floor action was executed.
    */
   event FloorExecuted(
     uint256 indexed strategyId,
-    address dex,
-    bytes callData,
     uint256 floorValue,
     uint256 executedAt
   );
@@ -120,7 +116,7 @@ contract FloorFacet is Modifiers {
       if (strategy.parameters._cancelOnFloor) {
         strategy.status = Status.CANCELLED;
       }
-      emit FloorExecuted(strategyId, dex, callData, price, block.timestamp);
+      emit FloorExecuted(strategyId, price, block.timestamp);
     }
   }
 }
