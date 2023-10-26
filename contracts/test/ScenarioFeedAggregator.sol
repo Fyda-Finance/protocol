@@ -20,7 +20,7 @@ contract ScenarioFeedAggregator {
       uint80 answeredInRound
     )
   {
-    return (roundId, price, 0, 0, 0);
+    return (_roundId, price, 0, 0, 0);
   }
 
   function latestRoundData()

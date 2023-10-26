@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice, WrongPreviousIDs } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
@@ -40,6 +40,9 @@ contract BuyFacet is Modifiers {
   event BuyExecuted(
     uint256 indexed strategyId,
     uint256 buyValue,
+    uint256 slippage,
+    uint256 amount,
+    uint256 exchangeRate,
     uint256 executedAt
   );
 
@@ -52,6 +55,9 @@ contract BuyFacet is Modifiers {
   event BuyTwapExecuted(
     uint256 indexed strategyId,
     uint256 buyValue,
+    uint256 slipagge,
+    uint256 amount,
+    uint256 exchangeRate,
     uint256 executedAt
   );
   /**
@@ -63,6 +69,9 @@ contract BuyFacet is Modifiers {
   event BTDExecuted(
     uint256 indexed strategyId,
     uint256 buyValue,
+    uint256 slipagge,
+    uint256 amount,
+    uint256 exchangeRate,
     uint256 executedAt
   );
 
@@ -98,9 +107,9 @@ contract BuyFacet is Modifiers {
     }
     transferBuy(
       strategy,
+      strategyId,
       strategy.parameters._stableAmount,
-      swap.dex,
-      swap.callData,
+      swap,
       price,
       investRoundId,
       stableRoundId,
@@ -127,7 +136,6 @@ contract BuyFacet is Modifiers {
       uint256 sellPercentage = 100 + strategy.parameters._sellValue;
       strategy.sellAt = (strategy.investPrice * sellPercentage) / 100;
     }
-    emit BuyExecuted(strategyId, price, block.timestamp);
   }
 
   /**
@@ -184,9 +192,9 @@ contract BuyFacet is Modifiers {
     }
     transferBuy(
       strategy,
+      strategyId,
       value,
-      swap.dex,
-      swap.callData,
+      swap,
       price,
       investRoundId,
       stableRoundId,
@@ -229,8 +237,6 @@ contract BuyFacet is Modifiers {
       uint256 sellPercentage = 100 + strategy.parameters._sellValue;
       strategy.sellAt = (strategy.investPrice * sellPercentage) / 100;
     }
-
-    emit BuyTwapExecuted(strategyId, price, block.timestamp);
   }
 
   /**
@@ -261,7 +267,7 @@ contract BuyFacet is Modifiers {
       revert NoSwapFromZeroBalance();
     }
     checkRoundDataMistmatch(
-      strategy,
+      strategyId,
       fromInvestRoundId,
       fromStableRoundId,
       toInvestRoundId,
@@ -292,16 +298,18 @@ contract BuyFacet is Modifiers {
       } else {
         value = strategy.parameters._stableAmount;
       }
+    } else if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
+      value = strategy.buyPercentageAmount;
     }
     uint256 priceToBTD;
     if (strategy.btdLastTrackedPrice == 0) {
-      if (price < strategy.buyAt) {
+      if (price < buyValue) {
         strategy.btdLastTrackedPrice = price;
         transferBuy(
           strategy,
+          strategyId,
           value,
-          swap.dex,
-          swap.callData,
+          swap,
           price,
           investRoundId,
           stableRoundId,
@@ -324,9 +332,9 @@ contract BuyFacet is Modifiers {
             strategy.btdLastTrackedPrice = price;
             transferBuy(
               strategy,
+              strategyId,
               value,
-              swap.dex,
-              swap.callData,
+              swap,
               price,
               investRoundId,
               stableRoundId,
@@ -341,9 +349,9 @@ contract BuyFacet is Modifiers {
             strategy.btdLastTrackedPrice = price;
             transferBuy(
               strategy,
+              strategyId,
               value,
-              swap.dex,
-              swap.callData,
+              swap,
               price,
               investRoundId,
               stableRoundId,
@@ -360,16 +368,16 @@ contract BuyFacet is Modifiers {
         } else if (strategy.parameters._btdType == DIP_SPIKE.INCREASE_BY) {
           priceToBTD =
             ((100 + strategy.parameters._btdValue) *
-              strategy.strLastTrackedPrice) /
+              strategy.btdLastTrackedPrice) /
             100;
           if (price > strategy.buyAt) {
             strategy.btdLastTrackedPrice = price;
           } else if (priceToBTD >= price) {
             transferBuy(
               strategy,
+              strategyId,
               value,
-              swap.dex,
-              swap.callData,
+              swap,
               price,
               investRoundId,
               stableRoundId,
@@ -388,9 +396,9 @@ contract BuyFacet is Modifiers {
             strategy.btdLastTrackedPrice = price;
             transferBuy(
               strategy,
+              strategyId,
               value,
-              swap.dex,
-              swap.callData,
+              swap,
               price,
               investRoundId,
               stableRoundId,
@@ -443,7 +451,6 @@ contract BuyFacet is Modifiers {
       uint256 sellPercentage = 100 + strategy.parameters._sellValue;
       strategy.sellAt = (strategy.investPrice * sellPercentage) / 100;
     }
-    emit BTDExecuted(strategyId, price, block.timestamp);
   }
 
   /**
@@ -451,8 +458,6 @@ contract BuyFacet is Modifiers {
    * @dev This function transfers assets from stable tokens to investment tokens on a DEX.
    * @param strategy The Strategy struct containing strategy parameters.
    * @param value The value to be transferred from stable tokens to investment tokens.
-   * @param dex The address of the decentralized exchange (DEX) used for the execution.
-   * @param callData The calldata for interacting with the DEX during the execution.
    * @param price The current price of the investment token.
    * @param investRoundId The invest round ID associated with the current price data.
    * @param stableRoundId The stable round ID associated with the current price data.
@@ -461,9 +466,9 @@ contract BuyFacet is Modifiers {
 
   function transferBuy(
     Strategy memory strategy,
+    uint256 strategyId,
     uint256 value,
-    address dex,
-    bytes calldata callData,
+    Swap memory swap,
     uint256 price,
     uint80 investRoundId,
     uint80 stableRoundId,
@@ -476,16 +481,16 @@ contract BuyFacet is Modifiers {
     ) {
       revert FloorGreaterThanPrice();
     }
-    LibSwap.SwapData memory swap = LibSwap.SwapData(
-      dex,
+    LibSwap.SwapData memory swap1 = LibSwap.SwapData(
+      swap.dex,
       strategy.parameters._stableToken,
       strategy.parameters._investToken,
       value,
-      callData,
+      swap.callData,
       strategy.user
     );
 
-    uint256 toTokenAmount = LibSwap.swap(swap);
+    uint256 toTokenAmount = LibSwap.swap(swap1);
 
     uint256 rate = LibTrade.calculateExchangeRate(
       strategy.parameters._investToken,
@@ -511,25 +516,69 @@ contract BuyFacet is Modifiers {
         100;
     }
 
-    LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, true);
+    uint256 slippage = LibTrade.validateSlippage(
+      rate,
+      price,
+      strategy.parameters._slippage,
+      true
+    );
+    if (
+      strategy.parameters._buy &&
+      !strategy.parameters._btd &&
+      !strategy.parameters._buyTwap
+    ) {
+      emit BuyExecuted(
+        strategyId,
+        price,
+        slippage,
+        toTokenAmount,
+        rate,
+        block.timestamp
+      );
+    } else if (strategy.parameters._btd) {
+      emit BTDExecuted(
+        strategyId,
+        price,
+        slippage,
+        toTokenAmount,
+        rate,
+        block.timestamp
+      );
+    } else if (strategy.parameters._buyTwap) {
+      emit BuyTwapExecuted(
+        strategyId,
+        price,
+        slippage,
+        toTokenAmount,
+        rate,
+        block.timestamp
+      );
+    }
   }
 
   /**
    * @notice Internal function to check if there is a data mismatch between price rounds for a strategy.
    * @dev This function ensures that the price fluctuations between specified rounds adhere to strategy parameters.
-   * @param strategy The Strategy struct containing strategy parameters.
+   * @param strategyId The unique ID of the trading strategy where the BTD action is executed.
    * @param fromInvestRoundId The round ID for the investment token's price data to start checking from.
    * @param fromStableRoundId The round ID for the stable token's price data to start checking from.
    * @param toInvestRoundId The round ID for the investment token's price data to check up to.
    * @param toStableRoundId The round ID for the stable token's price data to check up to.
    */
   function checkRoundDataMistmatch(
-    Strategy memory strategy,
+    uint256 strategyId,
     uint80 fromInvestRoundId,
     uint80 fromStableRoundId,
     uint80 toInvestRoundId,
     uint80 toStableRoundId
   ) internal view {
+    Strategy storage strategy = s.strategies[strategyId];
+    if (
+      toInvestRoundId < fromInvestRoundId || toStableRoundId < fromStableRoundId
+    ) {
+      revert WrongPreviousIDs();
+    }
+
     if (
       fromInvestRoundId == 0 ||
       toInvestRoundId == 0 ||

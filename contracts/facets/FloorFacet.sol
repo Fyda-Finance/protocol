@@ -34,6 +34,9 @@ contract FloorFacet is Modifiers {
   event FloorExecuted(
     uint256 indexed strategyId,
     uint256 floorValue,
+    uint256 slippage,
+    uint256 amount,
+    uint256 exchangeRate,
     uint256 executedAt
   );
 
@@ -97,7 +100,7 @@ contract FloorFacet is Modifiers {
       );
 
       // Validate the slippage based on the calculated rate and the latest price.
-      LibTrade.validateSlippage(
+      uint256 slippage = LibTrade.validateSlippage(
         rate,
         price,
         strategy.parameters._slippage,
@@ -116,7 +119,14 @@ contract FloorFacet is Modifiers {
       if (strategy.parameters._cancelOnFloor) {
         strategy.status = Status.CANCELLED;
       }
-      emit FloorExecuted(strategyId, price, block.timestamp);
+      emit FloorExecuted(
+        strategyId,
+        price,
+        slippage,
+        toTokenAmount,
+        rate,
+        block.timestamp
+      );
     }
   }
 }

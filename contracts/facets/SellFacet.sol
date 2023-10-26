@@ -5,7 +5,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
@@ -13,6 +13,10 @@ import { LibTrade } from "../libraries/LibTrade.sol";
 error SellNotSelected();
 error PriceLessThanHighSellValue();
 error SellDCANotSelected();
+error SellTwapNotSelected();
+error ValueGreaterThanHighSellValue();
+error TWAPTimeDifferenceIsLess();
+error STRNotSelected();
 
 /**
  * @title SellFacet
@@ -37,6 +41,9 @@ contract SellFacet is Modifiers {
   event SellExecuted(
     uint256 indexed strategyId,
     uint256 sellValue,
+    uint256 slippage,
+    uint256 amount,
+    uint256 exchangeRate,
     uint256 executedAt
   );
 
@@ -49,6 +56,9 @@ contract SellFacet is Modifiers {
   event SellTwapExecuted(
     uint256 indexed strategyId,
     uint256 sellValue,
+    uint256 slippage,
+    uint256 amount,
+    uint256 exchangeRate,
     uint256 executedAt
   );
 
@@ -61,6 +71,9 @@ contract SellFacet is Modifiers {
   event STRExecuted(
     uint256 indexed strategyId,
     uint256 sellValue,
+    uint256 slippage,
+    uint256 amount,
+    uint256 exchangeRate,
     uint256 executedAt
   );
 
@@ -112,17 +125,17 @@ contract SellFacet is Modifiers {
     ) {
       // If a high sell value is specified and "strategy" or "sell TWAP" is selected, use the high sell value.
       sellValue = strategy.parameters._highSellValue;
-      if (price < strategy.parameters._highSellValue) {
+      if (price < sellValue) {
         revert PriceLessThanHighSellValue();
       }
     } else if (strategy.parameters._str || strategy.parameters._sellTwap) {
-      // If neither high sell value nor "strategy" nor "sell TWAP" is selected, throw an error.
+      // If neither high sell value nor "sell the rally" nor "sell TWAP" is selected, throw an error.
       revert SellDCANotSelected();
     }
 
     // Perform the sell action, including transferring assets to the DEX.
     transferSell(
-      strategy,
+      strategyId,
       strategy.parameters._investAmount,
       swap,
       price,
@@ -135,8 +148,6 @@ contract SellFacet is Modifiers {
     if (!strategy.parameters._buy) {
       strategy.status = Status.COMPLETED;
     }
-
-    emit SellExecuted(strategyId, price, block.timestamp);
   }
 
   /**
@@ -153,7 +164,7 @@ contract SellFacet is Modifiers {
 
     // Ensure that TWAP sell is selected in the strategy parameters.
     if (!strategy.parameters._sellTwap) {
-      revert();
+      revert SellTwapNotSelected();
     }
 
     // Ensure that there is invest token available for selling.
@@ -164,8 +175,8 @@ contract SellFacet is Modifiers {
     // Retrieve the latest price and round ID from Chainlink.
     (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
     .getPrice(
-      strategy.parameters._stableToken,
-      strategy.parameters._investToken
+      strategy.parameters._investToken,
+      strategy.parameters._stableToken
     );
 
     // Check the current price source selected in the strategy parameters.
@@ -187,13 +198,15 @@ contract SellFacet is Modifiers {
       } else {
         value = strategy.parameters._investAmount;
       }
+    } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
+      value = strategy.sellPercentageAmount;
     }
 
     if (
       strategy.parameters._highSellValue != 0 &&
       price > strategy.parameters._highSellValue
     ) {
-      revert();
+      revert ValueGreaterThanHighSellValue();
     }
 
     // Calculate the time interval for TWAP execution and check if it can be executed.
@@ -209,13 +222,13 @@ contract SellFacet is Modifiers {
         timeToExecute
       )
     ) {
-      revert();
+      revert TWAPTimeDifferenceIsLess();
     }
 
     // Update the TWAP execution timestamp and perform the TWAP sell action.
     strategy.sellTwapExecutedAt = block.timestamp;
     transferSell(
-      strategy,
+      strategyId,
       value,
       swap,
       price,
@@ -228,7 +241,6 @@ contract SellFacet is Modifiers {
     if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
       strategy.status = Status.COMPLETED;
     }
-    emit SellTwapExecuted(strategyId, price, block.timestamp);
   }
 
   /**
@@ -256,7 +268,7 @@ contract SellFacet is Modifiers {
 
     // Ensure that STR events are selected in the strategy parameters.
     if (!strategy.parameters._str) {
-      revert();
+      revert STRNotSelected();
     }
 
     // Ensure that there is invest token available for selling.
@@ -285,13 +297,12 @@ contract SellFacet is Modifiers {
       highSellValue = type(uint256).max;
     }
     checkRoundDataMistmatch(
-      strategy,
+      strategyId,
       fromInvestRoundId,
       fromStableRoundId,
       toInvestRoundId,
       toStableRoundId
     );
-    // uint256 botPrice=LibPrice.getRoundData(botRoundId, strategy.parameters._investToken,strategy.parameters._stableToken);
     uint256 sellValue = strategy.sellAt;
     if (strategy.strLastTrackedPrice != 0) {
       sellValue = strategy.strLastTrackedPrice;
@@ -309,9 +320,9 @@ contract SellFacet is Modifiers {
 
     uint256 priceToSTR;
     if (strategy.strLastTrackedPrice == 0) {
-      if (price >= strategy.sellAt && price < highSellValue) {
+      if (price >= sellValue && price < highSellValue) {
         transferSell(
-          strategy,
+          strategyId,
           value,
           swap,
           price,
@@ -326,7 +337,7 @@ contract SellFacet is Modifiers {
         strategy.parameters._strType == DIP_SPIKE.DECREASE_BY ||
         strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE
       ) {
-        if (strategy.strLastTrackedPrice > price) {
+        if (sellValue > price) {
           strategy.strLastTrackedPrice = price;
         } else if (strategy.parameters._strType == DIP_SPIKE.DECREASE_BY) {
           priceToSTR =
@@ -335,7 +346,7 @@ contract SellFacet is Modifiers {
             100;
           if (priceToSTR <= price) {
             transferSell(
-              strategy,
+              strategyId,
               value,
               swap,
               price,
@@ -346,12 +357,10 @@ contract SellFacet is Modifiers {
             strategy.strLastTrackedPrice = price;
           }
         } else if (strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE) {
-          priceToSTR =
-            strategy.strLastTrackedPrice -
-            strategy.parameters._strValue;
+          priceToSTR = sellValue - strategy.parameters._strValue;
           if (priceToSTR <= price) {
             transferSell(
-              strategy,
+              strategyId,
               value,
               swap,
               price,
@@ -370,14 +379,11 @@ contract SellFacet is Modifiers {
           strategy.strLastTrackedPrice = price;
         } else if (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY) {
           priceToSTR =
-            ((100 + strategy.parameters._strValue) *
-              strategy.strLastTrackedPrice) /
+            ((100 + strategy.parameters._strValue) * sellValue) /
             100;
-          if (price > highSellValue) {
-            strategy.strLastTrackedPrice = price;
-          } else if (priceToSTR >= price) {
+          if (priceToSTR >= price && !(price >= highSellValue)) {
             transferSell(
-              strategy,
+              strategyId,
               value,
               swap,
               price,
@@ -385,18 +391,14 @@ contract SellFacet is Modifiers {
               stableRoundId,
               sellValue
             );
-            strategy.strLastTrackedPrice = price;
           }
+          strategy.strLastTrackedPrice = price;
         } else if (strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE) {
-          priceToSTR =
-            strategy.strLastTrackedPrice +
-            strategy.parameters._strValue;
+          priceToSTR = sellValue + strategy.parameters._strValue;
 
-          if (price > highSellValue) {
-            strategy.strLastTrackedPrice = price;
-          } else if (priceToSTR >= strategy.strLastTrackedPrice) {
+          if (priceToSTR >= sellValue && !(price > highSellValue)) {
             transferSell(
-              strategy,
+              strategyId,
               value,
               swap,
               price,
@@ -404,8 +406,8 @@ contract SellFacet is Modifiers {
               stableRoundId,
               sellValue
             );
-            strategy.strLastTrackedPrice = price;
           }
+          strategy.strLastTrackedPrice = price;
         }
       }
     }
@@ -414,13 +416,11 @@ contract SellFacet is Modifiers {
     if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
       strategy.status = Status.COMPLETED;
     }
-    emit STRExecuted(strategyId, price, block.timestamp);
   }
 
   /**
    * @notice Transfer assets from the trading strategy during a sell action.
    * @dev This function swaps a specified amount of assets on a DEX (Decentralized Exchange) and updates the strategy's state accordingly.
-   * @param strategy The strategy being executed.
    * @param value The amount to be sold on the DEX.
    * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    * @param price The current market price of the investment token.
@@ -429,7 +429,7 @@ contract SellFacet is Modifiers {
    * @param sellValue The value at which the sell action was executed.
    */
   function transferSell(
-    Strategy memory strategy,
+    uint256 strategyId,
     uint256 value,
     Swap calldata swap,
     uint256 price,
@@ -437,6 +437,8 @@ contract SellFacet is Modifiers {
     uint80 stableRoundId,
     uint256 sellValue
   ) internal {
+    Strategy storage strategy = s.strategies[strategyId];
+
     // Create a swap data structure for the DEX trade.
     LibSwap.SwapData memory swap1 = LibSwap.SwapData(
       swap.dex,
@@ -461,8 +463,9 @@ contract SellFacet is Modifiers {
     }
 
     // Validate slippage if the strategy is not an STR (Spike Trigger).
+    uint256 slippage = 0;
     if (!strategy.parameters._str) {
-      LibTrade.validateSlippage(
+      slippage = LibTrade.validateSlippage(
         rate,
         price,
         strategy.parameters._slippage,
@@ -482,16 +485,15 @@ contract SellFacet is Modifiers {
       strategy.parameters._stableAmount +
       toTokenAmount;
 
-    uint256 totalInvestAmount = strategy.parameters._investAmount *
+    uint256 sum = strategy.parameters._stableAmount +
+      strategy.parameters._investAmount *
       strategy.investPrice;
-    uint256 sum = strategy.parameters._stableAmount + totalInvestAmount;
 
     if (strategy.budget < sum) {
-      strategy.parameters._stableAmount = strategy.budget - totalInvestAmount;
-
-      if (strategy.profit == 0) {
-        strategy.profit = 0;
-      }
+      strategy.parameters._stableAmount =
+        strategy.budget -
+        strategy.parameters._investAmount *
+        strategy.investPrice;
 
       strategy.profit = sum - strategy.budget + strategy.profit;
     }
@@ -512,24 +514,63 @@ contract SellFacet is Modifiers {
         (strategy.parameters._buyDCAValue * strategy.parameters._stableAmount) /
         100;
     }
+    if (
+      (strategy.parameters._sell &&
+        !strategy.parameters._str &&
+        !strategy.parameters._sellTwap) ||
+      (strategy.parameters._sell && strategy.parameters._highSellValue > price)
+    ) {
+      emit SellExecuted(
+        strategyId,
+        sellValue,
+        slippage,
+        toTokenAmount,
+        rate,
+        block.timestamp
+      );
+    } else if (strategy.parameters._str) {
+      emit STRExecuted(
+        strategyId,
+        price,
+        slippage,
+        toTokenAmount,
+        rate,
+        block.timestamp
+      );
+    } else if (strategy.parameters._sellTwap) {
+      emit SellTwapExecuted(
+        strategyId,
+        price,
+        slippage,
+        toTokenAmount,
+        rate,
+        block.timestamp
+      );
+    }
   }
 
   /**
    * @notice Internal function to check if there is a data mismatch between price rounds for a strategy.
    * @dev This function ensures that the price fluctuations between specified rounds adhere to strategy parameters.
-   * @param strategy The Strategy struct containing strategy parameters.
+   * @param strategyId The unique ID of the strategy to execute the STR actions for.
    * @param fromInvestRoundId The round ID for the investment token's price data to start checking from.
    * @param fromStableRoundId The round ID for the stable token's price data to start checking from.
    * @param toInvestRoundId The round ID for the investment token's price data to check up to.
    * @param toStableRoundId The round ID for the stable token's price data to check up to.
    */
   function checkRoundDataMistmatch(
-    Strategy memory strategy,
+    uint256 strategyId,
     uint80 fromInvestRoundId,
     uint80 fromStableRoundId,
     uint80 toInvestRoundId,
     uint80 toStableRoundId
   ) internal view {
+    Strategy storage strategy = s.strategies[strategyId];
+    if (
+      toInvestRoundId < fromInvestRoundId || toStableRoundId < fromStableRoundId
+    ) {
+      revert WrongPreviousIDs();
+    }
     if (
       fromInvestRoundId == 0 ||
       toInvestRoundId == 0 ||

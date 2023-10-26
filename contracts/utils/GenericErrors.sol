@@ -52,3 +52,4 @@ error OrphandStrategy();
 error BuyNeverExecute();
 error FloorGreaterThanPrice();
 error FeedNotFound();
+error WrongPreviousIDs();

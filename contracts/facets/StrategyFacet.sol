@@ -33,7 +33,11 @@ contract StrategyFacet is Modifiers {
   event StrategyCreated(
     address indexed investToken,
     address indexed stableToken,
-    StrategyParameters parameter
+    StrategyParameters parameter,
+    uint256 timestamp,
+    uint256 investRoundId,
+    uint256 stableRoundId,
+    uint256 investPrice
   );
 
   /**
@@ -378,7 +382,11 @@ contract StrategyFacet is Modifiers {
     emit StrategyCreated(
       _parameter._investToken,
       _parameter._stableToken,
-      _parameter
+      _parameter,
+      block.timestamp,
+      investRoundId,
+      stableRoundId,
+      price
     );
   }
 
