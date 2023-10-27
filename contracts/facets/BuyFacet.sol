@@ -99,11 +99,11 @@ contract BuyFacet is Modifiers {
       strategy.parameters._stableToken
     );
 
-    if (strategy.parameters.current_price == CURRENT_PRICE.BUY_CURRENT) {
+    if (strategy.parameters._current_price == CURRENT_PRICE.BUY_CURRENT) {
       strategy.parameters._buyValue = price;
       strategy.buyAt = price;
       strategy.parameters._buyType = BuyLegType.LIMIT_PRICE;
-      strategy.parameters.current_price = CURRENT_PRICE.EXECUTED;
+      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
     }
     transferBuy(
       strategy,
@@ -159,11 +159,11 @@ contract BuyFacet is Modifiers {
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
-    if (strategy.parameters.current_price == CURRENT_PRICE.BUY_CURRENT) {
+    if (strategy.parameters._current_price == CURRENT_PRICE.BUY_CURRENT) {
       strategy.parameters._buyValue = price;
       strategy.buyAt = price;
       strategy.parameters._buyType = BuyLegType.LIMIT_PRICE;
-      strategy.parameters.current_price = CURRENT_PRICE.EXECUTED;
+      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
     }
 
     uint256 timeToExecute = LibTime.convertToSeconds(
@@ -279,11 +279,11 @@ contract BuyFacet is Modifiers {
       strategy.parameters._stableToken
     );
 
-    if (strategy.parameters.current_price == CURRENT_PRICE.BUY_CURRENT) {
+    if (strategy.parameters._current_price == CURRENT_PRICE.BUY_CURRENT) {
       strategy.parameters._buyValue = price;
       strategy.buyAt = price;
       strategy.parameters._buyType = BuyLegType.LIMIT_PRICE;
-      strategy.parameters.current_price = CURRENT_PRICE.EXECUTED;
+      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
     }
 
     uint256 buyValue = strategy.buyAt;

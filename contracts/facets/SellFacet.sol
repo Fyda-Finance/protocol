@@ -108,12 +108,12 @@ contract SellFacet is Modifiers {
     );
 
     // Check the current price source selected in the strategy parameters.
-    if (strategy.parameters.current_price == CURRENT_PRICE.SELL_CURRENT) {
+    if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
       // Set the sell value to the current price.
       strategy.parameters._sellValue = price;
       strategy.sellAt = price;
       strategy.parameters._sellType = SellLegType.LIMIT_PRICE;
-      strategy.parameters.current_price = CURRENT_PRICE.EXECUTED;
+      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
     }
 
     // Determine the sell value based on strategy parameters and market conditions.
@@ -180,12 +180,12 @@ contract SellFacet is Modifiers {
     );
 
     // Check the current price source selected in the strategy parameters.
-    if (strategy.parameters.current_price == CURRENT_PRICE.SELL_CURRENT) {
+    if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
       // Set the sell value to the current price.
       strategy.parameters._sellValue = price;
       strategy.sellAt = price;
       strategy.parameters._sellType = SellLegType.LIMIT_PRICE;
-      strategy.parameters.current_price = CURRENT_PRICE.EXECUTED;
+      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
     }
 
     // Initialize value for the TWAP sell.
@@ -284,11 +284,11 @@ contract SellFacet is Modifiers {
     );
 
     // Check the current price source selected in the strategy parameters.
-    if (strategy.parameters.current_price == CURRENT_PRICE.SELL_CURRENT) {
+    if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
       strategy.parameters._sellValue = price;
       strategy.sellAt = price;
       strategy.parameters._sellType = SellLegType.LIMIT_PRICE;
-      strategy.parameters.current_price = CURRENT_PRICE.EXECUTED;
+      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
     }
 
     // Initialize high sell value for STR events.

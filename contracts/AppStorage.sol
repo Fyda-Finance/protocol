@@ -182,8 +182,8 @@ struct StrategyParameters {
   TimeUnit _sellTwapTimeUnit;
   // @param _completeOnSell A flag to complete the strategy on selling (if sell is set).
   bool _completeOnSell;
-  // @param current_price The current price indicator is selected what kind of strategy to execute immediately.
-  CURRENT_PRICE current_price;
+  // @param _current_price The current price indicator is selected what kind of strategy to execute immediately.
+  CURRENT_PRICE _current_price;
 }
 
 /**

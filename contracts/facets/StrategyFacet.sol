@@ -165,10 +165,10 @@ contract StrategyFacet is Modifiers {
     (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
     .getPrice(_parameter._investToken, _parameter._stableToken);
 
-    if (_parameter.current_price == CURRENT_PRICE.BUY_CURRENT) {
+    if (_parameter._current_price == CURRENT_PRICE.BUY_CURRENT) {
       _parameter._buyValue = price;
       _parameter._buyType = BuyLegType.LIMIT_PRICE;
-    } else if (_parameter.current_price == CURRENT_PRICE.SELL_CURRENT) {
+    } else if (_parameter._current_price == CURRENT_PRICE.SELL_CURRENT) {
       _parameter._sellValue = price;
       _parameter._sellType = SellLegType.LIMIT_PRICE;
     }
