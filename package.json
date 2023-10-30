@@ -45,7 +45,8 @@
     "lint:sol:fix": "prettier --write \"contracts/**/*.sol\"",
     "prettier": "prettier  --write \"**/*.{js,json,md,ts,yaml,yml,sol}\"",
     "prettier:check": "prettier --check \"**/*.{js,json,md,ts,yaml,yml,sol}\"",
-    "docgen": "hardhat docgen"
+    "docgen": "hardhat docgen",
+    "coverage": "hardhat coverage"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.8.0",
