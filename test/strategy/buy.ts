@@ -1,5 +1,6 @@
-import { setupDiamondFixture, SetupDiamondFixture } from "./utils";
 import { ethers } from "hardhat";
+
+import { SetupDiamondFixture, setupDiamondFixture } from "./utils";
 
 const { expect } = require("chai");
 
@@ -14,9 +15,7 @@ describe("Your Test Suite", function () {
   it("Buy the dip", async () => {
     const budget = "1000000000"; // $1k
 
-    await setup.scenarioERC20USDC
-      .connect(setup.user)
-      .approve(setup.strategyFacet.address, budget);
+    await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
 
     const parameters = {
       _investToken: setup.scenarioERC20WETH.address,
@@ -66,16 +65,10 @@ describe("Your Test Suite", function () {
     await setup.wethScenarioFeedAggregator.setRoundPrice(12, "120000000100");
 
     // 1 WETH = 1200 USD
-    await setup.scenarioDEX.updateExchangeRate(
-      setup.scenarioERC20WETH.address,
-      "120000000000"
-    );
+    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20WETH.address, "120000000000");
 
     // 1 USDC = 1 USD
-    await setup.scenarioDEX.updateExchangeRate(
-      setup.scenarioERC20USDC.address,
-      "100000000"
-    );
+    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
     const value = await setup.buyFacet.executionBuyValue(0);
