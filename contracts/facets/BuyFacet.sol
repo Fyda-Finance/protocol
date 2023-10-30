@@ -444,9 +444,6 @@ contract BuyFacet is Modifiers {
       revert WrongPreviousIDs();
     }
 
-    if (fromInvestRoundId == 0 || toInvestRoundId == 0) {
-      return;
-    }
     uint8 decimals = IERC20Metadata(strategy.parameters._stableToken)
     .decimals();
     int256 priceDecimals = int256(

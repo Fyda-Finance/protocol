@@ -456,13 +456,11 @@ contract SellFacet is Modifiers {
     uint80 toStableRoundId
   ) internal view {
     Strategy storage strategy = s.strategies[strategyId];
+
     if (
       toInvestRoundId < fromInvestRoundId || toStableRoundId < fromStableRoundId
     ) {
       revert WrongPreviousIDs();
-    }
-    if (fromInvestRoundId == 0 || toInvestRoundId == 0) {
-      return;
     }
 
     uint8 decimals = IERC20Metadata(strategy.parameters._stableToken)
