@@ -17,6 +17,8 @@ error SellTwapNotSelected();
 error ValueGreaterThanHighSellValue();
 error TWAPTimeDifferenceIsLess();
 error STRNotSelected();
+error PriceLessThanSellValue();
+error PriceIsNotInTheRange();
 
 /**
  * @title SellFacet
@@ -108,6 +110,9 @@ contract SellFacet is Modifiers {
     );
 
     checkCurrent(strategyId, price);
+    if (strategy.sellAt > price) {
+      revert PriceLessThanSellValue();
+    }
 
     // Determine the sell value based on strategy parameters and market conditions.
     uint256 sellValue = strategy.sellAt;
@@ -173,16 +178,16 @@ contract SellFacet is Modifiers {
     );
 
     checkCurrent(strategyId, price);
+    if (
+      price < strategy.sellAt ||
+      (strategy.parameters._highSellValue != 0 &&
+        price >= strategy.parameters._highSellValue)
+    ) {
+      revert PriceIsNotInTheRange();
+    }
 
     // Initialize value for the TWAP sell.
     uint256 value = executionSellValue(strategyId);
-
-    if (
-      strategy.parameters._highSellValue != 0 &&
-      price > strategy.parameters._highSellValue
-    ) {
-      revert ValueGreaterThanHighSellValue();
-    }
 
     // Calculate the time interval for TWAP execution and check if it can be executed.
     uint256 timeToExecute = LibTime.convertToSeconds(
@@ -259,6 +264,13 @@ contract SellFacet is Modifiers {
     );
 
     checkCurrent(strategyId, price);
+    if (
+      price < strategy.sellAt ||
+      (strategy.parameters._highSellValue != 0 &&
+        price >= strategy.parameters._highSellValue)
+    ) {
+      revert PriceIsNotInTheRange();
+    }
 
     checkRoundDataMistmatch(
       strategyId,
@@ -285,6 +297,28 @@ contract SellFacet is Modifiers {
     if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
       strategy.status = Status.COMPLETED;
     }
+  }
+
+  function executionSellValue(uint256 strategyId)
+    public
+    view
+    returns (uint256)
+  {
+    uint256 value;
+    Strategy storage strategy = s.strategies[strategyId];
+
+    if (strategy.parameters._sellDCAUnit == DCA_UNIT.FIXED) {
+      value = (strategy.parameters._investAmount >
+        strategy.parameters._sellDCAValue)
+        ? strategy.parameters._sellDCAValue
+        : strategy.parameters._investAmount;
+    } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
+      value = (strategy.parameters._investAmount >
+        strategy.sellPercentageAmount)
+        ? strategy.sellPercentageAmount
+        : strategy.parameters._investAmount;
+    }
+    return value;
   }
 
   /**
@@ -413,30 +447,17 @@ contract SellFacet is Modifiers {
     }
   }
 
-  function executionSellValue(uint256 strategyId)
-    public
-    view
-    returns (uint256)
-  {
-    uint256 value;
+  function checkCurrent(uint256 strategyId, uint256 price) internal {
     Strategy storage strategy = s.strategies[strategyId];
 
-    if (strategy.parameters._sellDCAUnit == DCA_UNIT.FIXED) {
-      if (
-        strategy.parameters._investAmount > strategy.parameters._sellDCAValue
-      ) {
-        value = strategy.parameters._sellDCAValue;
-      } else {
-        value = strategy.parameters._investAmount;
-      }
-    } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
-      if (strategy.parameters._investAmount > strategy.sellPercentageAmount) {
-        value = strategy.sellPercentageAmount;
-      } else {
-        value = strategy.parameters._investAmount;
-      }
+    // Check the current price source selected in the strategy parameters.
+    if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
+      // Set the sell value to the current price.
+      strategy.parameters._sellValue = price;
+      strategy.sellAt = price;
+      strategy.parameters._sellType = SellLegType.LIMIT_PRICE;
+      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
     }
-    return value;
   }
 
   /**
@@ -463,9 +484,15 @@ contract SellFacet is Modifiers {
       revert WrongPreviousIDs();
     }
 
-    uint8 decimals = IERC20Metadata(strategy.parameters._stableToken)
-    .decimals();
-    int256 priceDecimals = int256(100 * (10**uint256(decimals)));
+    if (
+      strategy.investRoundId >= fromInvestRoundId ||
+      strategy.investRoundId >= toInvestRoundId ||
+      strategy.stableRoundId >= fromStableRoundId ||
+      strategy.stableRoundId >= toStableRoundId
+    ) {
+      revert WrongPreviousIDs();
+    }
+
     uint256 fromPrice = LibPrice.getRoundData(
       fromInvestRoundId,
       fromStableRoundId,
@@ -478,45 +505,20 @@ contract SellFacet is Modifiers {
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
-    if (strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE) {
-      if (
-        (int256(strategy.parameters._strValue) >= int256(toPrice - fromPrice))
-      ) {
-        revert RoundDataDoesNotMatch();
-      }
-    } else if (strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE) {
-      if (
-        (int256(strategy.parameters._strValue) >= int256(fromPrice - toPrice))
-      ) {
-        revert RoundDataDoesNotMatch();
-      }
-    } else if (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY) {
-      if (
-        (int256(strategy.parameters._strValue) >=
-          ((int256(toPrice - fromPrice) * priceDecimals) / int256(fromPrice)))
-      ) {
-        revert RoundDataDoesNotMatch();
-      }
-    } else if (strategy.parameters._strType == DIP_SPIKE.DECREASE_BY) {
-      if (
-        (int256(strategy.parameters._strValue) >=
-          ((int256(fromPrice - toPrice) * priceDecimals) / int256(fromPrice)))
-      ) {
-        revert RoundDataDoesNotMatch();
-      }
-    }
-  }
+    int256 strValue = int256(strategy.parameters._strValue);
 
-  function checkCurrent(uint256 strategyId, uint256 price) internal {
-    Strategy storage strategy = s.strategies[strategyId];
-
-    // Check the current price source selected in the strategy parameters.
-    if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
-      // Set the sell value to the current price.
-      strategy.parameters._sellValue = price;
-      strategy.sellAt = price;
-      strategy.parameters._sellType = SellLegType.LIMIT_PRICE;
-      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
+    if (
+      (strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE &&
+        strValue >= int256(toPrice - fromPrice)) ||
+      (strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE &&
+        strValue >= int256(fromPrice - toPrice)) ||
+      (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY &&
+        strValue >=
+        (int256(toPrice - fromPrice) * 10000) / int256(fromPrice)) ||
+      (strategy.parameters._strType == DIP_SPIKE.DECREASE_BY &&
+        strValue >= (int256(fromPrice - toPrice) * 10000) / int256(fromPrice))
+    ) {
+      revert RoundDataDoesNotMatch();
     }
   }
 }

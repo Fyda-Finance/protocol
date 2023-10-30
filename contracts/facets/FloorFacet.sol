@@ -10,6 +10,7 @@ import { LibTrade } from "../libraries/LibTrade.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
 
 error FloorNotSet();
+error PriceIsGreaterThanFloorValue();
 
 /**
  * @title FloorFacet
@@ -67,6 +68,16 @@ contract FloorFacet is Modifiers {
       revert NoSwapFromZeroBalance();
     }
 
+    (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+    .getPrice(
+      strategy.parameters._investToken,
+      strategy.parameters._stableToken
+    );
+
+    if (price > strategy.floorAt) {
+      revert PriceIsGreaterThanFloorValue();
+    }
+
     // If liquidation is enabled, initiate a swap of assets.
     if (strategy.parameters._liquidateOnFloor) {
       // Prepare swap data for the DEX.
@@ -91,13 +102,6 @@ contract FloorFacet is Modifiers {
       if (rate > strategy.floorAt) {
         revert InvalidExchangeRate(strategy.floorAt, rate);
       }
-
-      // Retrieve the latest price and round ID from Chainlink.
-      (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
-      .getPrice(
-        strategy.parameters._investToken,
-        strategy.parameters._stableToken
-      );
 
       // Validate the slippage based on the calculated rate and the latest price.
       uint256 slippage = LibTrade.validateSlippage(

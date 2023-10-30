@@ -16,6 +16,7 @@ error BuyDCAIsSet();
 error BuyTwapNotSelected();
 error ExpectedTimeNotElapsed();
 error BTDNotSelected();
+error PriceIsGreaterThanBuyValue();
 
 /**
  * @title BuyFacet
@@ -98,7 +99,9 @@ contract BuyFacet is Modifiers {
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
+
     checkCurrent(strategyId, price);
+
     transferBuy(
       strategyId,
       strategy.parameters._stableAmount,
@@ -136,6 +139,7 @@ contract BuyFacet is Modifiers {
       strategy.parameters._investToken,
       strategy.parameters._stableToken
     );
+
     checkCurrent(strategyId, price);
 
     uint256 timeToExecute = LibTime.convertToSeconds(
@@ -242,21 +246,15 @@ contract BuyFacet is Modifiers {
   function executionBuyValue(uint256 strategyId) public view returns (uint256) {
     uint256 value;
     Strategy storage strategy = s.strategies[strategyId];
-
     if (strategy.parameters._buyDCAUnit == DCA_UNIT.FIXED) {
-      if (
-        strategy.parameters._stableAmount > strategy.parameters._buyDCAValue
-      ) {
-        value = strategy.parameters._buyDCAValue;
-      } else {
-        value = strategy.parameters._stableAmount;
-      }
+      value = (strategy.parameters._stableAmount >
+        strategy.parameters._buyDCAValue)
+        ? strategy.parameters._buyDCAValue
+        : strategy.parameters._stableAmount;
     } else if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
-      if (strategy.parameters._stableAmount > strategy.buyPercentageAmount) {
-        value = strategy.buyPercentageAmount;
-      } else {
-        value = strategy.parameters._stableAmount;
-      }
+      value = (strategy.parameters._stableAmount > strategy.buyPercentageAmount)
+        ? strategy.buyPercentageAmount
+        : strategy.parameters._stableAmount;
     }
 
     return value;
@@ -293,6 +291,9 @@ contract BuyFacet is Modifiers {
     uint256 buyValue
   ) internal {
     Strategy storage strategy = s.strategies[strategyId];
+    if (price > strategy.buyAt) {
+      revert PriceIsGreaterThanBuyValue();
+    }
 
     if (
       strategy.parameters._floor &&
@@ -389,14 +390,13 @@ contract BuyFacet is Modifiers {
   function setSellFloorValues(uint256 strategyId) internal {
     Strategy storage strategy = s.strategies[strategyId];
 
-    if (
-      (strategy.parameters._sellTwap || strategy.parameters._str) &&
-      strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE
-    ) {
-      strategy.sellPercentageAmount =
-        (strategy.parameters._sellDCAValue *
-          strategy.parameters._investAmount) /
-        LibTrade.MAX_PERCENTAGE;
+    if (strategy.parameters._sellTwap || strategy.parameters._str) {
+      if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
+        strategy.sellPercentageAmount =
+          (strategy.parameters._sellDCAValue *
+            strategy.parameters._investAmount) /
+          LibTrade.MAX_PERCENTAGE;
+      }
     }
 
     if (
@@ -409,6 +409,7 @@ contract BuyFacet is Modifiers {
         (strategy.investPrice * floorPercentage) /
         LibTrade.MAX_PERCENTAGE;
     }
+
     if (
       strategy.parameters._sell &&
       strategy.parameters._sellType == SellLegType.INCREASE_BY
@@ -443,12 +444,14 @@ contract BuyFacet is Modifiers {
     ) {
       revert WrongPreviousIDs();
     }
-
-    uint8 decimals = IERC20Metadata(strategy.parameters._stableToken)
-    .decimals();
-    int256 priceDecimals = int256(
-      LibTrade.MAX_PERCENTAGE * (10**uint256(decimals))
-    );
+    if (
+      strategy.investRoundId >= fromInvestRoundId ||
+      strategy.investRoundId >= toInvestRoundId ||
+      strategy.stableRoundId >= fromStableRoundId ||
+      strategy.stableRoundId >= toStableRoundId
+    ) {
+      revert WrongPreviousIDs();
+    }
 
     uint256 fromPrice = LibPrice.getRoundData(
       fromInvestRoundId,
@@ -463,32 +466,21 @@ contract BuyFacet is Modifiers {
       strategy.parameters._stableToken
     );
 
-    if (strategy.parameters._btdType == DIP_SPIKE.FIXED_INCREASE) {
-      if (
-        (int256(strategy.parameters._btdValue) >= int256(toPrice - fromPrice))
-      ) {
-        revert RoundDataDoesNotMatch();
-      }
-    } else if (strategy.parameters._btdType == DIP_SPIKE.FIXED_DECREASE) {
-      if (
-        (int256(strategy.parameters._btdValue) >= int256(fromPrice - toPrice))
-      ) {
-        revert RoundDataDoesNotMatch();
-      }
-    } else if (strategy.parameters._btdType == DIP_SPIKE.INCREASE_BY) {
-      if (
-        (int256(strategy.parameters._btdValue) >=
-          ((int256(toPrice - fromPrice) * priceDecimals) / int256(fromPrice)))
-      ) {
-        revert RoundDataDoesNotMatch();
-      }
-    } else if (strategy.parameters._btdType == DIP_SPIKE.DECREASE_BY) {
-      if (
-        (int256(strategy.parameters._btdValue) >=
-          ((int256(fromPrice - toPrice) * priceDecimals) / int256(fromPrice)))
-      ) {
-        revert RoundDataDoesNotMatch();
-      }
+    int256 btdValue = int256(strategy.parameters._btdValue);
+    int256 toFromPriceDifference = int256(toPrice - fromPrice);
+    int256 fromToPriceDifference = int256(fromPrice - toPrice);
+
+    if (
+      (strategy.parameters._btdType == DIP_SPIKE.FIXED_INCREASE &&
+        btdValue >= toFromPriceDifference) ||
+      (strategy.parameters._btdType == DIP_SPIKE.FIXED_DECREASE &&
+        btdValue >= fromToPriceDifference) ||
+      (strategy.parameters._btdType == DIP_SPIKE.INCREASE_BY &&
+        btdValue >= (toFromPriceDifference * 10000) / int256(fromPrice)) ||
+      (strategy.parameters._btdType == DIP_SPIKE.DECREASE_BY &&
+        btdValue >= (fromToPriceDifference * 10000) / int256(fromPrice))
+    ) {
+      revert RoundDataDoesNotMatch();
     }
   }
 }
