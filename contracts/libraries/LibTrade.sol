@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { HighSlippage } from "../utils/GenericErrors.sol";
+import "hardhat/console.sol";
 
 library LibTrade {
-  uint256 constant MAX_PERCENTAGE = 10000;
+  uint256 public constant MAX_PERCENTAGE = 10000;
 
   /**
     @dev Calculate exchange rate given input and output amounts
@@ -42,6 +43,7 @@ library LibTrade {
       slippage > MAX_PERCENTAGE &&
       slippage - MAX_PERCENTAGE > maxSlippage
     ) revert HighSlippage();
+    console.log("Slippage %s", slippage);
     return slippage;
   }
 }

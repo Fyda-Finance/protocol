@@ -5,7 +5,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
@@ -107,14 +107,7 @@ contract SellFacet is Modifiers {
       strategy.parameters._stableToken
     );
 
-    // Check the current price source selected in the strategy parameters.
-    if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
-      // Set the sell value to the current price.
-      strategy.parameters._sellValue = price;
-      strategy.sellAt = price;
-      strategy.parameters._sellType = SellLegType.LIMIT_PRICE;
-      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
-    }
+    checkCurrent(strategyId, price);
 
     // Determine the sell value based on strategy parameters and market conditions.
     uint256 sellValue = strategy.sellAt;
@@ -179,28 +172,10 @@ contract SellFacet is Modifiers {
       strategy.parameters._stableToken
     );
 
-    // Check the current price source selected in the strategy parameters.
-    if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
-      // Set the sell value to the current price.
-      strategy.parameters._sellValue = price;
-      strategy.sellAt = price;
-      strategy.parameters._sellType = SellLegType.LIMIT_PRICE;
-      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
-    }
+    checkCurrent(strategyId, price);
 
     // Initialize value for the TWAP sell.
-    uint256 value = 0;
-
-    if (strategy.parameters._sellDCAUnit == DCA_UNIT.FIXED) {
-      // If the TWAP sell unit is fixed, determine the value based on strategy parameters.
-      if (strategy.parameters._investAmount > strategy.parameters._sellValue) {
-        value = strategy.parameters._sellValue;
-      } else {
-        value = strategy.parameters._investAmount;
-      }
-    } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
-      value = strategy.sellPercentageAmount;
-    }
+    uint256 value = executionSellValue(strategyId);
 
     if (
       strategy.parameters._highSellValue != 0 &&
@@ -283,19 +258,8 @@ contract SellFacet is Modifiers {
       strategy.parameters._stableToken
     );
 
-    // Check the current price source selected in the strategy parameters.
-    if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
-      strategy.parameters._sellValue = price;
-      strategy.sellAt = price;
-      strategy.parameters._sellType = SellLegType.LIMIT_PRICE;
-      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
-    }
+    checkCurrent(strategyId, price);
 
-    // Initialize high sell value for STR events.
-    uint256 highSellValue = strategy.parameters._highSellValue;
-    if (strategy.parameters._highSellValue == 0) {
-      highSellValue = type(uint256).max;
-    }
     checkRoundDataMistmatch(
       strategyId,
       fromInvestRoundId,
@@ -303,114 +267,19 @@ contract SellFacet is Modifiers {
       toInvestRoundId,
       toStableRoundId
     );
-    uint256 sellValue = strategy.sellAt;
-    if (strategy.strLastTrackedPrice != 0) {
-      sellValue = strategy.strLastTrackedPrice;
-    }
-    uint256 value = 0;
-    if (strategy.parameters._sellDCAUnit == DCA_UNIT.FIXED) {
-      if (strategy.parameters._investAmount > strategy.parameters._sellValue) {
-        value = strategy.parameters._sellValue;
-      } else {
-        value = strategy.parameters._investAmount;
-      }
-    } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
-      value = strategy.sellPercentageAmount;
-    }
 
-    uint256 priceToSTR;
-    if (strategy.strLastTrackedPrice == 0) {
-      if (price >= sellValue && price < highSellValue) {
-        transferSell(
-          strategyId,
-          value,
-          swap,
-          price,
-          investRoundId,
-          stableRoundId,
-          sellValue
-        );
-        strategy.strLastTrackedPrice = price;
-      }
-    } else {
-      if (
-        strategy.parameters._strType == DIP_SPIKE.DECREASE_BY ||
-        strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE
-      ) {
-        if (sellValue > price) {
-          strategy.strLastTrackedPrice = price;
-        } else if (strategy.parameters._strType == DIP_SPIKE.DECREASE_BY) {
-          priceToSTR =
-            ((100 - strategy.parameters._strValue) *
-              strategy.strLastTrackedPrice) /
-            100;
-          if (priceToSTR <= price) {
-            transferSell(
-              strategyId,
-              value,
-              swap,
-              price,
-              investRoundId,
-              stableRoundId,
-              sellValue
-            );
-            strategy.strLastTrackedPrice = price;
-          }
-        } else if (strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE) {
-          priceToSTR = sellValue - strategy.parameters._strValue;
-          if (priceToSTR <= price) {
-            transferSell(
-              strategyId,
-              value,
-              swap,
-              price,
-              investRoundId,
-              stableRoundId,
-              sellValue
-            );
-            strategy.strLastTrackedPrice = price;
-          }
-        }
-      } else if (
-        strategy.parameters._strType == DIP_SPIKE.INCREASE_BY ||
-        strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE
-      ) {
-        if (strategy.strLastTrackedPrice < price) {
-          strategy.strLastTrackedPrice = price;
-        } else if (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY) {
-          priceToSTR =
-            ((100 + strategy.parameters._strValue) * sellValue) /
-            100;
-          if (priceToSTR >= price && !(price >= highSellValue)) {
-            transferSell(
-              strategyId,
-              value,
-              swap,
-              price,
-              investRoundId,
-              stableRoundId,
-              sellValue
-            );
-          }
-          strategy.strLastTrackedPrice = price;
-        } else if (strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE) {
-          priceToSTR = sellValue + strategy.parameters._strValue;
+    uint256 value = executionSellValue(strategyId);
 
-          if (priceToSTR >= sellValue && !(price > highSellValue)) {
-            transferSell(
-              strategyId,
-              value,
-              swap,
-              price,
-              investRoundId,
-              stableRoundId,
-              sellValue
-            );
-          }
-          strategy.strLastTrackedPrice = price;
-        }
-      }
-    }
+    transferSell(
+      strategyId,
+      value,
+      swap,
+      price,
+      investRoundId,
+      stableRoundId,
+      price
+    );
+
     // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
 
     if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
@@ -475,9 +344,6 @@ contract SellFacet is Modifiers {
 
     // Calculate the total investment amount and check if it exceeds the budget.
 
-    strategy.totalSellDCAInvestment =
-      strategy.totalSellDCAInvestment +
-      toTokenAmount;
     strategy.parameters._investAmount =
       strategy.parameters._investAmount -
       value;
@@ -501,8 +367,6 @@ contract SellFacet is Modifiers {
     // Update the strategy's timestamp, buy percentage amount, and round ID if necessary.
 
     strategy.timestamp = block.timestamp;
-    strategy.parameters._investAmount -= value;
-    strategy.parameters._stableAmount += toTokenAmount;
     strategy.investRoundId = investRoundId;
     strategy.stableRoundId = stableRoundId;
     // Calculate the buy percentage amount if buy actions are based on TWAP or BTD.
@@ -512,7 +376,7 @@ contract SellFacet is Modifiers {
     ) {
       strategy.buyPercentageAmount =
         (strategy.parameters._buyDCAValue * strategy.parameters._stableAmount) /
-        100;
+        LibTrade.MAX_PERCENTAGE;
     }
     if (
       (strategy.parameters._sell &&
@@ -549,6 +413,32 @@ contract SellFacet is Modifiers {
     }
   }
 
+  function executionSellValue(uint256 strategyId)
+    public
+    view
+    returns (uint256)
+  {
+    uint256 value;
+    Strategy storage strategy = s.strategies[strategyId];
+
+    if (strategy.parameters._sellDCAUnit == DCA_UNIT.FIXED) {
+      if (
+        strategy.parameters._investAmount > strategy.parameters._sellDCAValue
+      ) {
+        value = strategy.parameters._sellDCAValue;
+      } else {
+        value = strategy.parameters._investAmount;
+      }
+    } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
+      if (strategy.parameters._investAmount > strategy.sellPercentageAmount) {
+        value = strategy.sellPercentageAmount;
+      } else {
+        value = strategy.parameters._investAmount;
+      }
+    }
+    return value;
+  }
+
   /**
    * @notice Internal function to check if there is a data mismatch between price rounds for a strategy.
    * @dev This function ensures that the price fluctuations between specified rounds adhere to strategy parameters.
@@ -571,11 +461,7 @@ contract SellFacet is Modifiers {
     ) {
       revert WrongPreviousIDs();
     }
-    if (
-      fromInvestRoundId == 0 ||
-      toInvestRoundId == 0 ||
-      strategy.strLastTrackedPrice == 0
-    ) {
+    if (fromInvestRoundId == 0 || toInvestRoundId == 0) {
       return;
     }
 
@@ -596,30 +482,43 @@ contract SellFacet is Modifiers {
     );
     if (strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE) {
       if (
-        !(int256(strategy.parameters._strValue) >= int256(toPrice - fromPrice))
+        (int256(strategy.parameters._strValue) >= int256(toPrice - fromPrice))
       ) {
-        revert();
+        revert RoundDataDoesNotMatch();
       }
     } else if (strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE) {
       if (
-        !(int256(strategy.parameters._strValue) >= int256(fromPrice - toPrice))
+        (int256(strategy.parameters._strValue) >= int256(fromPrice - toPrice))
       ) {
-        revert();
+        revert RoundDataDoesNotMatch();
       }
     } else if (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY) {
       if (
-        !(int256(strategy.parameters._strValue) >=
+        (int256(strategy.parameters._strValue) >=
           ((int256(toPrice - fromPrice) * priceDecimals) / int256(fromPrice)))
       ) {
-        revert();
+        revert RoundDataDoesNotMatch();
       }
     } else if (strategy.parameters._strType == DIP_SPIKE.DECREASE_BY) {
       if (
-        !(int256(strategy.parameters._strValue) >=
+        (int256(strategy.parameters._strValue) >=
           ((int256(fromPrice - toPrice) * priceDecimals) / int256(fromPrice)))
       ) {
-        revert();
+        revert RoundDataDoesNotMatch();
       }
+    }
+  }
+
+  function checkCurrent(uint256 strategyId, uint256 price) internal {
+    Strategy storage strategy = s.strategies[strategyId];
+
+    // Check the current price source selected in the strategy parameters.
+    if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
+      // Set the sell value to the current price.
+      strategy.parameters._sellValue = price;
+      strategy.sellAt = price;
+      strategy.parameters._sellType = SellLegType.LIMIT_PRICE;
+      strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
     }
   }
 }

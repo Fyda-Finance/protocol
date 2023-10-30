@@ -53,3 +53,4 @@ error BuyNeverExecute();
 error FloorGreaterThanPrice();
 error FeedNotFound();
 error WrongPreviousIDs();
+error RoundDataDoesNotMatch();

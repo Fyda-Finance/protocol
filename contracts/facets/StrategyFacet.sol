@@ -196,8 +196,9 @@ contract StrategyFacet is Modifiers {
       _parameter._floorType == FloorLegType.DECREASE_BY &&
       _parameter._investAmount > 0
     ) {
-      uint256 floorPercentage = 100 - _parameter._floorValue;
-      floorAt = (price * floorPercentage) / 100;
+      uint256 floorPercentage = LibTrade.MAX_PERCENTAGE -
+        _parameter._floorValue;
+      floorAt = (price * floorPercentage) / LibTrade.MAX_PERCENTAGE;
     }
 
     if (_parameter._sell && _parameter._sellType == SellLegType.LIMIT_PRICE) {
@@ -207,8 +208,8 @@ contract StrategyFacet is Modifiers {
       _parameter._sellType == SellLegType.INCREASE_BY &&
       _parameter._investAmount > 0
     ) {
-      uint256 sellPercentage = 100 + _parameter._sellValue;
-      sellAt = (price * sellPercentage) / 100;
+      uint256 sellPercentage = LibTrade.MAX_PERCENTAGE + _parameter._sellValue;
+      sellAt = (price * sellPercentage) / LibTrade.MAX_PERCENTAGE;
     }
 
     // Check if floor is chosen
@@ -308,12 +309,15 @@ contract StrategyFacet is Modifiers {
       (_parameter._sellTwap || _parameter._str) &&
       _parameter._sellDCAUnit == DCA_UNIT.PERCENTAGE
     ) {
-      if (_parameter._sellDCAValue < 0 || _parameter._sellDCAValue > 100) {
+      if (
+        _parameter._sellDCAValue < 0 ||
+        _parameter._sellDCAValue > LibTrade.MAX_PERCENTAGE
+      ) {
         revert SellDCAValueRangeIsNotValid();
       }
       sellPercentageAmount =
         (_parameter._sellDCAValue * _parameter._investAmount) /
-        100;
+        LibTrade.MAX_PERCENTAGE;
     }
 
     if (
@@ -336,12 +340,15 @@ contract StrategyFacet is Modifiers {
       (_parameter._buyTwap || _parameter._btd) &&
       _parameter._buyDCAUnit == DCA_UNIT.PERCENTAGE
     ) {
-      if (_parameter._buyDCAValue < 0 || _parameter._buyDCAValue > 100) {
+      if (
+        _parameter._buyDCAValue < 0 ||
+        _parameter._buyDCAValue > LibTrade.MAX_PERCENTAGE
+      ) {
         revert BuyDCAValueRangeIsNotValid();
       }
       buyPercentageAmount =
         (_parameter._buyDCAValue * _parameter._stableAmount) /
-        100;
+        LibTrade.MAX_PERCENTAGE;
     }
 
     uint256 budget = 0;
@@ -360,9 +367,7 @@ contract StrategyFacet is Modifiers {
       floorAt: floorAt,
       buyAt: buyAt,
       sellPercentageAmount: sellPercentageAmount,
-      strLastTrackedPrice: 0,
       sellTwapExecutedAt: block.timestamp,
-      btdLastTrackedPrice: 0,
       buyPercentageAmount: buyPercentageAmount,
       buyTwapExecutedAt: block.timestamp,
       timestamp: block.timestamp,
@@ -372,8 +377,6 @@ contract StrategyFacet is Modifiers {
       investPrice: price,
       profit: 0,
       budget: budget,
-      totalBuyDCAInvestment: 0,
-      totalSellDCAInvestment: 0,
       status: Status.ACTIVE
     });
 

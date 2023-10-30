@@ -208,15 +208,9 @@ struct Strategy {
   // @param sellPercentageAmount The percentage of assets to be sold.
   // If percentage sell is set.Otherwise it remains 0.
   uint256 sellPercentageAmount;
-  //  @param strLastTrackedPrice The last tracked price for strategy actions
-  // if the str is set for the sell. Otherwise it remains 0.
-  uint256 strLastTrackedPrice;
   //  @param sellTwapExecutedAt The timestamp of the last executed TWAP (Time-Weighted Average Price) sell.
   //  if sell twap is set for the sell. Otherwise it remains 0
   uint256 sellTwapExecutedAt;
-  //  @param btdLastTrackedPrice The last tracked price for "buy the dip" actions.
-  //  if buy is set for btd. otherwise it is remains 0
-  uint256 btdLastTrackedPrice;
   //  @param buyPercentageAmount The percentage of assets to be bought.
   //  if percenatge is set for buy. Otherwise it remains 0.
   uint256 buyPercentageAmount;
@@ -237,12 +231,6 @@ struct Strategy {
   //  @param budget The available budget for the strategy.
   // it is set at the starting of the strategy
   uint256 budget;
-  //  @param totalBuyDCAInvestment The total investment amount in buy DCA (Dollar-Cost Averaging).
-  // if buy DCA is set. Otherwise it remains zero.
-  uint256 totalBuyDCAInvestment;
-  // @param totalSellDCAInvestment The total investment amount in sell DCA (Dollar-Cost Averaging).
-  // if sell DCA is set. Otherwise it remains zero.
-  uint256 totalSellDCAInvestment;
   // @param status The current status of the strategy.
   Status status;
 }
