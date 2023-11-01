@@ -6,6 +6,7 @@ import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, BuySellAndZeroAmount, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /**
  * @title StrategyFacet
@@ -326,10 +327,12 @@ contract StrategyFacet is Modifiers {
       }
     }
 
+    uint256 decimals = 10**IERC20Metadata(_parameter._stableToken).decimals();
+
     uint256 budget = 0;
 
     if (_parameter._investAmount > 0) {
-      budget = _parameter._investAmount * price;
+      budget = ((_parameter._investAmount * price) / decimals);
     }
 
     if (_parameter._stableAmount > 0) {
