@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import {ScenarioERC20} from "./ScenarioERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract ScenarioDEX {
     // total decimals for USD price
@@ -42,6 +43,7 @@ contract ScenarioDEX {
             exchangeRate[toAsset];
 
         ScenarioERC20(toAsset).mint(address(this), toAmount);
-        ScenarioERC20(toAsset).transfer(msg.sender, toAmount);
+        SafeERC20.safeTransfer(IERC20(toAsset), msg.sender, toAmount);
+        SafeERC20.safeTransferFrom(IERC20(fromAsset), msg.sender, address(this), fromAmount);
     }
 }
