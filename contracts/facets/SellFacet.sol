@@ -132,11 +132,12 @@ contract SellFacet is Modifiers {
       // If neither high sell value nor "sell the rally" nor "sell TWAP" is selected, throw an error.
       revert SellDCASelected();
     }
+    uint256 value = executionSellValue(true, strategyId);
 
     // Perform the sell action, including transferring assets to the DEX.
     transferSell(
       strategyId,
-      strategy.parameters._investAmount,
+      value,
       swap,
       price,
       investRoundId,
@@ -198,7 +199,7 @@ contract SellFacet is Modifiers {
     }
 
     // Initialize value for the TWAP sell.
-    uint256 value = executionSellValue(strategyId);
+    uint256 value = executionSellValue(false, strategyId);
 
     // Calculate the time interval for TWAP execution and check if it can be executed.
     uint256 timeToExecute = LibTime.convertToSeconds(
@@ -247,11 +248,11 @@ contract SellFacet is Modifiers {
    */
   function executeSTR(
     uint256 strategyId,
-    Swap calldata swap,
     uint80 fromInvestRoundId,
     uint80 fromStableRoundId,
     uint80 toInvestRoundId,
-    uint80 toStableRoundId
+    uint80 toStableRoundId,
+    Swap calldata swap
   ) public {
     // Retrieve the strategy details.
     Strategy storage strategy = s.strategies[strategyId];
@@ -273,6 +274,8 @@ contract SellFacet is Modifiers {
       strategy.parameters._stableToken
     );
 
+    console.log("Price: %s", price);
+
     uint256 sellAt = strategy.parameters._sellValue;
     if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
       uint256 sellPercentage = LibTrade.MAX_PERCENTAGE +
@@ -281,6 +284,8 @@ contract SellFacet is Modifiers {
         (strategy.investPrice * sellPercentage) /
         LibTrade.MAX_PERCENTAGE;
     }
+
+    console.log("Sell At: %s", sellAt);
 
     updateCurrentPrice(strategyId, price);
     if (
@@ -301,7 +306,7 @@ contract SellFacet is Modifiers {
       stableRoundId
     );
 
-    uint256 value = executionSellValue(strategyId);
+    uint256 value = executionSellValue(false, strategyId);
 
     transferSell(
       strategyId,
@@ -320,15 +325,16 @@ contract SellFacet is Modifiers {
     }
   }
 
-  function executionSellValue(uint256 strategyId)
+  function executionSellValue(bool investValue, uint256 strategyId)
     public
     view
     returns (uint256)
   {
     uint256 value;
     Strategy storage strategy = s.strategies[strategyId];
-
-    if (strategy.parameters._sellDCAUnit == DCA_UNIT.FIXED) {
+    if (investValue) {
+      value = strategy.parameters._investAmount;
+    } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.FIXED) {
       value = (strategy.parameters._investAmount >
         strategy.parameters._sellDCAValue)
         ? strategy.parameters._sellDCAValue
@@ -473,6 +479,11 @@ contract SellFacet is Modifiers {
   ) internal view {
     Strategy storage strategy = s.strategies[strategyId];
 
+    console.log("present Invest Round %s", presentInvestRound);
+    console.log("to Invest Round %s", toInvestRoundId);
+    console.log("form round ID %s ", fromInvestRoundId);
+    console.log("created round Id: %s ", strategy.investRoundId);
+
     if (
       presentInvestRound < toInvestRoundId ||
       presentStableRound < toStableRoundId
@@ -519,6 +530,7 @@ contract SellFacet is Modifiers {
         strategy.parameters._strType == DIP_SPIKE.INCREASE_BY)
     ) {
       if (toPrice < fromPrice) {
+        console.log("To Price is smaller than fromPrice");
         revert RoundDataDoesNotMatch();
       } else {
         toFromPriceDifference = toPrice - fromPrice;
@@ -533,6 +545,7 @@ contract SellFacet is Modifiers {
         strategy.parameters._strType == DIP_SPIKE.DECREASE_BY)
     ) {
       if (toPrice > fromPrice) {
+        console.log("To Price is greater than fromPrice");
         revert RoundDataDoesNotMatch();
       } else {
         fromToPriceDifference = fromPrice - toPrice;

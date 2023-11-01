@@ -8,6 +8,8 @@ import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
+error BothStableAndInvestAmountProvided();
+
 /**
  * @title StrategyFacet
  * @notice This contract handles the creation, retrieval, and cancellation of strategies.
@@ -329,6 +331,9 @@ contract StrategyFacet is Modifiers {
 
     uint256 decimals = 10**IERC20Metadata(_parameter._stableToken).decimals();
 
+    if (_parameter._investAmount > 0 && _parameter._stableAmount > 0) {
+      revert BothStableAndInvestAmountProvided();
+    }
     uint256 budget = 0;
 
     if (_parameter._investAmount > 0) {
@@ -336,7 +341,7 @@ contract StrategyFacet is Modifiers {
     }
 
     if (_parameter._stableAmount > 0) {
-      budget += _parameter._stableAmount;
+      budget = _parameter._stableAmount;
     }
 
     s.strategies[s.nextStrategyId] = Strategy({
