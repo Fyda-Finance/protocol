@@ -1,10 +1,10 @@
 /* global ethers */
 
 /* eslint prefer-const: "off" */
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 
 import { FacetCutAction, getSelectors } from "./libraries/diamond";
+import { SignerWithAddress } from "hardhat-deploy-ethers/signers";
 
 async function deployDiamond(contractOwner?: SignerWithAddress) {
   if (!contractOwner) {
