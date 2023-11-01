@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { LibAsset } from "./LibAsset.sol";
-import { LibUtil } from "./LibUtil.sol";
-import { NoSwapFromZeroBalance, InsufficientBalance, SwapFailed } from "../utils/GenericErrors.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {LibAsset} from "./LibAsset.sol";
+import {LibUtil} from "./LibUtil.sol";
+import {NoSwapFromZeroBalance, InsufficientBalance, SwapFailed} from "../utils/GenericErrors.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
 
 library LibSwap {
@@ -33,9 +33,17 @@ library LibSwap {
 
         console.log("USDC Address: %s", _swap.fromAsset);
 
-        LibAsset.transferFrom(_swap.fromAsset, _swap.user, address(this), fromAmount);
+        LibAsset.transferFrom(
+            _swap.fromAsset,
+            _swap.user,
+            address(this),
+            fromAmount
+        );
 
-        uint256 initialReceivingAssetBalance = LibAsset.balanceOf(_swap.toAsset, address(this));
+        uint256 initialReceivingAssetBalance = LibAsset.balanceOf(
+            _swap.toAsset,
+            address(this)
+        );
 
         LibAsset.maxApprove(_swap.fromAsset, _swap.callTo, _swap.fromAmount);
 
@@ -55,7 +63,14 @@ library LibSwap {
 
         LibAsset.transfer(_swap.toAsset, _swap.user, receivedAmount);
 
-        emit AssetSwapped(_swap.callTo, _swap.fromAsset, _swap.toAsset, _swap.fromAmount, receivedAmount, _swap.user);
+        emit AssetSwapped(
+            _swap.callTo,
+            _swap.fromAsset,
+            _swap.toAsset,
+            _swap.fromAmount,
+            receivedAmount,
+            _swap.user
+        );
 
         return receivedAmount;
     }

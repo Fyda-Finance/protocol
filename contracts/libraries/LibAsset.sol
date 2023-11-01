@@ -3,13 +3,17 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { TransferFailed } from "../utils/GenericErrors.sol";
+import {TransferFailed} from "../utils/GenericErrors.sol";
 import "hardhat/console.sol";
 
 library LibAsset {
     uint256 private constant MAX_UINT = type(uint256).max;
 
-    function balanceOf(address asset, address account) internal view returns (uint256) {
+    function balanceOf(address asset, address account)
+        internal
+        view
+        returns (uint256)
+    {
         return IERC20(asset).balanceOf(account);
     }
 

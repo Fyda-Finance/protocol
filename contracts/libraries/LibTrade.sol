@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { HighSlippage } from "../utils/GenericErrors.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {HighSlippage} from "../utils/GenericErrors.sol";
 import "hardhat/console.sol";
 
 library LibTrade {
@@ -33,8 +33,16 @@ library LibTrade {
     ) internal pure returns (uint256) {
         uint256 slippage = (price * MAX_PERCENTAGE) / exchangeRate;
 
-        if (isBuy && slippage < MAX_PERCENTAGE && MAX_PERCENTAGE - slippage > maxSlippage) revert HighSlippage();
-        if (!isBuy && slippage > MAX_PERCENTAGE && slippage - MAX_PERCENTAGE > maxSlippage) revert HighSlippage();
+        if (
+            isBuy &&
+            slippage < MAX_PERCENTAGE &&
+            MAX_PERCENTAGE - slippage > maxSlippage
+        ) revert HighSlippage();
+        if (
+            !isBuy &&
+            slippage > MAX_PERCENTAGE &&
+            slippage - MAX_PERCENTAGE > maxSlippage
+        ) revert HighSlippage();
         console.log("Slippage %s", slippage);
         return slippage;
     }

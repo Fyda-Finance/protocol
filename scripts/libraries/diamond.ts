@@ -34,7 +34,7 @@ export function remove(functionNames): {
   remove: any;
   get: any;
 } {
-  const selectors = this.filter(v => {
+  const selectors = this.filter((v) => {
     for (const functionName of functionNames) {
       if (v === this.contract.interface.getSighash(functionName)) {
         return false;
@@ -51,7 +51,7 @@ export function remove(functionNames): {
 // used with getSelectors to get selectors from an array of selectors
 // functionNames argument is an array of function signatures
 export function get(functionNames): { contract: any; remove: any; get: any } {
-  const selectors = this.filter(v => {
+  const selectors = this.filter((v) => {
     for (const functionName of functionNames) {
       if (v === this.contract.interface.getSighash(functionName)) {
         return true;
@@ -67,9 +67,11 @@ export function get(functionNames): { contract: any; remove: any; get: any } {
 
 // remove selectors using an array of signatures
 export function removeSelectors(selectors, signatures): string[] {
-  const iface = new ethers.utils.Interface(signatures.map(v => "function " + v));
-  const removeSelectors = signatures.map(v => iface.getSighash(v));
-  selectors = selectors.filter(v => !removeSelectors.includes(v));
+  const iface = new ethers.utils.Interface(
+    signatures.map((v) => "function " + v)
+  );
+  const removeSelectors = signatures.map((v) => iface.getSighash(v));
+  selectors = selectors.filter((v) => !removeSelectors.includes(v));
   return selectors;
 }
 
