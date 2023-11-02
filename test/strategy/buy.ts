@@ -2,7 +2,7 @@ import { SetupDiamondFixture, setupDiamondFixture } from "./utils";
 
 const { expect } = require("chai");
 
-describe("Buy Tests", function () {
+describe("Buy", function () {
   let setup: SetupDiamondFixture; // Adjust the type as needed
 
   beforeEach(async function () {

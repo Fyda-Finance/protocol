@@ -2,7 +2,7 @@ import { SetupDiamondFixture, setupDiamondFixture } from "./utils";
 
 const { expect } = require("chai");
 
-describe("floor Tests", function () {
+describe("Floor", function () {
   let setup: SetupDiamondFixture; // Adjust the type as needed
   const budget = "1000000000000000000000"; // $1k
   let parameters;

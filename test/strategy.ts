@@ -24,7 +24,7 @@ type SetupDiamondFixture = {
   wethScenarioFeedAggregator: ScenarioFeedAggregator;
 };
 
-describe("ScenarioDEX", function () {
+describe("Strategy", function () {
   async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
     const [owner, user] = await ethers.getSigners();
 
@@ -100,7 +100,7 @@ describe("ScenarioDEX", function () {
     setup = await loadFixture(setupDiamondFixture);
   });
 
-  it("All strategy based", async function () {
+  it("Error Checks", async function () {
     const budget = "1000000000"; // $1k
 
     await setup.scenarioERC20USDC

@@ -26,7 +26,7 @@ type SetupDiamondFixture = {
   wethScenarioFeedAggregator: ScenarioFeedAggregator;
 };
 
-describe("ScenarioDEX", function () {
+describe("Swap and Slippage", function () {
   async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
     const [owner, user] = await ethers.getSigners();
 
