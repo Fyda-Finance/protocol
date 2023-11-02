@@ -9,6 +9,7 @@ import { LibTrade } from "../libraries/LibTrade.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 error BothStableAndInvestAmountProvided();
+error OnlyOwnerCanCancelStrategies();
 
 /**
  * @title StrategyFacet
@@ -378,6 +379,9 @@ contract StrategyFacet is Modifiers {
    */
   function cancelStrategy(uint256 id) external {
     Strategy memory strategy = s.strategies[id];
+    if (msg.sender != strategy.user) {
+      revert OnlyOwnerCanCancelStrategies();
+    }
     strategy.status = Status.CANCELLED;
     emit StrategyCancelled(id);
   }

@@ -5,7 +5,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
@@ -86,6 +86,10 @@ contract SellFacet is Modifiers {
     // Retrieve the strategy details.
     Strategy storage strategy = s.strategies[strategyId];
 
+    if (strategy.status != Status.ACTIVE) {
+      revert StrategyIsNotActive();
+    }
+
     // Ensure that selling is selected in the strategy parameters.
     if (!strategy.parameters._sell) {
       revert SellNotSelected();
@@ -161,6 +165,10 @@ contract SellFacet is Modifiers {
   function executeSellTwap(uint256 strategyId, Swap calldata swap) external {
     // Retrieve the strategy details.
     Strategy storage strategy = s.strategies[strategyId];
+
+    if (strategy.status != Status.ACTIVE) {
+      revert StrategyIsNotActive();
+    }
 
     // Ensure that TWAP sell is selected in the strategy parameters.
     if (!strategy.parameters._sellTwap) {
@@ -255,6 +263,10 @@ contract SellFacet is Modifiers {
   ) public {
     // Retrieve the strategy details.
     Strategy storage strategy = s.strategies[strategyId];
+
+    if (strategy.status != Status.ACTIVE) {
+      revert StrategyIsNotActive();
+    }
 
     // Ensure that STR events are selected in the strategy parameters.
     if (!strategy.parameters._str) {

@@ -54,3 +54,4 @@ error FloorGreaterThanPrice();
 error FeedNotFound();
 error WrongPreviousIDs();
 error RoundDataDoesNotMatch();
+error StrategyIsNotActive();

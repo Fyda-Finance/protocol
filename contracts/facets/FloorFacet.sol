@@ -7,7 +7,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, StrategyIsNotActive } from "../utils/GenericErrors.sol";
 
 error FloorNotSet();
 error PriceIsGreaterThanFloorValue();
@@ -50,6 +50,9 @@ contract FloorFacet is Modifiers {
   function executeFloor(uint256 strategyId, Swap calldata dexSwap) external {
     // Retrieve the strategy details.
     Strategy storage strategy = s.strategies[strategyId];
+    if (strategy.status != Status.ACTIVE) {
+      revert StrategyIsNotActive();
+    }
 
     // Check if the floor price is set in the strategy parameters.
     if (!strategy.parameters._floor) {

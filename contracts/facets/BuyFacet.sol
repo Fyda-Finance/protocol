@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice, WrongPreviousIDs, RoundDataDoesNotMatch } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
@@ -78,6 +78,10 @@ contract BuyFacet is Modifiers {
   function executeBuy(uint256 strategyId, Swap calldata swap) external {
     Strategy storage strategy = s.strategies[strategyId];
 
+    if (strategy.status != Status.ACTIVE) {
+      revert StrategyIsNotActive();
+    }
+
     if (!strategy.parameters._buy) {
       revert BuyNotSet();
     }
@@ -120,6 +124,10 @@ contract BuyFacet is Modifiers {
    */
   function executeBuyTwap(uint256 strategyId, Swap calldata swap) external {
     Strategy storage strategy = s.strategies[strategyId];
+
+    if (strategy.status != Status.ACTIVE) {
+      revert StrategyIsNotActive();
+    }
 
     if (!strategy.parameters._buyTwap) {
       revert BuyTwapNotSelected();
@@ -193,6 +201,9 @@ contract BuyFacet is Modifiers {
     Swap calldata swap
   ) external {
     Strategy storage strategy = s.strategies[strategyId];
+    if (strategy.status != Status.ACTIVE) {
+      revert StrategyIsNotActive();
+    }
 
     if (!strategy.parameters._btd) {
       revert BTDNotSelected();
