@@ -186,8 +186,8 @@ describe("ScenarioDEX", function () {
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
     await expect(await setup.strategyFacet.nextStartegyId()).to.equal(3);
 
-    parameters._buy = false;
-    parameters._buyValue = "0";
+    parameters._buy = true;
+    parameters._buyValue = "10000";
     parameters._btd = false;
     parameters._sellTwap = true;
     parameters._sell = true;
@@ -206,5 +206,96 @@ describe("ScenarioDEX", function () {
     parameters._sellDCAValue = "12";
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
     expect(await setup.strategyFacet.nextStartegyId()).to.equal(4);
+  });
+
+  it("Both DCA chosen", async function () {
+    const budget = "1000000000"; // $1k
+
+    await setup.scenarioERC20USDC
+      .connect(setup.user)
+      .approve(setup.strategyFacet.address, budget);
+
+    const parameters = {
+      _investToken: setup.scenarioERC20WETH.address,
+      _stableToken: setup.scenarioERC20WETH.address,
+      _stableAmount: budget,
+      _investAmount: budget,
+      _slippage: 1000,
+      _floor: true,
+      _floorType: 1,
+      _floorValue: "1600000000",
+      _liquidateOnFloor: false,
+      _cancelOnFloor: false,
+      _buy: true,
+      _buyType: 1,
+      _buyValue: "1500000000",
+      _sell: true,
+      _sellType: 2,
+      _sellValue: "1000000",
+      _highSellValue: "1550000000",
+      _str: true,
+      _strValue: "0",
+      _strType: 1,
+      _sellDCAUnit: 2,
+      _sellDCAValue: "1000",
+      _sellTwap: true,
+      _sellTwapTime: 1,
+      _sellTwapTimeUnit: 1,
+      _completeOnSell: false,
+      _buyTwap: false,
+      _buyTwapTime: 1,
+      _buyTwapTimeUnit: 1,
+      _btd: true,
+      _btdValue: "0",
+      _btdType: 1,
+      _buyDCAUnit: 2,
+      _buyDCAValue: "1000",
+      _current_price: 0,
+    };
+
+    await setup.wethScenarioFeedAggregator.setPrice("120000000000", 25);
+
+    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.reverted;
+    parameters._stableToken = setup.scenarioERC20USDC.address;
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.reverted;
+    parameters._floorValue = "100000000";
+
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.reverted;
+    parameters._buyTwap = false;
+    parameters._buyTwapTime = 0;
+    parameters._buyTwapTimeUnit = 0;
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.reverted;
+    parameters._sellTwap = false;
+    parameters._sellTwapTime = 0;
+    parameters._sellTwapTimeUnit = 0;
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.reverted;
+    parameters._sellValue = "1600000000";
+    parameters._sellType = 1;
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.reverted;
+    parameters._sellTwapTime = 0;
+    parameters._investAmount = "0";
+    parameters._strValue = "1000";
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.reverted;
+    parameters._highSellValue = "1650000000";
+    await expect(
+      setup.strategyFacet.connect(setup.user).createStrategy(parameters)
+    ).to.be.reverted;
+    parameters._btdValue = "1000";
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
   });
 });

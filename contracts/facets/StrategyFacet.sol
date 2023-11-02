@@ -219,7 +219,7 @@ contract StrategyFacet is Modifiers {
         revert BuySellAndZeroAmount();
       }
       if (
-        _parameter._buyValue > _parameter._sellValue &&
+        _parameter._buyValue >= _parameter._sellValue &&
         _parameter._sellType == SellLegType.LIMIT_PRICE
       ) {
         revert BuyAndSellAtMisorder();
@@ -295,6 +295,7 @@ contract StrategyFacet is Modifiers {
     if (
       ((_parameter._sellTwap || _parameter._str) &&
         _parameter._sellDCAUnit == DCA_UNIT.FIXED) &&
+      _parameter._investAmount > 0 &&
       (_parameter._sellDCAValue > _parameter._investAmount)
     ) {
       revert DCAValueShouldBeLessThanIntitialAmount();
@@ -303,6 +304,7 @@ contract StrategyFacet is Modifiers {
     if (
       (_parameter._buyTwap || _parameter._btd) &&
       (_parameter._buyDCAUnit == DCA_UNIT.FIXED) &&
+      _parameter._stableAmount > 0 &&
       (_parameter._buyDCAValue > _parameter._stableAmount)
     ) {
       revert DCAValueShouldBeLessThanIntitialAmount();
