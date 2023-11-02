@@ -1,9 +1,10 @@
 /* eslint-disable prefer-const */
+import { assert } from "chai";
+import { ethers } from "hardhat";
+
 import deployDiamond from "../scripts/deploy";
 import { FacetCutAction } from "../scripts/libraries/diamond";
 import { DiamondLoupeFacet, Test1Facet } from "../typechain";
-import { assert } from "chai";
-import { ethers } from "hardhat";
 
 // The diamond example comes with 8 function selectors
 // [cut, loupe, loupe, loupe, loupe, erc165, transferOwnership, owner]
@@ -31,29 +32,11 @@ describe("Cache bug test", async () => {
     let tx;
     let receipt;
 
-    let selectors = [
-      sel0,
-      sel1,
-      sel2,
-      sel3,
-      sel4,
-      sel5,
-      sel6,
-      sel7,
-      sel8,
-      sel9,
-      sel10,
-    ];
+    let selectors = [sel0, sel1, sel2, sel3, sel4, sel5, sel6, sel7, sel8, sel9, sel10];
 
     let diamondAddress = await deployDiamond();
-    let diamondCutFacet = await ethers.getContractAt(
-      "DiamondCutFacet",
-      diamondAddress
-    );
-    diamondLoupeFacet = await ethers.getContractAt(
-      "DiamondLoupeFacet",
-      diamondAddress
-    );
+    let diamondCutFacet = await ethers.getContractAt("DiamondCutFacet", diamondAddress);
+    diamondLoupeFacet = await ethers.getContractAt("DiamondLoupeFacet", diamondAddress);
     const Test1Facet = await ethers.getContractFactory("Test1Facet");
     test1Facet = await Test1Facet.deploy();
     await test1Facet.deployed();
@@ -69,7 +52,7 @@ describe("Cache bug test", async () => {
       ],
       ethers.constants.AddressZero,
       "0x",
-      { gasLimit: 800000 }
+      { gasLimit: 800000 },
     );
     receipt = await tx.wait();
     if (!receipt.status) {
@@ -93,7 +76,7 @@ describe("Cache bug test", async () => {
       ],
       ethers.constants.AddressZero,
       "0x",
-      { gasLimit: 800000 }
+      { gasLimit: 800000 },
     );
     receipt = await tx.wait();
     if (!receipt.status) {
@@ -103,9 +86,7 @@ describe("Cache bug test", async () => {
 
   it("should not exhibit the cache bug", async () => {
     // Get the test1Facet's registered functions
-    let selectors = await diamondLoupeFacet.facetFunctionSelectors(
-      test1Facet.address
-    );
+    let selectors = await diamondLoupeFacet.facetFunctionSelectors(test1Facet.address);
 
     // Check individual correctness
     assert.isTrue(selectors.includes(sel0), "Does not contain sel0");

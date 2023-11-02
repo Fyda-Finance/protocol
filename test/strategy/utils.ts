@@ -1,3 +1,6 @@
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
+
 import deployDiamond from "../../scripts/deploy";
 import {
   BuyFacet,
@@ -8,8 +11,6 @@ import {
   SellFacet,
   StrategyFacet,
 } from "../../typechain";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers } from "hardhat";
 
 export type SetupDiamondFixture = {
   scenarioERC20USDC: ScenarioERC20;
@@ -38,44 +39,22 @@ export async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
   console.log("USDC Address: ", scenarioERC20USDC.address);
   const scenarioERC20WETH = await scenarioERC20.deploy("WETH", "WETH", 18);
   console.log("WETH Address: ", scenarioERC20WETH.address);
-  await scenarioERC20USDC.mint(
-    user.address,
-    ethers.utils.parseUnits("20000000000", 6)
-  );
-  await scenarioERC20WETH.mint(
-    user.address,
-    ethers.utils.parseUnits("20000000000000000000000", 18)
-  );
+  await scenarioERC20USDC.mint(user.address, ethers.utils.parseUnits("20000000000", 6));
+  await scenarioERC20WETH.mint(user.address, ethers.utils.parseUnits("20000000000000000000000", 18));
 
-  const strategyFacet = await ethers.getContractAt(
-    "StrategyFacet",
-    diamondAddress
-  );
+  const strategyFacet = await ethers.getContractAt("StrategyFacet", diamondAddress);
   const buyFacet = await ethers.getContractAt("BuyFacet", diamondAddress);
   const sellFacet = await ethers.getContractAt("SellFacet", diamondAddress);
   const floorFacet = await ethers.getContractAt("FloorFacet", diamondAddress);
 
-  const priceOracleFacet = await ethers.getContractAt(
-    "PriceOracleFacet",
-    diamondAddress
-  );
+  const priceOracleFacet = await ethers.getContractAt("PriceOracleFacet", diamondAddress);
 
-  const ScenarioFeedAggregator = await ethers.getContractFactory(
-    "ScenarioFeedAggregator"
-  );
-  const usdcScenarioFeedAggregator: ScenarioFeedAggregator =
-    await ScenarioFeedAggregator.deploy();
-  const wethScenarioFeedAggregator: ScenarioFeedAggregator =
-    await ScenarioFeedAggregator.deploy();
+  const ScenarioFeedAggregator = await ethers.getContractFactory("ScenarioFeedAggregator");
+  const usdcScenarioFeedAggregator: ScenarioFeedAggregator = await ScenarioFeedAggregator.deploy();
+  const wethScenarioFeedAggregator: ScenarioFeedAggregator = await ScenarioFeedAggregator.deploy();
 
-  await priceOracleFacet.setAssetFeed(
-    scenarioERC20USDC.address,
-    usdcScenarioFeedAggregator.address
-  );
-  await priceOracleFacet.setAssetFeed(
-    scenarioERC20WETH.address,
-    wethScenarioFeedAggregator.address
-  );
+  await priceOracleFacet.setAssetFeed(scenarioERC20USDC.address, usdcScenarioFeedAggregator.address);
+  await priceOracleFacet.setAssetFeed(scenarioERC20WETH.address, wethScenarioFeedAggregator.address);
 
   return {
     scenarioERC20USDC,

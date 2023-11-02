@@ -9,51 +9,43 @@ import { HighSlippage } from "../utils/GenericErrors.sol";
  * @dev This library provides functions for calculating exchange rates and validating slippage.
  */
 library LibTrade {
-  uint256 public constant MAX_PERCENTAGE = 10000;
+    uint256 public constant MAX_PERCENTAGE = 10000;
 
-  /**
+    /**
     @dev Calculate exchange rate given input and output amounts
     @param fromAsset Address of the asset that was used to swap
     @param fromAmount Amount of the asset that was used to swap
     @param toAmount Amount of the asset that was received from swap
     @return uint256 Returns the exchange rate in toAsset unit
      */
-  function calculateExchangeRate(
-    address fromAsset,
-    uint256 fromAmount,
-    uint256 toAmount
-  ) internal view returns (uint256) {
-    IERC20Metadata _fromToken = IERC20Metadata(fromAsset);
-    uint256 fromDecimals = _fromToken.decimals();
-    return ((toAmount * (10**fromDecimals)) / fromAmount);
-  }
+    function calculateExchangeRate(
+        address fromAsset,
+        uint256 fromAmount,
+        uint256 toAmount
+    ) internal view returns (uint256) {
+        IERC20Metadata _fromToken = IERC20Metadata(fromAsset);
+        uint256 fromDecimals = _fromToken.decimals();
+        return ((toAmount * (10**fromDecimals)) / fromAmount);
+    }
 
-  /**
-   * @notice Validate the slippage of a swap.
-   * @param exchangeRate The calculated exchange rate for the swap.
-   * @param price The reference price for the swap.
-   * @param maxSlippage The maximum allowed slippage percentage.
-   * @param isBuy A flag indicating if it's a buy operation (true) or not (false).
-   * @return uint256 Returns the calculated slippage percentage.
-   */
-  function validateSlippage(
-    uint256 exchangeRate,
-    uint256 price,
-    uint256 maxSlippage,
-    bool isBuy
-  ) internal pure returns (uint256) {
-    uint256 slippage = (price * MAX_PERCENTAGE) / exchangeRate;
+    /**
+     * @notice Validate the slippage of a swap.
+     * @param exchangeRate The calculated exchange rate for the swap.
+     * @param price The reference price for the swap.
+     * @param maxSlippage The maximum allowed slippage percentage.
+     * @param isBuy A flag indicating if it's a buy operation (true) or not (false).
+     * @return uint256 Returns the calculated slippage percentage.
+     */
+    function validateSlippage(
+        uint256 exchangeRate,
+        uint256 price,
+        uint256 maxSlippage,
+        bool isBuy
+    ) internal pure returns (uint256) {
+        uint256 slippage = (price * MAX_PERCENTAGE) / exchangeRate;
 
-    if (
-      isBuy &&
-      slippage < MAX_PERCENTAGE &&
-      MAX_PERCENTAGE - slippage > maxSlippage
-    ) revert HighSlippage();
-    if (
-      !isBuy &&
-      slippage > MAX_PERCENTAGE &&
-      slippage - MAX_PERCENTAGE > maxSlippage
-    ) revert HighSlippage();
-    return slippage;
-  }
+        if (isBuy && slippage < MAX_PERCENTAGE && MAX_PERCENTAGE - slippage > maxSlippage) revert HighSlippage();
+        if (!isBuy && slippage > MAX_PERCENTAGE && slippage - MAX_PERCENTAGE > maxSlippage) revert HighSlippage();
+        return slippage;
+    }
 }
