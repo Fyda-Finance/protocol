@@ -8,7 +8,6 @@ import { LibSwap } from "../libraries/LibSwap.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance, StrategyIsNotActive } from "../utils/GenericErrors.sol";
-
 error FloorNotSet();
 error PriceIsGreaterThanFloorValue();
 
@@ -76,7 +75,9 @@ contract FloorFacet is Modifiers {
     } else if (strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
       uint256 floorPercentage = LibTrade.MAX_PERCENTAGE -
         strategy.parameters._floorValue;
-      floorAt = (price * floorPercentage) / LibTrade.MAX_PERCENTAGE;
+      floorAt =
+        (strategy.investPrice * floorPercentage) /
+        LibTrade.MAX_PERCENTAGE;
     }
 
     if (price > floorAt) {

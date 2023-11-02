@@ -264,7 +264,7 @@ describe("sell Tests", function () {
     // 1 WETH = 1200 USD
     await setup.scenarioDEX.updateExchangeRate(
       setup.scenarioERC20WETH.address,
-      "120000000000"
+      "140000000000"
     );
 
     // 1 USDC = 1 USD
@@ -273,8 +273,8 @@ describe("sell Tests", function () {
       "100000000"
     );
     parameters._sell = true;
-    parameters._sellType = 1;
-    parameters._sellValue = "1200000000";
+    parameters._sellType = 2;
+    parameters._sellValue = "1000";
     parameters._investAmount = "100000000000000000000";
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
@@ -286,6 +286,7 @@ describe("sell Tests", function () {
       setup.scenarioERC20USDC.address,
       value,
     ]);
+    await setup.wethScenarioFeedAggregator.setPrice("133000000000", 5);
 
     await setup.sellFacet.connect(setup.user).executeSell(0, {
       dex: setup.scenarioDEX.address,
@@ -299,12 +300,14 @@ describe("sell Tests", function () {
       })
     ).to.be.reverted;
 
+    parameters._sellType = 1;
     parameters._sellDCAUnit = 2;
     parameters._sellDCAValue = "100000000000000000000";
     parameters._sellTwap = true;
     parameters._sellTwapTime = 1;
     parameters._sellTwapTimeUnit = 1;
     parameters._highSellValue = "2000000000";
+    await setup.wethScenarioFeedAggregator.setPrice("120000000000", 5);
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
@@ -332,6 +335,20 @@ describe("sell Tests", function () {
       dex: setup.scenarioDEX.address,
       callData: dexCalldata,
     });
+    let strategy = await setup.strategyFacet.connect(setup.user).getStrategy(1);
+    expect(strategy.status).to.equal(2);
+
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).cancelStrategy(2);
+    strategy = await setup.strategyFacet.connect(setup.user).getStrategy(2);
+    await expect(
+      setup.sellFacet.connect(setup.user).executeSell(2, {
+        dex: setup.scenarioDEX.address,
+        callData: dexCalldata,
+      })
+    ).to.be.reverted;
+    strategy = await setup.strategyFacet.connect(setup.user).getStrategy(2);
+    expect(strategy.status).to.equal(1);
   });
 
   it("P&L test", async () => {

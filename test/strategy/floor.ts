@@ -2,7 +2,7 @@ import { SetupDiamondFixture, setupDiamondFixture } from "./utils";
 
 const { expect } = require("chai");
 
-describe("sell Tests", function () {
+describe("floor Tests", function () {
   let setup: SetupDiamondFixture; // Adjust the type as needed
   const budget = "1000000000000000000000"; // $1k
   let parameters;
@@ -49,7 +49,7 @@ describe("sell Tests", function () {
     };
   });
 
-  it("floor tests", async () => {
+  it("floor", async () => {
     await setup.scenarioERC20WETH
       .connect(setup.user)
       .approve(setup.strategyFacet.address, budget);
@@ -70,8 +70,8 @@ describe("sell Tests", function () {
       "100000000"
     );
     parameters._floor = true;
-    parameters._floorType = 1;
-    parameters._floorValue = "1200000000";
+    parameters._floorType = 2;
+    parameters._floorValue = "1000";
     parameters._investAmount = "1000000000000000000000";
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
@@ -81,6 +81,8 @@ describe("sell Tests", function () {
       parameters._investAmount,
     ]);
 
+    await setup.wethScenarioFeedAggregator.setPrice("100000000000", 5);
+
     await setup.floorFacet.connect(setup.user).executeFloor(0, {
       dex: setup.scenarioDEX.address,
       callData: dexCalldata,
@@ -88,6 +90,8 @@ describe("sell Tests", function () {
 
     parameters._cancelOnFloor = true;
     parameters._liquidateOnFloor = true;
+    parameters._floorType = 1;
+    parameters._floorValue = "90000000000";
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
     await setup.floorFacet.connect(setup.user).executeFloor(1, {
@@ -95,7 +99,7 @@ describe("sell Tests", function () {
       callData: dexCalldata,
     });
     await expect(
-      setup.sellFacet.connect(setup.user).executeSellTwap(1, {
+      setup.floorFacet.connect(setup.user).executeFloor(1, {
         dex: setup.scenarioDEX.address,
         callData: dexCalldata,
       })

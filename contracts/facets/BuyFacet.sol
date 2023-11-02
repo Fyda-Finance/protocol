@@ -316,8 +316,11 @@ contract BuyFacet is Modifiers {
       } else if (strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
         uint256 floorPercentage = LibTrade.MAX_PERCENTAGE -
           strategy.parameters._floorValue;
-        floorAt = (price * floorPercentage) / LibTrade.MAX_PERCENTAGE;
+        floorAt =
+          (strategy.investPrice * floorPercentage) /
+          LibTrade.MAX_PERCENTAGE;
       }
+
       if (floorAt > price) {
         revert FloorGreaterThanPrice();
       }

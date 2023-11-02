@@ -196,18 +196,6 @@ contract StrategyFacet is Modifiers {
       }
     }
 
-    uint256 sellAt;
-    if (_parameter._sell && _parameter._sellType == SellLegType.LIMIT_PRICE) {
-      sellAt = _parameter._sellValue;
-    } else if (
-      _parameter._sell &&
-      _parameter._sellType == SellLegType.INCREASE_BY &&
-      _parameter._investAmount > 0
-    ) {
-      uint256 sellPercentage = LibTrade.MAX_PERCENTAGE + _parameter._sellValue;
-      sellAt = (price * sellPercentage) / LibTrade.MAX_PERCENTAGE;
-    }
-
     if (_parameter._sell || _parameter._str || _parameter._sellTwap) {
       if (_parameter._sellType == SellLegType.NO_TYPE) {
         revert InvalidSellType();
@@ -219,7 +207,7 @@ contract StrategyFacet is Modifiers {
         _parameter._highSellValue != 0 &&
         (_parameter._str || _parameter._sellTwap)
       ) {
-        if (sellAt > _parameter._highSellValue) {
+        if (_parameter._sellValue > _parameter._highSellValue) {
           revert InvalidHighSellValue();
         }
       }
@@ -231,7 +219,7 @@ contract StrategyFacet is Modifiers {
         revert BuySellAndZeroAmount();
       }
       if (
-        _parameter._buyValue > sellAt &&
+        _parameter._buyValue > _parameter._sellValue &&
         _parameter._sellType == SellLegType.LIMIT_PRICE
       ) {
         revert BuyAndSellAtMisorder();
@@ -272,7 +260,7 @@ contract StrategyFacet is Modifiers {
       _parameter._sellType == SellLegType.LIMIT_PRICE &&
       _parameter._floorType == FloorLegType.LIMIT_PRICE
     ) {
-      if (_parameter._floorValue >= sellAt) {
+      if (_parameter._floorValue >= _parameter._sellValue) {
         revert FloorValueGreaterThanSellValue();
       }
     }
@@ -306,16 +294,18 @@ contract StrategyFacet is Modifiers {
 
     if (
       ((_parameter._sellTwap || _parameter._str) &&
-        _parameter._sellDCAUnit == DCA_UNIT.FIXED) ||
-      ((_parameter._buyTwap || _parameter._btd) &&
-        _parameter._buyDCAUnit == DCA_UNIT.FIXED)
+        _parameter._sellDCAUnit == DCA_UNIT.FIXED) &&
+      (_parameter._sellDCAValue > _parameter._investAmount)
     ) {
-      if (
-        (_parameter._sellDCAValue > _parameter._investAmount) &&
-        (_parameter._buyDCAValue > _parameter._stableAmount)
-      ) {
-        revert DCAValueShouldBeLessThanIntitialAmount();
-      }
+      revert DCAValueShouldBeLessThanIntitialAmount();
+    }
+
+    if (
+      (_parameter._buyTwap || _parameter._btd) &&
+      (_parameter._buyDCAUnit == DCA_UNIT.FIXED) &&
+      (_parameter._buyDCAValue > _parameter._stableAmount)
+    ) {
+      revert DCAValueShouldBeLessThanIntitialAmount();
     }
 
     if (
@@ -344,7 +334,10 @@ contract StrategyFacet is Modifiers {
     if (_parameter._stableAmount > 0) {
       budget = _parameter._stableAmount;
     }
-
+    uint256 investPrice = 0;
+    if (_parameter._investAmount > 0) {
+      investPrice = price;
+    }
     s.strategies[s.nextStrategyId] = Strategy({
       user: msg.sender,
       sellTwapExecutedAt: 0,
@@ -352,7 +345,7 @@ contract StrategyFacet is Modifiers {
       investRoundId: investRoundId,
       stableRoundId: stableRoundId,
       parameters: _parameter,
-      investPrice: price,
+      investPrice: investPrice,
       profit: 0,
       budget: budget,
       status: Status.ACTIVE
@@ -378,7 +371,7 @@ contract StrategyFacet is Modifiers {
    * @param id The unique ID of the strategy to cancel.
    */
   function cancelStrategy(uint256 id) external {
-    Strategy memory strategy = s.strategies[id];
+    Strategy storage strategy = s.strategies[id];
     if (msg.sender != strategy.user) {
       revert OnlyOwnerCanCancelStrategies();
     }
