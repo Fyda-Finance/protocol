@@ -38,6 +38,9 @@ contract SellFacet is Modifiers {
    * @notice Emitted when a sell action is executed for a trading strategy using a specific DEX and call data.
    * @param strategyId The unique ID of the strategy where the sell action is executed.
    * @param sellValue The value at which the  sell action was executed.
+   * @param slippage The allowable price slippage percentage for the buy action.
+   * @param amount The amount of tokens bought.
+   * @param exchangeRate The exchange rate at which the tokens were acquired.
    */
   event SellExecuted(
     uint256 indexed strategyId,
@@ -51,6 +54,10 @@ contract SellFacet is Modifiers {
    * @notice Emitted when a Time-Weighted Average Price (TWAP) sell action is executed for a trading strategy using a specific DEX and call data.
    * @param strategyId The unique ID of the strategy where the TWAP sell action was executed.
    * @param sellValue The value at which the TWAP sell action was executed.
+   * @param slippage The allowable price slippage percentage for the buy action.
+   * @param amount The amount of tokens bought.
+   * @param exchangeRate The exchange rate at which the tokens were acquired.
+   * @param time The time at which it was executed.
    */
   event SellTwapExecuted(
     uint256 indexed strategyId,
@@ -65,6 +72,9 @@ contract SellFacet is Modifiers {
    * @notice Emitted when a Spike Trigger (STR) event is executed for a trading strategy using a specific DEX and call data.
    * @param strategyId The unique ID of the strategy where the STR event was executed.
    * @param sellValue The value at which the STR event was executed.
+   * @param slippage The allowable price slippage percentage for the buy action.
+   * @param amount The amount of tokens bought.
+   * @param exchangeRate The exchange rate at which the tokens were acquired.
    */
   event STRExecuted(
     uint256 indexed strategyId,
@@ -79,9 +89,7 @@ contract SellFacet is Modifiers {
    * @dev This function performs a sell action based on the specified strategy parameters and market conditions.
    *      It verifies whether the strategy's parameters meet the required conditions for executing a sell.
    * @param strategyId The unique ID of the strategy to execute the sell action for.
-  * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
-
-
+   * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    */
   function executeSell(uint256 strategyId, Swap calldata swap) external {
     // Retrieve the strategy details.
@@ -333,6 +341,13 @@ contract SellFacet is Modifiers {
     }
   }
 
+  /**
+   * @notice Calculate the value to be sold in a trading strategy based on provided parameters.
+   * @param investValue Boolean indicating whether the value is based on the investment amount.
+   * @param strategyId The unique ID of the strategy for which the sell value is calculated.
+   * @return The calculated value to be sold, which can be based on fixed or percentage units.
+   */
+
   function executionSellValue(bool investValue, uint256 strategyId)
     public
     view
@@ -361,6 +376,7 @@ contract SellFacet is Modifiers {
   /**
    * @notice Transfer assets from the trading strategy during a sell action.
    * @dev This function swaps a specified amount of assets on a DEX (Decentralized Exchange) and updates the strategy's state accordingly.
+   * @param strategyId The unique ID of the trading strategy where the BTD action is executed.
    * @param value The amount to be sold on the DEX.
    * @param dexSwap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    * @param price The current market price of the investment token.
@@ -462,6 +478,11 @@ contract SellFacet is Modifiers {
     }
   }
 
+  /**
+   * @notice Update the current price of a trading strategy based on the given price.
+   * @param strategyId The unique ID of the strategy to update.
+   * @param price The new price to set as the current price.
+   */
   function updateCurrentPrice(uint256 strategyId, uint256 price) internal {
     Strategy storage strategy = s.strategies[strategyId];
 
@@ -481,6 +502,8 @@ contract SellFacet is Modifiers {
    * @param fromStableRoundId The round ID for the stable token's price data to start checking from.
    * @param toInvestRoundId The round ID for the investment token's price data to check up to.
    * @param toStableRoundId The round ID for the stable token's price data to check up to.
+   * @param presentInvestRound The present round ID for the invest token's price.
+   * @param presentStableRound The present round ID for the stable token's price.
    */
   function checkRoundDataMistmatch(
     uint256 strategyId,

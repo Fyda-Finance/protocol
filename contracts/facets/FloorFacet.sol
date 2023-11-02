@@ -29,6 +29,9 @@ contract FloorFacet is Modifiers {
    * @notice Emitted when a floor execution is initiated for a trading strategy.
    * @param strategyId The unique ID of the strategy where the floor execution is initiated.
    * @param floorValue The value at which the floor action was executed.
+   * @param slippage The allowable price slippage percentage for the buy action.
+   * @param amount The amount of tokens bought.
+   * @param exchangeRate The exchange rate at which the tokens were acquired.
    */
   event FloorExecuted(
     uint256 indexed strategyId,
@@ -44,7 +47,7 @@ contract FloorFacet is Modifiers {
    *      it may execute a liquidation of assets. Liquidation occurs if the strategy's floor price is reached and
    *      liquidation is enabled in the strategy parameters.
    * @param strategyId The unique ID of the strategy to execute the floor check for.
-   
+   * @param dexSwap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    */
   function executeFloor(uint256 strategyId, Swap calldata dexSwap) external {
     // Retrieve the strategy details.

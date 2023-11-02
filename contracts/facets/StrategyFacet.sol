@@ -25,13 +25,14 @@ contract StrategyFacet is Modifiers {
   AppStorage internal s;
 
   /**
-   * @notice The `StrategyCreated` event is emitted when a new strategy is created in the contract.
-   * @dev This event provides information about the newly created strategy, including the investment token,
-   *      stable token, and the strategy's parameters.
-   * @param investToken The address of the investment token used by the strategy.
-   * @param stableToken The address of the stable token used by the strategy.
-   * @param parameter The parameters defining the strategy, as a `StrategyParameters` struct. Please look at the
-   * struct in the AppStorage.sol
+   * @notice Emitted when a new trading strategy is created.
+   * @param investToken The address of the investment token used in the strategy.
+   * @param stableToken The address of the stable token used in the strategy.
+   * @param parameter The strategy parameter including settings for buying and selling.
+   * @param timestamp Timestamp when the strategy is created.
+   * @param investRoundId Round ID for the investment token price when the strategy is created.
+   * @param stableRoundId Round ID for the stable token price when the strategy is created.
+   * @param investPrice The price of the investment token at the time of strategy creation.
    */
 
   event StrategyCreated(

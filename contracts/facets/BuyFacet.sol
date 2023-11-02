@@ -32,10 +32,14 @@ contract BuyFacet is Modifiers {
   AppStorage internal s;
 
   /**
-   * @notice Emitted when a buy action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
+   * @notice Emitted when a buy action is executed for a trading strategy.
    * @param strategyId The unique ID of the strategy where the buy action was executed.
    * @param buyValue The value at which the buy action was executed.
+   * @param slippage The allowable price slippage percentage for the buy action.
+   * @param amount The amount of tokens bought.
+   * @param exchangeRate The exchange rate at which the tokens were acquired.
    */
+
   event BuyExecuted(
     uint256 indexed strategyId,
     uint256 buyValue,
@@ -48,11 +52,15 @@ contract BuyFacet is Modifiers {
    * @notice Emitted when a Buy on Time-Weighted Average Price (TWAP) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
    * @param strategyId The unique ID of the strategy where the Buy on TWAP action was executed.
    * @param buyValue The value at which the Buy on TWAP action was executed.
+   * @param slippage The allowable price slippage percentage for the buy action.
+   * @param amount The amount of tokens bought.
+   * @param exchangeRate The exchange rate at which the tokens were acquired.
+   * @param time The time at which it was executed.
    */
   event BuyTwapExecuted(
     uint256 indexed strategyId,
     uint256 buyValue,
-    uint256 slipagge,
+    uint256 slippage,
     uint256 amount,
     uint256 exchangeRate,
     uint256 time
@@ -61,11 +69,14 @@ contract BuyFacet is Modifiers {
    * @notice Emitted when a Buy The Dip (BTD) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
    * @param strategyId The unique ID of the strategy where the BTD action was executed.
    * @param buyValue The value at which the BTD action was executed.
+   * @param slippage The allowable price slippage percentage for the buy action.
+   * @param amount The amount of tokens bought.
+   * @param exchangeRate The exchange rate at which the tokens were acquired.
    */
   event BTDExecuted(
     uint256 indexed strategyId,
     uint256 buyValue,
-    uint256 slipagge,
+    uint256 slippage,
     uint256 amount,
     uint256 exchangeRate
   );
@@ -119,9 +130,7 @@ contract BuyFacet is Modifiers {
   /**
    * @notice Executes a Buy on Time-Weighted Average Price (TWAP) action for a trading strategy.
    * @param strategyId The unique ID of the strategy to execute the Buy on TWAP action.
-  * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
-
- 
+   * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    */
   function executeBuyTwap(uint256 strategyId, Swap calldata swap) external {
     Strategy storage strategy = s.strategies[strategyId];
@@ -189,8 +198,7 @@ contract BuyFacet is Modifiers {
    * @param toInvestRoundId The ending invest round ID for monitoring price fluctuations.
    * @param fromStableRoundId The starting stable round ID for monitoring price fluctuations.
    * @param toStableRoundId The ending stable round ID for monitoring price fluctuations.
-    * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
-   
+   * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    */
 
   function executeBTD(
@@ -251,6 +259,12 @@ contract BuyFacet is Modifiers {
     }
   }
 
+  /**
+   * @notice Calculate the effective value for a buy action in a trading strategy.
+   * @param stableAmount Boolean flag indicating whether to consider the entire stable token amount.
+   * @param strategyId The unique ID of the strategy for which to calculate the buy value.
+   * @return The calculated buy value based on the specified parameters.
+   */
   function executionBuyValue(bool stableAmount, uint256 strategyId)
     public
     view
@@ -276,6 +290,11 @@ contract BuyFacet is Modifiers {
     return value;
   }
 
+  /**
+   * @notice Update the current price of a trading strategy based on the given price.
+   * @param strategyId The unique ID of the strategy to update.
+   * @param price The new price to set as the current price.
+   */
   function updateCurrentPrice(uint256 strategyId, uint256 price) internal {
     Strategy storage strategy = s.strategies[strategyId];
     if (strategy.parameters._current_price == CURRENT_PRICE.BUY_CURRENT) {
@@ -290,6 +309,7 @@ contract BuyFacet is Modifiers {
    * @dev This function transfers assets from stable tokens to investment tokens on a DEX.
    * @param strategyId The unique ID of the trading strategy where the BTD action is executed.
    * @param value The value to be transferred from stable tokens to investment tokens.
+   * @param dexSwap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
    * @param price The current price of the investment token.
    * @param investRoundId The invest round ID associated with the current price data.
    * @param stableRoundId The stable round ID associated with the current price data.
@@ -396,6 +416,8 @@ contract BuyFacet is Modifiers {
    * @param fromStableRoundId The round ID for the stable token's price data to start checking from.
    * @param toInvestRoundId The round ID for the investment token's price data to check up to.
    * @param toStableRoundId The round ID for the stable token's price data to check up to.
+   * @param presentInvestRound The present round ID for the invest token's price.
+   * @param presentStableRound The present round ID for the stable token's price.
    */
   function checkRoundDataMistmatch(
     uint256 strategyId,

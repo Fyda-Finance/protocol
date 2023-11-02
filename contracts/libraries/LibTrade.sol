@@ -4,6 +4,10 @@ pragma solidity ^0.8.20;
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { HighSlippage } from "../utils/GenericErrors.sol";
 
+/**
+ * @title LibTrade
+ * @dev This library provides functions for calculating exchange rates and validating slippage.
+ */
 library LibTrade {
   uint256 public constant MAX_PERCENTAGE = 10000;
 
@@ -24,6 +28,14 @@ library LibTrade {
     return ((toAmount * (10**fromDecimals)) / fromAmount);
   }
 
+  /**
+   * @notice Validate the slippage of a swap.
+   * @param exchangeRate The calculated exchange rate for the swap.
+   * @param price The reference price for the swap.
+   * @param maxSlippage The maximum allowed slippage percentage.
+   * @param isBuy A flag indicating if it's a buy operation (true) or not (false).
+   * @return uint256 Returns the calculated slippage percentage.
+   */
   function validateSlippage(
     uint256 exchangeRate,
     uint256 price,
