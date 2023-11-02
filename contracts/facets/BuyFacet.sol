@@ -54,7 +54,8 @@ contract BuyFacet is Modifiers {
     uint256 buyValue,
     uint256 slipagge,
     uint256 amount,
-    uint256 exchangeRate
+    uint256 exchangeRate,
+    uint256 time
   );
   /**
    * @notice Emitted when a Buy The Dip (BTD) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
@@ -376,7 +377,14 @@ contract BuyFacet is Modifiers {
     } else if (strategy.parameters._btd) {
       emit BTDExecuted(strategyId, price, slippage, toTokenAmount, rate);
     } else if (strategy.parameters._buyTwap) {
-      emit BuyTwapExecuted(strategyId, price, slippage, toTokenAmount, rate);
+      emit BuyTwapExecuted(
+        strategyId,
+        price,
+        slippage,
+        toTokenAmount,
+        rate,
+        block.timestamp
+      );
     }
   }
 

@@ -57,7 +57,8 @@ contract SellFacet is Modifiers {
     uint256 sellValue,
     uint256 slippage,
     uint256 amount,
-    uint256 exchangeRate
+    uint256 exchangeRate,
+    uint256 time
   );
 
   /**
@@ -450,7 +451,14 @@ contract SellFacet is Modifiers {
     } else if (strategy.parameters._str) {
       emit STRExecuted(strategyId, price, slippage, toTokenAmount, rate);
     } else if (strategy.parameters._sellTwap) {
-      emit SellTwapExecuted(strategyId, price, slippage, toTokenAmount, rate);
+      emit SellTwapExecuted(
+        strategyId,
+        price,
+        slippage,
+        toTokenAmount,
+        rate,
+        block.timestamp
+      );
     }
   }
 
