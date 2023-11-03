@@ -28,16 +28,16 @@ contract FloorFacet is Modifiers {
     /**
      * @notice Emitted when a floor execution is initiated for a trading strategy.
      * @param strategyId The unique ID of the strategy where the floor execution is initiated.
-     * @param floorValue The value at which the floor action was executed.
+     * @param price The price at which the floor action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
-     * @param amount The amount of tokens bought.
+     * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
     event FloorExecuted(
         uint256 indexed strategyId,
-        uint256 floorValue,
+        uint256 price,
         uint256 slippage,
-        uint256 amount,
+        uint256 stableTokenAmount,
         uint256 exchangeRate
     );
 

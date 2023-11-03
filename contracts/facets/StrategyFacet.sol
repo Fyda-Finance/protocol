@@ -11,6 +11,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 error BothStableAndInvestAmountProvided();
 error OnlyOwnerCanCancelStrategies();
 error NoAmountProvided();
+error HighSellValueIsChosenWithoutSeLLDCA();
 
 /**
  * @title StrategyFacet
@@ -27,13 +28,13 @@ contract StrategyFacet is Modifiers {
 
     /**
      * @notice Emitted when a new trading strategy is created.
-     * @param investToken The address of the investment token used in the strategy.
+     * @param investToken The address of the invest token used in the strategy.
      * @param stableToken The address of the stable token used in the strategy.
      * @param parameter The strategy parameter including settings for buying and selling.
      * @param timestamp Timestamp when the strategy is created.
-     * @param investRoundId Round ID for the investment token price when the strategy is created.
+     * @param investRoundId Round ID for the invest token price when the strategy is created.
      * @param stableRoundId Round ID for the stable token price when the strategy is created.
-     * @param price The price of the investment token at the time of strategy creation.
+     * @param price The price of the invest token at the time of strategy creation.
      */
 
     event StrategyCreated(
@@ -214,6 +215,12 @@ contract StrategyFacet is Modifiers {
             }
         }
 
+        if (_parameter._highSellValue != 0) {
+            if (!(_parameter._str || _parameter._sellTwap)) {
+                revert HighSellValueIsChosenWithoutSeLLDCA();
+            }
+        }
+
         if (_parameter._sell || _parameter._str || _parameter._sellTwap) {
             if (_parameter._sellType == SellLegType.NO_TYPE) {
                 revert InvalidSellType();
@@ -223,11 +230,9 @@ contract StrategyFacet is Modifiers {
             }
             if (
                 _parameter._highSellValue != 0 &&
-                (_parameter._str || _parameter._sellTwap)
+                sellValue > _parameter._highSellValue
             ) {
-                if (sellValue > _parameter._highSellValue) {
-                    revert InvalidHighSellValue();
-                }
+                revert InvalidHighSellValue();
             }
         }
 

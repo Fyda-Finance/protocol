@@ -37,33 +37,33 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a sell action is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the sell action is executed.
-     * @param sellValue The value at which the  sell action was executed.
+     * @param price The price at which the  sell action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
-     * @param amount The amount of tokens bought.
+     * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
     event SellExecuted(
         uint256 indexed strategyId,
-        uint256 sellValue,
+        uint256 price,
         uint256 slippage,
-        uint256 amount,
+        uint256 stableTokenAmount,
         uint256 exchangeRate
     );
 
     /**
      * @notice Emitted when a Time-Weighted Average Price (TWAP) sell action is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the TWAP sell action was executed.
-     * @param sellValue The value at which the TWAP sell action was executed.
+     * @param price The price at which the TWAP sell action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
-     * @param amount The amount of tokens bought.
+     * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param time The time at which it was executed.
      */
     event SellTwapExecuted(
         uint256 indexed strategyId,
-        uint256 sellValue,
+        uint256 price,
         uint256 slippage,
-        uint256 amount,
+        uint256 stableTokenAmount,
         uint256 exchangeRate,
         uint256 time
     );
@@ -71,16 +71,16 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a Spike Trigger (STR) event is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the STR event was executed.
-     * @param sellValue The value at which the STR event was executed.
+     * @param price The price at which the STR event was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
-     * @param amount The amount of tokens bought.
+     * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
     event STRExecuted(
         uint256 indexed strategyId,
-        uint256 sellValue,
+        uint256 price,
         uint256 slippage,
-        uint256 amount,
+        uint256 stableTokenAmount,
         uint256 exchangeRate
     );
 
@@ -131,10 +131,7 @@ contract SellFacet is Modifiers {
             revert PriceLessThanSellValue();
         }
 
-        if (
-            strategy.parameters._highSellValue != 0 &&
-            (strategy.parameters._str || strategy.parameters._sellTwap)
-        ) {
+        if (strategy.parameters._highSellValue != 0) {
             // If a high sell value is specified and "strategy" or "sell TWAP" is selected, use the high sell value.
             sellAt = strategy.parameters._highSellValue;
             if (price < sellAt) {
@@ -144,7 +141,7 @@ contract SellFacet is Modifiers {
             // If neither high sell value nor "sell the rally" nor "sell TWAP" is selected, throw an error.
             revert SellDCASelected();
         }
-        uint256 value = executionSellValue(true, strategyId);
+        uint256 value = executionSellAmount(true, strategyId);
 
         // Perform the sell action, including transferring assets to the DEX.
         transferSell(
@@ -215,7 +212,7 @@ contract SellFacet is Modifiers {
         }
 
         // Initialize value for the TWAP sell.
-        uint256 value = executionSellValue(false, strategyId);
+        uint256 value = executionSellAmount(false, strategyId);
 
         // Calculate the time interval for TWAP execution and check if it can be executed.
         uint256 timeToExecute = LibTime.convertToSeconds(
@@ -313,7 +310,7 @@ contract SellFacet is Modifiers {
             revert PriceIsNotInTheRange();
         }
 
-        checkRoundDataMistmatch(
+        checkRoundPrices(
             strategyId,
             fromInvestRoundId,
             fromStableRoundId,
@@ -323,7 +320,7 @@ contract SellFacet is Modifiers {
             stableRoundId
         );
 
-        uint256 value = executionSellValue(false, strategyId);
+        uint256 value = executionSellAmount(false, strategyId);
 
         transferSell(
             strategyId,
@@ -351,17 +348,17 @@ contract SellFacet is Modifiers {
      * @return The calculated value to be sold, which can be based on fixed or percentage units.
      */
 
-    function executionSellValue(bool investValue, uint256 strategyId)
+    function executionSellAmount(bool investValue, uint256 strategyId)
         public
         view
         returns (uint256)
     {
-        uint256 value;
-        Strategy storage strategy = s.strategies[strategyId];
+        uint256 amount;
+        Strategy memory strategy = s.strategies[strategyId];
         if (investValue) {
-            value = strategy.parameters._investAmount;
+            amount = strategy.parameters._investAmount;
         } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.FIXED) {
-            value = (strategy.parameters._investAmount >
+            amount = (strategy.parameters._investAmount >
                 strategy.parameters._sellDCAValue)
                 ? strategy.parameters._sellDCAValue
                 : strategy.parameters._investAmount;
@@ -369,11 +366,11 @@ contract SellFacet is Modifiers {
             uint256 sellPercentageAmount = (strategy.parameters._sellDCAValue *
                 strategy.parameters._investAmount) / LibTrade.MAX_PERCENTAGE;
 
-            value = (strategy.parameters._investAmount > sellPercentageAmount)
+            amount = (strategy.parameters._investAmount > sellPercentageAmount)
                 ? sellPercentageAmount
                 : strategy.parameters._investAmount;
         }
-        return value;
+        return amount;
     }
 
     /**
@@ -501,7 +498,6 @@ contract SellFacet is Modifiers {
         // Check the current price source selected in the strategy parameters.
         if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
             strategy.parameters._sellValue = price;
-            strategy.parameters._sellType = SellLegType.LIMIT_PRICE;
             strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
         }
     }
@@ -517,7 +513,7 @@ contract SellFacet is Modifiers {
      * @param presentInvestRound The present round ID for the invest token's price.
      * @param presentStableRound The present round ID for the stable token's price.
      */
-    function checkRoundDataMistmatch(
+    function checkRoundPrices(
         uint256 strategyId,
         uint80 fromInvestRoundId,
         uint80 fromStableRoundId,
@@ -526,7 +522,7 @@ contract SellFacet is Modifiers {
         uint80 presentInvestRound,
         uint80 presentStableRound
     ) internal view {
-        Strategy storage strategy = s.strategies[strategyId];
+        Strategy memory strategy = s.strategies[strategyId];
 
         if (
             presentInvestRound < toInvestRoundId ||

@@ -50,9 +50,9 @@ export type Parameters = {
   _sell: boolean;
   _sellType: number;
   _sellValue: string;
-  _highSellValue: number;
+  _highSellValue: string;
   _str: boolean;
-  _strValue: number;
+  _strValue: string;
   _strType: number;
   _sellDCAUnit: number;
   _sellDCAValue: string;

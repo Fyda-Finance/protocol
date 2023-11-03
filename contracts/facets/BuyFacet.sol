@@ -35,50 +35,50 @@ contract BuyFacet is Modifiers {
     /**
      * @notice Emitted when a buy action is executed for a trading strategy.
      * @param strategyId The unique ID of the strategy where the buy action was executed.
-     * @param buyValue The value at which the buy action was executed.
+     * @param price The price at which the buy action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
-     * @param amount The amount of tokens bought.
+     * @param investTokenAmount The amount of invest tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
 
     event BuyExecuted(
         uint256 indexed strategyId,
-        uint256 buyValue,
+        uint256 price,
         uint256 slippage,
-        uint256 amount,
+        uint256 investTokenAmount,
         uint256 exchangeRate
     );
 
     /**
      * @notice Emitted when a Buy on Time-Weighted Average Price (TWAP) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
      * @param strategyId The unique ID of the strategy where the Buy on TWAP action was executed.
-     * @param buyValue The value at which the Buy on TWAP action was executed.
+     * @param price The price at which the Buy on TWAP action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
-     * @param amount The amount of tokens bought.
+     * @param investTokenAmount The amount of invest tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param time The time at which it was executed.
      */
     event BuyTwapExecuted(
         uint256 indexed strategyId,
-        uint256 buyValue,
+        uint256 price,
         uint256 slippage,
-        uint256 amount,
+        uint256 investTokenAmount,
         uint256 exchangeRate,
         uint256 time
     );
     /**
      * @notice Emitted when a Buy The Dip (BTD) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
      * @param strategyId The unique ID of the strategy where the BTD action was executed.
-     * @param buyValue The value at which the BTD action was executed.
+     * @param price The price at which the BTD action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
-     * @param amount The amount of tokens bought.
+     * @param investTokenAmount The amount of invest tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
     event BTDExecuted(
         uint256 indexed strategyId,
-        uint256 buyValue,
+        uint256 price,
         uint256 slippage,
-        uint256 amount,
+        uint256 investTokenAmount,
         uint256 exchangeRate
     );
 
@@ -111,7 +111,7 @@ contract BuyFacet is Modifiers {
         );
 
         updateCurrentPrice(strategyId, price);
-        uint256 value = executionBuyValue(true, strategyId);
+        uint256 value = executionBuyAmount(true, strategyId);
 
         transferBuy(
             strategyId,
@@ -170,7 +170,7 @@ contract BuyFacet is Modifiers {
             revert ExpectedTimeNotElapsed();
         }
 
-        uint256 value = executionBuyValue(false, strategyId);
+        uint256 value = executionBuyAmount(false, strategyId);
 
         transferBuy(
             strategyId,
@@ -228,7 +228,7 @@ contract BuyFacet is Modifiers {
             strategy.parameters._stableToken
         );
 
-        checkRoundDataMistmatch(
+        checkRoundPrices(
             strategyId,
             fromInvestRoundId,
             fromStableRoundId,
@@ -238,7 +238,7 @@ contract BuyFacet is Modifiers {
             stableRoundId
         );
 
-        uint256 value = executionBuyValue(false, strategyId);
+        uint256 value = executionBuyAmount(false, strategyId);
 
         transferBuy(
             strategyId,
@@ -264,29 +264,29 @@ contract BuyFacet is Modifiers {
      * @param strategyId The unique ID of the strategy for which to calculate the buy value.
      * @return The calculated buy value based on the specified parameters.
      */
-    function executionBuyValue(bool stableAmount, uint256 strategyId)
+    function executionBuyAmount(bool stableAmount, uint256 strategyId)
         public
         view
         returns (uint256)
     {
-        uint256 value;
-        Strategy storage strategy = s.strategies[strategyId];
+        uint256 amount;
+        Strategy memory strategy = s.strategies[strategyId];
         if (stableAmount) {
-            value = strategy.parameters._stableAmount;
+            amount = strategy.parameters._stableAmount;
         } else if (strategy.parameters._buyDCAUnit == DCA_UNIT.FIXED) {
-            value = (strategy.parameters._stableAmount >
+            amount = (strategy.parameters._stableAmount >
                 strategy.parameters._buyDCAValue)
                 ? strategy.parameters._buyDCAValue
                 : strategy.parameters._stableAmount;
         } else if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
             uint256 buyPercentageAmount = (strategy.parameters._buyDCAValue *
                 strategy.parameters._stableAmount) / LibTrade.MAX_PERCENTAGE;
-            value = (strategy.parameters._stableAmount > buyPercentageAmount)
+            amount = (strategy.parameters._stableAmount > buyPercentageAmount)
                 ? buyPercentageAmount
                 : strategy.parameters._stableAmount;
         }
 
-        return value;
+        return amount;
     }
 
     /**
@@ -299,7 +299,6 @@ contract BuyFacet is Modifiers {
 
         if (strategy.parameters._current_price == CURRENT_PRICE.BUY_CURRENT) {
             strategy.parameters._buyValue = price;
-            strategy.parameters._buyType = BuyLegType.LIMIT_PRICE;
             strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
         }
     }
@@ -421,7 +420,7 @@ contract BuyFacet is Modifiers {
      * @param presentInvestRound The present round ID for the invest token's price.
      * @param presentStableRound The present round ID for the stable token's price.
      */
-    function checkRoundDataMistmatch(
+    function checkRoundPrices(
         uint256 strategyId,
         uint80 fromInvestRoundId,
         uint80 fromStableRoundId,
@@ -430,7 +429,7 @@ contract BuyFacet is Modifiers {
         uint80 presentInvestRound,
         uint80 presentStableRound
     ) internal view {
-        Strategy storage strategy = s.strategies[strategyId];
+        Strategy memory strategy = s.strategies[strategyId];
 
         if (
             presentInvestRound < toInvestRoundId ||
