@@ -9,9 +9,7 @@
   "parserOptions": {
     "project": ".eslinttsconfigrc"
   },
-  "plugins": [
-    "@typescript-eslint"
-  ],
+  "plugins": ["@typescript-eslint"],
   "root": true,
   "rules": {
     "@typescript-eslint/no-floating-promises": [
@@ -32,7 +30,7 @@
     "@typescript-eslint/no-var-requires": "warn",
     "@typescript-eslint/no-namespace": "warn",
     "no-useless-escape": "warn",
-    "no-control-regex": "warn",
+    "no-control-regex": "warn"
   },
   "env": {
     "node": true
@@ -51,6 +49,6 @@
     "test": "readonly",
     "globals": "readonly",
     "env": "readonly",
-    "args": "readonly",
+    "args": "readonly"
   }
 }
