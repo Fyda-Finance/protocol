@@ -46,7 +46,8 @@
     "prettier": "prettier  --write \"**/*.{js,json,md,ts,yaml,yml,sol}\"",
     "prettier:check": "prettier --check \"**/*.{js,json,md,ts,yaml,yml,sol}\"",
     "docgen": "hardhat docgen",
-    "coverage": "hardhat coverage"
+    "coverage": "hardhat coverage",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.8.0",
@@ -88,7 +89,7 @@
     "hardhat-deploy": "^0.11.26",
     "hardhat-deploy-ethers": "^0.3.0-beta.13",
     "hardhat-gas-reporter": "^1.0.8",
-    "husky": "^8.0.1",
+    "husky": "^8.0.0",
     "prettier": "2.7.1",
     "prettier-plugin-solidity": "1.0.0-beta.13",
     "semantic-release": "^19.0.3",

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {TimeUnit} from "../AppStorage.sol";
+import { TimeUnit } from "../AppStorage.sol";
 
 error InvalidUnit();
 
@@ -17,11 +17,7 @@ library LibTime {
      * @return The time value converted to seconds.
      * @dev Reverts with `InvalidUnit` error if an unsupported time unit is provided.
      */
-    function convertToSeconds(uint256 time, TimeUnit unit)
-        internal
-        pure
-        returns (uint256)
-    {
+    function convertToSeconds(uint256 time, TimeUnit unit) internal pure returns (uint256) {
         if (unit == TimeUnit.HOURS) {
             return time * 3600;
         } else if (unit == TimeUnit.DAYS) {
@@ -47,9 +43,7 @@ library LibTime {
         if (executionTime == 0) {
             return true;
         }
-        bool timeDifference = targetTime <= presentTime - executionTime
-            ? true
-            : false;
+        bool timeDifference = targetTime <= presentTime - executionTime ? true : false;
         return timeDifference;
     }
 }
