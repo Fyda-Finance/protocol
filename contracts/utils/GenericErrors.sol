@@ -24,7 +24,6 @@ error InvalidBuyValue();
 error InvalidFloorValue();
 error InvalidFloorType();
 error InvalidSellTypeDCA();
-error BuySellAndZeroAmount();
 error FloorValueGreaterThanBuyValue();
 error FloorValueGreaterThanSellValue();
 error SellPercentageWithDCA();

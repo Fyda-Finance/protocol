@@ -1,21 +1,16 @@
-import { SetupDiamondFixture, setupDiamondFixture } from "./utils";
+import { SetupDiamondFixture, setupDiamondFixture, Parameters } from "./utils";
 
 const { expect } = require("chai");
 
 describe("Buy", function () {
   let setup: SetupDiamondFixture; // Adjust the type as needed
+  let parameters: Parameters;
+  const budget = "1000000000"; // $1k
 
   beforeEach(async function () {
     setup = await setupDiamondFixture();
-  });
 
-  // Your test cases go here
-  it("Buy the dip", async () => {
-    const budget = "1000000000"; // $1k
-
-    await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
-
-    const parameters = {
+    parameters = {
       _investToken: setup.scenarioERC20WETH.address,
       _stableToken: setup.scenarioERC20USDC.address,
       _stableAmount: budget,
@@ -26,17 +21,17 @@ describe("Buy", function () {
       _floorValue: "0",
       _liquidateOnFloor: false,
       _cancelOnFloor: false,
-      _buy: true,
-      _buyType: 1,
-      _buyValue: "1500000000",
+      _buy: false,
+      _buyType: 0,
+      _buyValue: "0",
       _buyTwap: false,
       _buyTwapTime: 0,
       _buyTwapTimeUnit: 0,
-      _btd: true,
-      _btdValue: "50000000",
-      _btdType: 3,
-      _buyDCAUnit: 2,
-      _buyDCAValue: "100000000",
+      _btd: false,
+      _btdValue: "0",
+      _btdType: 0,
+      _buyDCAUnit: 0,
+      _buyDCAValue: "0",
       _sell: false,
       _sellType: 0,
       _sellValue: "0",
@@ -52,6 +47,21 @@ describe("Buy", function () {
       _completeOnSell: false,
       _current_price: 0,
     };
+  });
+
+  // Your test cases go here
+  it("Buy the dip", async () => {
+    await setup.scenarioERC20USDC
+      .connect(setup.user)
+      .approve(setup.strategyFacet.address, budget);
+    parameters._buy = true;
+    parameters._buyType = 1;
+    parameters._buyValue = "1500000000";
+    parameters._btd = true;
+    parameters._btdValue = "50000000";
+    parameters._btdType = 3;
+    parameters._buyDCAUnit = 2;
+    parameters._buyDCAValue = "100000000";
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 5);
 
@@ -63,10 +73,16 @@ describe("Buy", function () {
     await setup.wethScenarioFeedAggregator.setRoundPrice(12, "120000000100");
 
     // 1 WETH = 1200 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20WETH.address, "120000000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20WETH.address,
+      "120000000000"
+    );
 
     // 1 USDC = 1 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20USDC.address,
+      "100000000"
+    );
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
     let value = await setup.buyFacet.executionBuyValue(false, 0);
@@ -81,7 +97,7 @@ describe("Buy", function () {
       setup.buyFacet.connect(setup.user).executeBTD(0, 10, 10, 12, 12, {
         dex: setup.scenarioDEX.address,
         callData: dexCalldata,
-      }),
+      })
     ).to.be.reverted;
 
     await setup.usdcScenarioFeedAggregator.setRoundPrice(10, "100000000");
@@ -120,7 +136,7 @@ describe("Buy", function () {
       setup.buyFacet.connect(setup.user).executeBTD(1, 10, 10, 12, 12, {
         dex: setup.scenarioDEX.address,
         callData: dexCalldata,
-      }),
+      })
     ).to.be.reverted;
     await setup.wethScenarioFeedAggregator.setRoundPrice(12, "127000000000");
     await setup.buyFacet.connect(setup.user).executeBTD(1, 10, 10, 12, 12, {
@@ -162,7 +178,7 @@ describe("Buy", function () {
       setup.buyFacet.connect(setup.user).executeBTD(3, 10, 10, 12, 12, {
         dex: setup.scenarioDEX.address,
         callData: dexCalldata,
-      }),
+      })
     ).to.be.reverted;
     parameters._current_price = 1;
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 5);
@@ -185,45 +201,18 @@ describe("Buy", function () {
   it("Buy twap", async () => {
     const budget = "1000000000"; // $1k
 
-    await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
+    await setup.scenarioERC20USDC
+      .connect(setup.user)
+      .approve(setup.strategyFacet.address, budget);
 
-    const parameters = {
-      _investToken: setup.scenarioERC20WETH.address,
-      _stableToken: setup.scenarioERC20USDC.address,
-      _stableAmount: budget,
-      _investAmount: "0",
-      _slippage: 1000,
-      _floor: false,
-      _floorType: 0,
-      _floorValue: "0",
-      _liquidateOnFloor: false,
-      _cancelOnFloor: false,
-      _buy: true,
-      _buyType: 1,
-      _buyValue: "1500000000",
-      _buyTwap: true,
-      _buyTwapTime: 1,
-      _buyTwapTimeUnit: 1,
-      _btd: false,
-      _btdValue: 0,
-      _btdType: 0,
-      _buyDCAUnit: 2,
-      _buyDCAValue: "100000000",
-      _sell: false,
-      _sellType: 0,
-      _sellValue: "0",
-      _highSellValue: 0,
-      _str: false,
-      _strValue: 0,
-      _strType: 0,
-      _sellDCAUnit: 0,
-      _sellDCAValue: "0",
-      _sellTwap: false,
-      _sellTwapTime: 0,
-      _sellTwapTimeUnit: 0,
-      _completeOnSell: false,
-      _current_price: 0,
-    };
+    parameters._buy = true;
+    parameters._buyType = 1;
+    parameters._buyValue = "1500000000";
+    parameters._buyTwap = true;
+    parameters._buyTwapTime = 1;
+    parameters._buyTwapTimeUnit = 1;
+    parameters._buyDCAUnit = 2;
+    parameters._buyDCAValue = "100000000";
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 5);
 
@@ -235,10 +224,16 @@ describe("Buy", function () {
     await setup.wethScenarioFeedAggregator.setRoundPrice(12, "120000000000");
 
     // 1 WETH = 1200 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20WETH.address, "120000000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20WETH.address,
+      "120000000000"
+    );
 
     // 1 USDC = 1 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20USDC.address,
+      "100000000"
+    );
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
     const value = await setup.buyFacet.executionBuyValue(false, 0);
@@ -258,14 +253,16 @@ describe("Buy", function () {
       setup.buyFacet.connect(setup.user).executeBuyTwap(0, {
         dex: setup.scenarioDEX.address,
         callData: dexCalldata,
-      }),
+      })
     ).to.be.reverted;
   });
 
   it("simple buy", async () => {
     const budget = "1000000000"; // $1k
 
-    await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
+    await setup.scenarioERC20USDC
+      .connect(setup.user)
+      .approve(setup.strategyFacet.address, budget);
 
     const parameters = {
       _investToken: setup.scenarioERC20WETH.address,
@@ -310,10 +307,16 @@ describe("Buy", function () {
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
 
     // 1 WETH = 1200 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20WETH.address, "120000000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20WETH.address,
+      "120000000000"
+    );
 
     // 1 USDC = 1 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20USDC.address,
+      "100000000"
+    );
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
     const value = await setup.buyFacet.executionBuyValue(true, 0);
@@ -329,7 +332,7 @@ describe("Buy", function () {
       setup.buyFacet.connect(setup.user).executeBuy(0, {
         dex: setup.scenarioDEX.address,
         callData: dexCalldata,
-      }),
+      })
     ).to.be.reverted;
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 5);
@@ -342,7 +345,7 @@ describe("Buy", function () {
       setup.buyFacet.connect(setup.user).executeBuy(0, {
         dex: setup.scenarioDEX.address,
         callData: dexCalldata,
-      }),
+      })
     ).to.be.reverted;
   });
 });
