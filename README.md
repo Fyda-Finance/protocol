@@ -5,11 +5,13 @@ Fyda protocol is a set of contracts that validate and execute strategies onchain
 ## Installation
 
 1. Clone this repo:
+
 ```console
 git clone git@github.com:Fyda-Finance/protocol.git
 ```
 
 2. Install NPM packages:
+
 ```console
 cd protocol
 npm install
@@ -35,7 +37,7 @@ To learn more about it visit [https://medium.com/@MarqyMarq/how-to-implement-the
 1. Facets are deployed.
 1. The diamond is upgraded. The `diamondCut` function is used to add functions from facets to the diamond. In addition the `diamondCut` function calls the `init` function from the `DiamondInit` contract using `delegatecall` to initialize state variables.
 
-How a diamond is deployed is not part of the EIP-2535 Diamonds standard. 
+How a diamond is deployed is not part of the EIP-2535 Diamonds standard.
 
 ### Upgrade a diamond
 
@@ -61,8 +63,6 @@ The `scripts/deploy.ts` file is used to deploy the diamond.
 
 The `test/diamondTest.ts` file gives tests for the `diamondCut` function and the Diamond Loupe functions.
 
-
-
 ### Calling Diamond Functions
 
 In order to call a function that exists in a diamond you need to use the ABI information of the facet that has the function.
@@ -81,4 +81,13 @@ Similarly you need to use the ABI of a facet in Solidity code in order to call f
 
 ```solidity
 string result = MyUsefulFacet(address(diamondContract)).getResult()
+```
+
+## Linting
+
+```
+yarn lint
+yarn lint:sol --fix
+yarn lint:sol --fix
+yarn prettier
 ```

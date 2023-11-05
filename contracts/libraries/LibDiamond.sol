@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-
 import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
 import { AppStorage } from "../AppStorage.sol";
 
@@ -17,20 +16,18 @@ library LibDiamond {
     bytes32 constant CLEAR_ADDRESS_MASK = bytes32(uint256(0xffffffffffffffffffffffff));
     bytes32 constant CLEAR_SELECTOR_MASK = bytes32(uint256(0xffffffff << 224));
 
-
     function diamondStorage() internal pure returns (AppStorage storage s) {
         assembly {
             s.slot := 0
         }
     }
-    
+
     function setContractOwner(address _newOwner) internal {
         AppStorage storage s = diamondStorage();
         address previousOwner = s.owner;
         s.owner = _newOwner;
         emit OwnershipTransferred(previousOwner, _newOwner);
     }
-
 
     // Internal function version of diamondCut
     // This code is almost the same as the external diamondCut,
@@ -48,7 +45,7 @@ library LibDiamond {
         uint256 selectorCount = originalSelectorCount;
         bytes32 selectorSlot;
         // Check if last selector slot is not full
-        // "selectorCount & 7" is a gas efficient modulo by eight "selectorCount % 8" 
+        // "selectorCount & 7" is a gas efficient modulo by eight "selectorCount % 8"
         if (selectorCount & 7 > 0) {
             // get last selectorSlot
             // "selectorSlot >> 3" is a gas efficient division by 8 "selectorSlot / 8"
@@ -72,7 +69,7 @@ library LibDiamond {
             s.selectorCount = uint16(selectorCount);
         }
         // If last selector slot is not full
-        // "selectorCount & 7" is a gas efficient modulo by eight "selectorCount % 8" 
+        // "selectorCount & 7" is a gas efficient modulo by eight "selectorCount % 8"
         if (selectorCount & 7 > 0) {
             // "selectorSlot >> 3" is a gas efficient division by 8 "selectorSlot / 8"
             s.selectorSlots[selectorCount >> 3] = selectorSlot;
@@ -95,14 +92,19 @@ library LibDiamond {
             for (uint256 selectorIndex; selectorIndex < _selectors.length; ) {
                 bytes4 selector = _selectors[selectorIndex];
                 bytes32 oldFacet = s.facets[selector];
-                require(address(bytes20(oldFacet)) == address(0), "LibDiamondCut: Can't add function that already exists");
+                require(
+                    address(bytes20(oldFacet)) == address(0),
+                    "LibDiamondCut: Can't add function that already exists"
+                );
                 // add facet for selector
                 s.facets[selector] = bytes20(_newFacetAddress) | bytes32(_selectorCount);
-                // "_selectorCount & 7" is a gas efficient modulo by eight "_selectorCount % 8" 
+                // "_selectorCount & 7" is a gas efficient modulo by eight "_selectorCount % 8"
                 // " << 5 is the same as multiplying by 32 ( * 32)
                 uint256 selectorInSlotPosition = (_selectorCount & 7) << 5;
                 // clear selector position in slot and add selector
-                _selectorSlot = (_selectorSlot & ~(CLEAR_SELECTOR_MASK >> selectorInSlotPosition)) | (bytes32(selector) >> selectorInSlotPosition);
+                _selectorSlot =
+                    (_selectorSlot & ~(CLEAR_SELECTOR_MASK >> selectorInSlotPosition)) |
+                    (bytes32(selector) >> selectorInSlotPosition);
                 // if slot is full then write it to storage
                 if (selectorInSlotPosition == 224) {
                     // "_selectorSlot >> 3" is a gas efficient division by 8 "_selectorSlot / 8"
@@ -123,7 +125,10 @@ library LibDiamond {
                 address oldFacetAddress = address(bytes20(oldFacet));
                 // only useful if immutable functions exist
                 require(oldFacetAddress != address(this), "LibDiamondCut: Can't replace immutable function");
-                require(oldFacetAddress != _newFacetAddress, "LibDiamondCut: Can't replace function with same function");
+                require(
+                    oldFacetAddress != _newFacetAddress,
+                    "LibDiamondCut: Can't replace function with same function"
+                );
                 require(oldFacetAddress != address(0), "LibDiamondCut: Can't replace function that doesn't exist");
                 // replace old facet address
                 s.facets[selector] = (oldFacet & CLEAR_ADDRESS_MASK) | bytes20(_newFacetAddress);
@@ -136,7 +141,7 @@ library LibDiamond {
             require(_newFacetAddress == address(0), "LibDiamondCut: Remove facet address must be address(0)");
             // "_selectorCount >> 3" is a gas efficient division by 8 "_selectorCount / 8"
             uint256 selectorSlotCount = _selectorCount >> 3;
-            // "_selectorCount & 7" is a gas efficient modulo by eight "_selectorCount % 8" 
+            // "_selectorCount & 7" is a gas efficient modulo by eight "_selectorCount % 8"
             uint256 selectorInSlotIndex = _selectorCount & 7;
             for (uint256 selectorIndex; selectorIndex < _selectors.length; ) {
                 if (_selectorSlot == 0) {
@@ -154,9 +159,15 @@ library LibDiamond {
                 {
                     bytes4 selector = _selectors[selectorIndex];
                     bytes32 oldFacet = s.facets[selector];
-                    require(address(bytes20(oldFacet)) != address(0), "LibDiamondCut: Can't remove function that doesn't exist");
+                    require(
+                        address(bytes20(oldFacet)) != address(0),
+                        "LibDiamondCut: Can't remove function that doesn't exist"
+                    );
                     // only useful if immutable functions exist
-                    require(address(bytes20(oldFacet)) != address(this), "LibDiamondCut: Can't remove immutable function");
+                    require(
+                        address(bytes20(oldFacet)) != address(this),
+                        "LibDiamondCut: Can't remove immutable function"
+                    );
                     // replace selector with last selector in s.facets
                     // gets the last selector
                     // " << 5 is the same as multiplying by 32 ( * 32)
@@ -169,7 +180,7 @@ library LibDiamond {
                     uint256 oldSelectorCount = uint16(uint256(oldFacet));
                     // "oldSelectorCount >> 3" is a gas efficient division by 8 "oldSelectorCount / 8"
                     oldSelectorsSlotCount = oldSelectorCount >> 3;
-                    // "oldSelectorCount & 7" is a gas efficient modulo by eight "oldSelectorCount % 8" 
+                    // "oldSelectorCount & 7" is a gas efficient modulo by eight "oldSelectorCount % 8"
                     // " << 5 is the same as multiplying by 32 ( * 32)
                     oldSelectorInSlotPosition = (oldSelectorCount & 7) << 5;
                 }
@@ -207,7 +218,7 @@ library LibDiamond {
         if (_init == address(0)) {
             return;
         }
-        enforceHasContractCode(_init, "LibDiamondCut: _init address has no code");        
+        enforceHasContractCode(_init, "LibDiamondCut: _init address has no code");
         (bool success, bytes memory error) = _init.delegatecall(_calldata);
         if (!success) {
             if (error.length > 0) {

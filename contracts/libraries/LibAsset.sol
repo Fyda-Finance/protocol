@@ -1,17 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { TransferFailed } from "../utils/GenericErrors.sol";
 
+/**
+ * @title LibAsset
+ * @dev This library provides functions for interacting with ERC20 assets.
+ */
 library LibAsset {
-  uint256 private constant MAX_UINT = type(uint256).max;
+    uint256 private constant MAX_UINT = type(uint256).max;
 
-    function balanceOf(address asset, address account) internal view returns (uint256) {
-        return IERC20(asset).balanceOf(account);
-    }
-
+    /**
+     * @notice Approves a specified amount of an asset for a spender if the current allowance is insufficient.
+     * @param asset The address of the asset.
+     * @param spender The address of the spender.
+     * @param amount The amount to approve.
+     */
     function maxApprove(
         address asset,
         address spender,
@@ -23,6 +29,13 @@ library LibAsset {
         }
     }
 
+    /**
+     * @notice Transfers a specified amount of an asset from one address to another.
+     * @param asset The address of the asset.
+     * @param from The sender's address.
+     * @param to The recipient's address.
+     * @param amount The amount to transfer.
+     */
     function transferFrom(
         address asset,
         address from,
@@ -36,6 +49,12 @@ library LibAsset {
         }
     }
 
+    /**
+     * @notice Transfers a specified amount of an asset to a recipient.
+     * @param asset The address of the asset.
+     * @param to The recipient's address.
+     * @param amount The amount to transfer.
+     */
     function transfer(
         address asset,
         address to,
@@ -46,5 +65,15 @@ library LibAsset {
         if (IERC20(asset).balanceOf(to) - prevBalance != amount) {
             revert TransferFailed();
         }
+    }
+
+    /**
+     * @notice Retrieves the balance of a specified asset for a given account.
+     * @param asset The address of the asset.
+     * @param account The account for which to check the balance.
+     * @return The balance of the asset for the specified account.
+     */
+    function balanceOf(address asset, address account) internal view returns (uint256) {
+        return IERC20(asset).balanceOf(account);
     }
 }

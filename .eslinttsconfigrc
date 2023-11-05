@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "./typechain",
+    "./deploy",
+    "./test",
+    "./scripts",
+    "./scenario",
+    "jest.config.js",
+    "saddle.config.js",
+    "docgen-templates",
+    "commitlint.config.js"
+  ]
+}
