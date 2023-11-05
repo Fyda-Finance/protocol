@@ -87,7 +87,5 @@ string result = MyUsefulFacet(address(diamondContract)).getResult()
 
 ```
 yarn lint
-yarn lint:sol --fix
-yarn lint:sol --fix
 yarn prettier
 ```
