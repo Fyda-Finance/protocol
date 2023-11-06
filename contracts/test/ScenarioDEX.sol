@@ -16,7 +16,7 @@ contract ScenarioDEX {
     mapping(address => uint256) public exchangeRate;
 
     // asset => feed in USD
-    mapping (address => address) public feeds;
+    mapping(address => address) public feeds;
 
     // MAX_SLIPPAGE = 100% = 10000
     uint256 public slippage = 0;
@@ -55,7 +55,7 @@ contract ScenarioDEX {
         IERC20Metadata _toToken = IERC20Metadata(toAsset);
 
         uint256 fromAmountInUSD = (fromAmount * getPrice(fromAsset)) / (10**_fromToken.decimals());
-        uint256 toAmount = (fromAmountInUSD * 10**_toToken.decimals()) /  getPrice(toAsset);
+        uint256 toAmount = (fromAmountInUSD * 10**_toToken.decimals()) / getPrice(toAsset);
 
         uint256 slippageAmount = (toAmount * slippage) / MAX_SLIPPAGE;
 
