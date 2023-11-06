@@ -19,11 +19,7 @@ library LibBytes {
      * @param _length The length of the slice.
      * @return tempBytes A new bytes array containing the sliced data.
      */
-    function slice(
-        bytes memory _bytes,
-        uint256 _start,
-        uint256 _length
-    ) internal pure returns (bytes memory) {
+    function slice(bytes memory _bytes, uint256 _start, uint256 _length) internal pure returns (bytes memory) {
         if (_length + 31 < _length) revert SliceOverflow();
         if (_bytes.length < _start + _length) revert SliceOutOfBounds();
 

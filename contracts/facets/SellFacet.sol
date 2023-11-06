@@ -369,7 +369,7 @@ contract SellFacet is Modifiers {
 
         // Calculate the total investment amount and check if it exceeds the budget.
 
-        uint256 decimals = 10**IERC20Metadata(strategy.parameters._investToken).decimals();
+        uint256 decimals = 10 ** IERC20Metadata(strategy.parameters._investToken).decimals();
 
         strategy.parameters._investAmount = strategy.parameters._investAmount - value;
         strategy.parameters._stableAmount = strategy.parameters._stableAmount + toTokenAmount;

@@ -7,7 +7,7 @@ import {
   getSelectors,
   removeSelectors,
 } from "../scripts/libraries/diamond";
-import { DiamondCutFacet, DiamondLoupeFacet, OwnershipFacet } from "../typechain";
+import { DiamondCutFacet, DiamondLoupeFacet, OwnershipFacet } from "../typechain-types";
 
 const { assert, expect } = require("chai");
 

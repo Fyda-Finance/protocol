@@ -44,23 +44,19 @@ contract ScenarioDEX {
         }
     }
 
-    function swap(
-        address fromAsset,
-        address toAsset,
-        uint256 fromAmount
-    ) external {
+    function swap(address fromAsset, address toAsset, uint256 fromAmount) external {
         require(fromAmount > 0, "ScenarioDEX: fromAmount must be greater than 0");
 
         IERC20Metadata _fromToken = IERC20Metadata(fromAsset);
         IERC20Metadata _toToken = IERC20Metadata(toAsset);
 
-        uint256 fromAmountInUSD = (fromAmount * getPrice(fromAsset)) / (10**_fromToken.decimals());
-        uint256 toAmount = (fromAmountInUSD * 10**_toToken.decimals()) / getPrice(toAsset);
+        uint256 fromAmountInUSD = (fromAmount * getPrice(fromAsset)) / (10 ** _fromToken.decimals());
+        uint256 toAmount = (fromAmountInUSD * 10 ** _toToken.decimals()) / getPrice(toAsset);
 
         uint256 slippageAmount = (toAmount * slippage) / MAX_SLIPPAGE;
 
-        ScenarioERC20(toAsset).mint(address(this), toAmount - slippage);
-        SafeERC20.safeTransfer(IERC20(toAsset), msg.sender, toAmount - slippage);
+        ScenarioERC20(toAsset).mint(address(this), toAmount - slippageAmount);
+        SafeERC20.safeTransfer(IERC20(toAsset), msg.sender, toAmount - slippageAmount);
         SafeERC20.safeTransferFrom(IERC20(fromAsset), msg.sender, address(this), fromAmount);
     }
 }

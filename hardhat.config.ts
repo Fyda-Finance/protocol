@@ -1,11 +1,16 @@
-import "@nomicfoundation/hardhat-toolbox";
-import "@nomiclabs/hardhat-ethers";
-import { config as dotenvConfig } from "dotenv";
+import "module-alias/register";
+
+import "@nomiclabs/hardhat-etherscan";
+import "@nomiclabs/hardhat-waffle";
+import "@openzeppelin/hardhat-upgrades";
+import "@typechain/hardhat";
+import * as dotenv from "dotenv";
 import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
-import { resolve } from "path";
+import "solidity-coverage";
+import "solidity-docgen";
 
-dotenvConfig({ path: resolve(__dirname, "./.env") });
+dotenv.config();
 
 const config: HardhatUserConfig = {
   solidity: {

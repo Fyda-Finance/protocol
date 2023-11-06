@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 
 import deployDiamond from "../scripts/deploy";
 import { FacetCutAction } from "../scripts/libraries/diamond";
-import { DiamondLoupeFacet, Test1Facet } from "../typechain";
+import { DiamondLoupeFacet, Test1Facet } from "../typechain-types";
 
 // The diamond example comes with 8 function selectors
 // [cut, loupe, loupe, loupe, loupe, erc165, transferOwnership, owner]

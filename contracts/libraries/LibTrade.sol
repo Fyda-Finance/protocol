@@ -25,7 +25,7 @@ library LibTrade {
     ) internal view returns (uint256) {
         IERC20Metadata _fromToken = IERC20Metadata(fromAsset);
         uint256 fromDecimals = _fromToken.decimals();
-        return ((toAmount * (10**fromDecimals)) / fromAmount);
+        return ((toAmount * (10 ** fromDecimals)) / fromAmount);
     }
 
     /**
