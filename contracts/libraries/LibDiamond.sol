@@ -35,11 +35,7 @@ library LibDiamond {
     // 'Facet[] calldata _diamondCut'.
     // The code is duplicated to prevent copying calldata to memory which
     // causes an error for a two dimensional array.
-    function diamondCut(
-        IDiamondCut.FacetCut[] memory _diamondCut,
-        address _init,
-        bytes memory _calldata
-    ) internal {
+    function diamondCut(IDiamondCut.FacetCut[] memory _diamondCut, address _init, bytes memory _calldata) internal {
         AppStorage storage s = diamondStorage();
         uint256 originalSelectorCount = s.selectorCount;
         uint256 selectorCount = originalSelectorCount;

@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "hardhat-deploy-ethers/signers";
 
 import deployDiamond from "../scripts/deploy";
-import { BuyFacet, ScenarioDEX, ScenarioERC20, ScenarioFeedAggregator, StrategyFacet } from "../typechain";
+import { BuyFacet, ScenarioDEX, ScenarioERC20, ScenarioFeedAggregator, StrategyFacet } from "../typechain-types";
 
 const { expect } = require("chai");
 

@@ -89,3 +89,28 @@ string result = MyUsefulFacet(address(diamondContract)).getResult()
 yarn lint
 yarn prettier
 ```
+
+## Testnet Deployment
+
+```
+npx hardhat deploy --tags deployMock --network goerli
+```
+
+## Diamond Address
+
+_Ethereum Goerli Testnet_
+
+```
+DiamondCutFacet address: 0xeE4D1C8F7cf55c215E870C3B44265951D9307825
+Diamond address: 0xD9105CaABbb953759aF7f3EeA0Ae9340D8a4B626
+DiamondInit address: 0x4596fa3A3bA651680C493BAB7dbA087f2C4d37E7
+
+DiamondLoupeFacet address: 0x3eA5c9e61C8cD5B60A3609603EfF30FB899f6597
+OwnershipFacet address: 0xC930004AeE487Aab93a3a2437b22B434d28F2d8B
+StrategyFacet address: 0xB006ad5Aefe98216A75545c91fC62fA5305Ed249
+BuyFacet address: 0x007f0F6eaa702994adE9Cc04ea201f907fc45752
+SellFacet address: 0x2DE79765fAc8cf37fc764e7A3Bcb482618ebbc2e
+FloorFacet address: 0x83bE599ffe9419f1AA2E197fB22F81A334eBa8dD
+PriceOracleFacet address: 0xba4e3fd42214A5b207d4e4D25e2821d7e32e02c8
+LensFacet address: 0x260d030D5181e2274C1ec0a56a21d29411BCffDC
+```

@@ -20,7 +20,7 @@ contract DiamondCutFacet is IDiamondCut, Modifiers {
         FacetCut[] calldata _diamondCut,
         address _init,
         bytes calldata _calldata
-    ) external override onlyOwner() {
+    ) external override onlyOwner {
         AppStorage storage s = LibDiamond.diamondStorage();
         uint256 originalSelectorCount = s.selectorCount;
         uint256 selectorCount = originalSelectorCount;

@@ -293,7 +293,7 @@ contract StrategyFacet is Modifiers {
             }
         }
 
-        uint256 decimals = 10**IERC20Metadata(_parameter._investToken).decimals();
+        uint256 decimals = 10 ** IERC20Metadata(_parameter._investToken).decimals();
 
         if (_parameter._investAmount > 0 && _parameter._stableAmount > 0) {
             revert BothStableAndInvestAmountProvided();

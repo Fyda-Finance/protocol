@@ -18,11 +18,7 @@ library LibAsset {
      * @param spender The address of the spender.
      * @param amount The amount to approve.
      */
-    function maxApprove(
-        address asset,
-        address spender,
-        uint256 amount
-    ) internal {
+    function maxApprove(address asset, address spender, uint256 amount) internal {
         if (IERC20(asset).allowance(address(this), spender) < amount) {
             SafeERC20.safeApprove(IERC20(asset), spender, 0);
             SafeERC20.safeApprove(IERC20(asset), spender, amount);
@@ -36,12 +32,7 @@ library LibAsset {
      * @param to The recipient's address.
      * @param amount The amount to transfer.
      */
-    function transferFrom(
-        address asset,
-        address from,
-        address to,
-        uint256 amount
-    ) internal {
+    function transferFrom(address asset, address from, address to, uint256 amount) internal {
         uint256 prevBalance = IERC20(asset).balanceOf(to);
         SafeERC20.safeTransferFrom(IERC20(asset), from, to, amount);
         if (IERC20(asset).balanceOf(to) - prevBalance != amount) {
@@ -55,11 +46,7 @@ library LibAsset {
      * @param to The recipient's address.
      * @param amount The amount to transfer.
      */
-    function transfer(
-        address asset,
-        address to,
-        uint256 amount
-    ) internal {
+    function transfer(address asset, address to, uint256 amount) internal {
         uint256 prevBalance = IERC20(asset).balanceOf(to);
         SafeERC20.safeTransfer(IERC20(asset), to, amount);
         if (IERC20(asset).balanceOf(to) - prevBalance != amount) {

@@ -24,15 +24,7 @@ library LibPrice {
      * @return investRoundId The round ID of the asset's price feed.
      * @return stableRoundId The round ID of the unit's price feed.
      */
-    function getPrice(address asset, address unit)
-        internal
-        view
-        returns (
-            uint256 price,
-            uint80,
-            uint80
-        )
-    {
+    function getPrice(address asset, address unit) internal view returns (uint256 price, uint80, uint80) {
         AppStorage storage s = LibDiamond.diamondStorage();
 
         if (s.feeds[asset] == address(0) || s.feeds[unit] == address(0)) {
@@ -47,7 +39,7 @@ library LibPrice {
         }
 
         uint256 unitDecimals = IERC20Metadata(unit).decimals();
-        price = (uint256(assetPrice) * (10**unitDecimals)) / uint256(unitPrice);
+        price = (uint256(assetPrice) * (10 ** unitDecimals)) / uint256(unitPrice);
 
         return (price, investRoundId, stableRoundId);
     }
@@ -80,7 +72,7 @@ library LibPrice {
         }
 
         uint256 unitDecimals = IERC20Metadata(unit).decimals();
-        uint256 price = (uint256(assetPrice) * (10**unitDecimals)) / uint256(unitPrice);
+        uint256 price = (uint256(assetPrice) * (10 ** unitDecimals)) / uint256(unitPrice);
 
         return price;
     }

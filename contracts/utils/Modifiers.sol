@@ -7,7 +7,7 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 abstract contract Modifiers {
     /// @notice 100% = 100000 -> 2 decimals
 
-    modifier onlyOwner {
+    modifier onlyOwner() {
         AppStorage storage s = LibDiamond.diamondStorage();
         require(msg.sender == s.owner, "Modifiers: Must be contract owner");
         _;

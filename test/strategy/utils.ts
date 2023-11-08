@@ -10,7 +10,7 @@ import {
   ScenarioFeedAggregator,
   SellFacet,
   StrategyFacet,
-} from "../../typechain";
+} from "../../typechain-types";
 
 export type SetupDiamondFixture = {
   scenarioERC20USDC: ScenarioERC20;
