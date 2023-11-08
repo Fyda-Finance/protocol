@@ -1,7 +1,3 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "hardhat-deploy-ethers/signers";
-
 import deployDiamond from "../scripts/deploy";
 import {
   BuyFacet,
@@ -11,6 +7,9 @@ import {
   ScenarioFeedAggregator,
   StrategyFacet,
 } from "../typechain-types";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { ethers } from "hardhat";
+import { SignerWithAddress } from "hardhat-deploy-ethers/signers";
 
 const { expect } = require("chai");
 
@@ -37,23 +36,56 @@ describe("Swap and Slippage", function () {
     const scenarioDEX = (await ScenarioDEX.deploy()) as ScenarioDEX;
 
     const scenarioERC20 = await ethers.getContractFactory("ScenarioERC20");
-    const scenarioERC20USDC: ScenarioERC20 = (await scenarioERC20.deploy("USDC", "USDC", 6)) as ScenarioERC20;
-    const scenarioERC20WETH: ScenarioERC20 = (await scenarioERC20.deploy("WETH", "WETH", 18)) as ScenarioERC20;
+    const scenarioERC20USDC: ScenarioERC20 = (await scenarioERC20.deploy(
+      "USDC",
+      "USDC",
+      6
+    )) as ScenarioERC20;
+    const scenarioERC20WETH: ScenarioERC20 = (await scenarioERC20.deploy(
+      "WETH",
+      "WETH",
+      18
+    )) as ScenarioERC20;
 
-    await scenarioERC20USDC.mint(user.address, ethers.utils.parseUnits("20000000000", 6));
+    await scenarioERC20USDC.mint(
+      user.address,
+      ethers.utils.parseUnits("20000000000", 6)
+    );
 
-    const strategyFacet: StrategyFacet = await ethers.getContractAt("StrategyFacet", diamondAddress);
-    const buyFacet: BuyFacet = await ethers.getContractAt("BuyFacet", diamondAddress);
-    const priceOracleFacet = await ethers.getContractAt("PriceOracleFacet", diamondAddress);
+    const strategyFacet: StrategyFacet = await ethers.getContractAt(
+      "StrategyFacet",
+      diamondAddress
+    );
+    const buyFacet: BuyFacet = await ethers.getContractAt(
+      "BuyFacet",
+      diamondAddress
+    );
+    const priceOracleFacet = await ethers.getContractAt(
+      "PriceOracleFacet",
+      diamondAddress
+    );
 
-    const lensFacet: LensFacet = await ethers.getContractAt("LensFacet", diamondAddress);
+    const lensFacet: LensFacet = await ethers.getContractAt(
+      "LensFacet",
+      diamondAddress
+    );
 
-    const ScenarioFeedAggregator = await ethers.getContractFactory("ScenarioFeedAggregator");
-    const usdcScenarioFeedAggregator = (await ScenarioFeedAggregator.deploy()) as ScenarioFeedAggregator;
-    const wethScenarioFeedAggregator = (await ScenarioFeedAggregator.deploy()) as ScenarioFeedAggregator;
+    const ScenarioFeedAggregator = await ethers.getContractFactory(
+      "ScenarioFeedAggregator"
+    );
+    const usdcScenarioFeedAggregator =
+      (await ScenarioFeedAggregator.deploy()) as ScenarioFeedAggregator;
+    const wethScenarioFeedAggregator =
+      (await ScenarioFeedAggregator.deploy()) as ScenarioFeedAggregator;
 
-    await priceOracleFacet.setAssetFeed(scenarioERC20USDC.address, usdcScenarioFeedAggregator.address);
-    await priceOracleFacet.setAssetFeed(scenarioERC20WETH.address, wethScenarioFeedAggregator.address);
+    await priceOracleFacet.setAssetFeed(
+      scenarioERC20USDC.address,
+      usdcScenarioFeedAggregator.address
+    );
+    await priceOracleFacet.setAssetFeed(
+      scenarioERC20WETH.address,
+      wethScenarioFeedAggregator.address
+    );
 
     return {
       scenarioERC20USDC,
@@ -78,7 +110,9 @@ describe("Swap and Slippage", function () {
   it("should perform a swap correctly", async function () {
     const budget = "1000000000"; // $1k
 
-    await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
+    await setup.scenarioERC20USDC
+      .connect(setup.user)
+      .approve(setup.strategyFacet.address, budget);
 
     const parameters = {
       _investToken: setup.scenarioERC20WETH.address,
@@ -119,10 +153,16 @@ describe("Swap and Slippage", function () {
     };
 
     // 1 WETH = 1200 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20WETH.address, "120000000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20WETH.address,
+      "120000000000"
+    );
 
     // 1 USDC = 1 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20USDC.address,
+      "100000000"
+    );
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 25);
 
@@ -148,7 +188,9 @@ describe("Swap and Slippage", function () {
   it("should fail swap due to higher price impact", async function () {
     const budget = "1000000000"; // $1k
 
-    await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
+    await setup.scenarioERC20USDC
+      .connect(setup.user)
+      .approve(setup.strategyFacet.address, budget);
 
     const parameters = {
       _investToken: setup.scenarioERC20WETH.address,
@@ -189,10 +231,16 @@ describe("Swap and Slippage", function () {
       _current_price: 0,
     };
     // 1 WETH = 1900 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20WETH.address, "190000000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20WETH.address,
+      "190000000000"
+    );
 
     // 1 USDC = 1 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20USDC.address,
+      "100000000"
+    );
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 25);
 
@@ -213,7 +261,7 @@ describe("Swap and Slippage", function () {
       setup.buyFacet.executeBuy(0, {
         dex: setup.scenarioDEX.address,
         callData: dexCalldata,
-      }),
+      })
     ).to.be.reverted;
   });
 
@@ -224,7 +272,7 @@ describe("Swap and Slippage", function () {
     let rate = await setup.lensFacet.calculateExchangeRate(
       scenarioERC20WBTC.address,
       "10000000000", // 100 BTC <- input
-      "1743810000000000000000", // 1743.81 ETH <- output
+      "1743810000000000000000" // 1743.81 ETH <- output
     );
 
     // 1 BTC is 17.4381 ETH
@@ -233,7 +281,7 @@ describe("Swap and Slippage", function () {
     rate = await setup.lensFacet.calculateExchangeRate(
       setup.scenarioERC20WETH.address,
       "100000000000000000000", // 100 ETH <- input
-      "573000000", // 5.73 BTC <- output
+      "573000000" // 5.73 BTC <- output
     );
 
     // 1 ETH is 0.057 BTC
@@ -242,7 +290,7 @@ describe("Swap and Slippage", function () {
     rate = await setup.lensFacet.calculateExchangeRate(
       setup.scenarioERC20USDC.address,
       "50000000000", // 50k USDC <- input
-      "200000000", // 2 BTC <- output
+      "200000000" // 2 BTC <- output
     );
 
     // 1 USDC is 0.00004 BTC
@@ -251,7 +299,7 @@ describe("Swap and Slippage", function () {
     rate = await setup.lensFacet.calculateExchangeRate(
       scenarioERC20WBTC.address,
       "200000000", // 2 BTC <- output
-      "50000000000", // 50k USDC <- input
+      "50000000000" // 50k USDC <- input
     );
 
     // 1 BTC is 25k USDC
@@ -263,24 +311,32 @@ describe("Swap and Slippage", function () {
     // price = 1500,000000
     // exchangeRate = 1450,000000
     // slippage = (1500 * 10000) / 1450 = 103.44%
-    await expect(setup.lensFacet.validateSlippage(1450000000, 1500000000, 500, true)).to.not.be.reverted;
+    await expect(
+      setup.lensFacet.validateSlippage(1450000000, 1500000000, 500, true)
+    ).to.not.be.reverted;
 
     // buy with bad rate example
     // price = 1500,000000
     // exchangeRate = 1550,000000
     // slippage = (1500 * 10000) / 1550 = 96.77%
-    await expect(setup.lensFacet.validateSlippage(1550000000, 1500000000, 200, true)).to.be.reverted;
+    await expect(
+      setup.lensFacet.validateSlippage(1550000000, 1500000000, 200, true)
+    ).to.be.reverted;
 
     // sell with better rate example
     // price = 1500,000000
     // exchangeRate = 1600,000000
     // slippage = (1500 * 10000) / 1600 = 93.75%
-    await expect(setup.lensFacet.validateSlippage(1600000000, 1500000000, 500, false)).to.not.be.reverted;
+    await expect(
+      setup.lensFacet.validateSlippage(1600000000, 1500000000, 500, false)
+    ).to.not.be.reverted;
 
     // sell with bad rate example
     // price = 1500,000000
     // exchangeRate = 1300,000000
     // slippage = (1500 * 10000) / 1300 = 115.38%
-    await expect(setup.lensFacet.validateSlippage(1300000000, 1500000000, 500, false)).to.be.reverted;
+    await expect(
+      setup.lensFacet.validateSlippage(1300000000, 1500000000, 500, false)
+    ).to.be.reverted;
   });
 });
