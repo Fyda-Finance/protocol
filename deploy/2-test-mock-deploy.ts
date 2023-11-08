@@ -8,6 +8,8 @@ import { ethers } from "hardhat";
 import hre from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
+import deployDiamond from "../scripts/deploy";
+
 const addresses: any = {
   goerli: {
     usdc: "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
@@ -18,11 +20,7 @@ const addresses: any = {
   },
 };
 
-module.exports = async ({
-  network,
-  getNamedAccounts,
-  deployments,
-}: HardhatRuntimeEnvironment) => {
+module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const accounts = await ethers.getSigners();
   const deployer = accounts[0].address;
