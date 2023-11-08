@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IERC173 } from "../interfaces/IERC173.sol";
-import { Modifiers } from "../utils/Modifiers.sol";
-import { AppStorage } from "../AppStorage.sol";
-import { LibPrice } from "../libraries/LibPrice.sol";
+import {IERC173} from "../interfaces/IERC173.sol";
+import {Modifiers} from "../utils/Modifiers.sol";
+import {AppStorage} from "../AppStorage.sol";
+import {LibPrice} from "../libraries/LibPrice.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
 
 /**
@@ -31,7 +31,10 @@ contract PriceOracleFacet is Modifiers {
      * @return investRoundId The round ID of the asset's price feed.
      * @return stableRoundId The round ID of the unit's price feed.
      */
-    function getPrice(address asset, address unit) internal view returns (uint256 price, uint80, uint80) {
+    function getPrice(
+        address asset,
+        address unit
+    ) internal view returns (uint256 price, uint80, uint80) {
         return LibPrice.getPrice(asset, unit);
     }
 
@@ -58,7 +61,8 @@ contract PriceOracleFacet is Modifiers {
      * @return price The price of the asset in USD
      */
     function getUSDPrice(address asset) internal view returns (uint256) {
-        (, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).latestRoundData();
+        (, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset])
+            .latestRoundData();
         return uint256(assetPrice);
     }
 }
