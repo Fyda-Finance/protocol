@@ -1,4 +1,5 @@
 import "module-alias/register";
+
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
@@ -23,10 +24,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     goerli: {
-      accounts: [
-        process.env.PRIVATE_KEY || "",
-        process.env.MY_PRIVATE_KEY || "",
-      ],
+      accounts: [process.env.PRIVATE_KEY || "", process.env.MY_PRIVATE_KEY || ""],
       url: process.env.RPC_URL || "",
       chainId: 5,
     },

@@ -1,13 +1,9 @@
-import deployDiamond from "../scripts/deploy";
-import {
-  PriceOracleFacet,
-  ScenarioDEX,
-  StrategyFacet,
-  BuyFacet,
-} from "../typechain-types";
 import { ethers } from "hardhat";
 import hre from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+
+import deployDiamond from "../scripts/deploy";
+import { BuyFacet, PriceOracleFacet, ScenarioDEX, StrategyFacet } from "../typechain-types";
 
 const addresses: any = {
   goerli: {
@@ -19,11 +15,7 @@ const addresses: any = {
   },
 };
 
-module.exports = async ({
-  network,
-  getNamedAccounts,
-  deployments,
-}: HardhatRuntimeEnvironment) => {
+module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const accounts = await ethers.getSigners();
   const deployer = accounts[0].address;
@@ -72,10 +64,7 @@ module.exports = async ({
   //   .approve(addresses[network.name].diamond, budget);
   // await budgetApproval.wait();
   console.log("Fetching strategy Facets");
-  const strategyFacet: StrategyFacet = await ethers.getContractAt(
-    "StrategyFacet",
-    addresses[network.name].diamond
-  );
+  const strategyFacet: StrategyFacet = await ethers.getContractAt("StrategyFacet", addresses[network.name].diamond);
 
   const parameters = {
     _investToken: weth.address,
@@ -114,9 +103,7 @@ module.exports = async ({
     _completeOnSell: false,
     _current_price: 0,
   };
-  const createStrategy = await strategyFacet
-    .connect(accounts[1])
-    .createStrategy(parameters);
+  const createStrategy = await strategyFacet.connect(accounts[1]).createStrategy(parameters);
   await createStrategy.wait();
   const strategy = await strategyFacet.getStrategy(1);
   console.log("Strategy: ", strategy);
