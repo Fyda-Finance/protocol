@@ -38,6 +38,7 @@ contract BuyFacet is Modifiers {
      * @param price The price at which the buy action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
      * @param investTokenAmount The amount of invest tokens bought.
+     * @param investPrice the average price at which invest tokens were bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
 
@@ -46,6 +47,7 @@ contract BuyFacet is Modifiers {
         uint256 price,
         uint256 slippage,
         uint256 investTokenAmount,
+        uint256 investPrice,
         uint256 exchangeRate
     );
 
@@ -55,6 +57,7 @@ contract BuyFacet is Modifiers {
      * @param price The price at which the Buy on TWAP action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
      * @param investTokenAmount The amount of invest tokens bought.
+     * @param investPrice the average price at which invest tokens were bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param time The time at which it was executed.
      */
@@ -63,6 +66,7 @@ contract BuyFacet is Modifiers {
         uint256 price,
         uint256 slippage,
         uint256 investTokenAmount,
+        uint256 investPrice,
         uint256 exchangeRate,
         uint256 time
     );
@@ -72,6 +76,7 @@ contract BuyFacet is Modifiers {
      * @param price The price at which the BTD action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
      * @param investTokenAmount The amount of invest tokens bought.
+     * @param investPrice the average price at which invest tokens were bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
     event BTDExecuted(
@@ -79,6 +84,7 @@ contract BuyFacet is Modifiers {
         uint256 price,
         uint256 slippage,
         uint256 investTokenAmount,
+        uint256 investPrice,
         uint256 exchangeRate
     );
 
@@ -327,11 +333,19 @@ contract BuyFacet is Modifiers {
         uint256 slippage = LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, true);
 
         if (strategy.parameters._buy && !strategy.parameters._btd && !strategy.parameters._buyTwap) {
-            emit BuyExecuted(strategyId, price, slippage, toTokenAmount, rate);
+            emit BuyExecuted(strategyId, price, slippage, toTokenAmount, strategy.investPrice, rate);
         } else if (strategy.parameters._btd) {
-            emit BTDExecuted(strategyId, price, slippage, toTokenAmount, rate);
+            emit BTDExecuted(strategyId, price, slippage, toTokenAmount, strategy.investPrice, rate);
         } else if (strategy.parameters._buyTwap) {
-            emit BuyTwapExecuted(strategyId, price, slippage, toTokenAmount, rate, block.timestamp);
+            emit BuyTwapExecuted(
+                strategyId,
+                price,
+                slippage,
+                toTokenAmount,
+                strategy.investPrice,
+                rate,
+                block.timestamp
+            );
         }
     }
 

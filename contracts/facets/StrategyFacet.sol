@@ -44,7 +44,9 @@ contract StrategyFacet is Modifiers {
         uint256 timestamp,
         uint256 investRoundId,
         uint256 stableRoundId,
-        uint256 price
+        uint256 price,
+        uint256 budget,
+        address user
     );
 
     /**
@@ -333,7 +335,9 @@ contract StrategyFacet is Modifiers {
             block.timestamp,
             investRoundId,
             stableRoundId,
-            price
+            price,
+            budget,
+            msg.sender
         );
     }
 
