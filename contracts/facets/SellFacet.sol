@@ -481,7 +481,14 @@ contract SellFacet is Modifiers {
                 strategy.profit
             );
         } else if (strategy.parameters._str) {
-            emit STRExecuted(strategyId, price, slippage, toTokenAmount, rate, strategy.profit);
+            emit STRExecuted(
+                strategyId,
+                price,
+                slippage,
+                toTokenAmount,
+                rate,
+                strategy.profit
+            );
         } else if (strategy.parameters._sellTwap) {
             emit SellTwapExecuted(
                 strategyId,

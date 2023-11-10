@@ -399,9 +399,23 @@ contract BuyFacet is Modifiers {
             !strategy.parameters._btd &&
             !strategy.parameters._buyTwap
         ) {
-            emit BuyExecuted(strategyId, price, slippage, toTokenAmount,strategy.investPrice, rate);
+            emit BuyExecuted(
+                strategyId,
+                price,
+                slippage,
+                toTokenAmount,
+                strategy.investPrice,
+                rate
+            );
         } else if (strategy.parameters._btd) {
-            emit BTDExecuted(strategyId, price, slippage, toTokenAmount,strategy.investPrice, rate);
+            emit BTDExecuted(
+                strategyId,
+                price,
+                slippage,
+                toTokenAmount,
+                strategy.investPrice,
+                rate
+            );
         } else if (strategy.parameters._buyTwap) {
             emit BuyTwapExecuted(
                 strategyId,
