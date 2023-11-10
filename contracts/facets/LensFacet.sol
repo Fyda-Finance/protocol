@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import { Modifiers } from "../utils/Modifiers.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
+import { LibUtil } from "../libraries/LibUtil.sol";
 import { AppStorage } from "../AppStorage.sol";
 
 /**
@@ -55,5 +56,13 @@ contract LensFacet is Modifiers {
      */
     function getNonce(address account) external view returns (uint256 nonce) {
         return s.nonces[account];
+    }
+
+    /**
+     * @notice Get the current chain ID.
+     * @return chain ID.
+     */
+    function getChainId() external view returns (uint256) {
+        return LibUtil.getChainID();
     }
 }

@@ -110,3 +110,79 @@ export async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
     lensFacet,
   };
 }
+
+export type Permit = {
+  tokenOwner: string;
+  tokenReceiver: string;
+  value: string;
+  deadline: string;
+  v: number;
+  r: string;
+  s: string;
+};
+
+export async function getPermit(
+  tokenOwner: SignerWithAddress,
+  tokenReceiver: string,
+  nonce: number,
+  chainId: number,
+  tokenName: string,
+  tokenAddress: string,
+): Promise<Permit> {
+  const domain = {
+    name: tokenName,
+    version: "1",
+    chainId: chainId,
+    verifyingContract: tokenAddress,
+  };
+
+  const types = {
+    Permit: [
+      {
+        name: "owner",
+        type: "address",
+      },
+      {
+        name: "spender",
+        type: "address",
+      },
+      {
+        name: "value",
+        type: "uint256",
+      },
+      {
+        name: "nonce",
+        type: "uint256",
+      },
+      {
+        name: "deadline",
+        type: "uint256",
+      },
+    ],
+  };
+
+  const value = ethers.constants.MaxUint256;
+  const deadline = ethers.constants.MaxUint256;
+
+  // set the Permit type values
+  const values = {
+    owner: tokenOwner.address,
+    spender: tokenReceiver,
+    value: value,
+    nonce: nonce,
+    deadline: deadline,
+  };
+
+  const signature = await tokenOwner._signTypedData(domain, types, values);
+  const sig = ethers.utils.splitSignature(signature);
+
+  return {
+    tokenOwner: tokenOwner.address,
+    tokenReceiver: tokenReceiver,
+    value: value.toString(),
+    deadline: deadline.toString(),
+    v: sig.v,
+    r: sig.r,
+    s: sig.s,
+  };
+}

@@ -9,6 +9,7 @@ import { LibTrade } from "../libraries/LibTrade.sol";
 import { LibSignature } from "../libraries/LibSignature.sol";
 import { LibUtil } from "../libraries/LibUtil.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 
 error BothStableAndInvestAmountProvided();
 error OnlyOwnerCanCancelStrategies();
@@ -22,6 +23,28 @@ error HighSellValueIsChosenWithoutSeLLDCA();
  * @dev StrategyFacet is one of the facets of the system, dedicated to strategy management.
  */
 contract StrategyFacet is Modifiers {
+    /**
+     * @notice The `Permit` struct is used to hold the parameters for the permit function.
+     * @param token The address of the token to spend.
+     * @param owner The address of the owner of the token.
+     * @param spender The address of the spender of the token.
+     * @param value The amount of the token to spend.
+     * @param deadline The deadline for the permit.
+     * @param v The v parameter of the permit signature.
+     * @param r The r parameter of the permit signature.
+     * @param s The s parameter of the permit signature.
+     */
+    struct Permit {
+        address token;
+        address owner;
+        address spender;
+        uint256 value;
+        uint256 deadline;
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+    }
+
     /**
      * @notice The `AppStorage` state variable serves as the central data repository for this contract. Please
      * please look at AppStorage.sol for more detail
@@ -87,17 +110,31 @@ contract StrategyFacet is Modifiers {
      * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
      *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
      *      If the parameters do not meet the criteria, an error is thrown.
+     * @param permits The array of `Permit` structs containing the parameters for the permit function.
      * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
      * @param account The address of the user who created the strategy.
      * @param nonce The nonce of the user who created the strategy.
      * @param signature The signature of the user who created the strategy.
      */
     function createStrategyOnBehalf(
+        Permit[] memory permits,
         StrategyParameters memory _parameter,
         address account,
         uint256 nonce,
         bytes memory signature
     ) public {
+        for (uint256 i = 0; i < permits.length; i++) {
+            IERC20Permit(permits[i].token).permit(
+                permits[i].owner,
+                permits[i].spender,
+                permits[i].value,
+                permits[i].deadline,
+                permits[i].v,
+                permits[i].r,
+                permits[i].s
+            );
+        }
+
         if (s.nonces[account] != nonce) {
             revert InvalidNonce();
         }
