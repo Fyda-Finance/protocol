@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE } from "../AppStorage.sol";
-import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute } from "../utils/GenericErrors.sol";
-import { LibPrice } from "../libraries/LibPrice.sol";
-import { LibTrade } from "../libraries/LibTrade.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE} from "../AppStorage.sol";
+import {Modifiers} from "../utils/Modifiers.sol";
+import {InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute} from "../utils/GenericErrors.sol";
+import {LibPrice} from "../libraries/LibPrice.sol";
+import {LibTrade} from "../libraries/LibTrade.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 error BothStableAndInvestAmountProvided();
 error OnlyOwnerCanCancelStrategies();
@@ -79,11 +79,17 @@ contract StrategyFacet is Modifiers {
             revert AtLeastOneOptionRequired();
         }
 
-        if (_parameter._sellType == SellLegType.INCREASE_BY && (_parameter._str || _parameter._sellTwap)) {
+        if (
+            _parameter._sellType == SellLegType.INCREASE_BY &&
+            (_parameter._str || _parameter._sellTwap)
+        ) {
             revert SellPercentageWithDCA();
         }
 
-        if (_parameter._floorType == FloorLegType.DECREASE_BY && (_parameter._buyTwap || _parameter._btd)) {
+        if (
+            _parameter._floorType == FloorLegType.DECREASE_BY &&
+            (_parameter._buyTwap || _parameter._btd)
+        ) {
             revert FloorPercentageWithDCA();
         }
 
@@ -98,7 +104,10 @@ contract StrategyFacet is Modifiers {
         if (_parameter._buyTwap && _parameter._buyTwapTime <= 0) {
             revert BuyTwapTimeInvalid();
         }
-        if (_parameter._buyTwap && _parameter._buyTwapTimeUnit == TimeUnit.NO_UNIT) {
+        if (
+            _parameter._buyTwap &&
+            _parameter._buyTwapTimeUnit == TimeUnit.NO_UNIT
+        ) {
             revert BuyTwapTimeUnitNotSelected();
         }
 
@@ -109,7 +118,10 @@ contract StrategyFacet is Modifiers {
         if ((_parameter._sellTwap || _parameter._str) && !_parameter._sell) {
             revert SellDCAWithoutSell();
         }
-        if (_parameter._sellTwap && _parameter._sellTwapTimeUnit == TimeUnit.NO_UNIT) {
+        if (
+            _parameter._sellTwap &&
+            _parameter._sellTwapTimeUnit == TimeUnit.NO_UNIT
+        ) {
             revert SellTwapTimeUnitNotSelected();
         }
 
@@ -117,15 +129,25 @@ contract StrategyFacet is Modifiers {
             revert SellTwapTimeInvalid();
         }
 
-        if ((_parameter._sellTwap || _parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.NO_UNIT) {
+        if (
+            (_parameter._sellTwap || _parameter._str) &&
+            _parameter._sellDCAUnit == DCA_UNIT.NO_UNIT
+        ) {
             revert SellTwapOrStrWithoutSellDCAUnit();
         }
 
-        if (_parameter._sellDCAUnit != DCA_UNIT.NO_UNIT && _parameter._sellDCAValue == 0) {
+        if (
+            _parameter._sellDCAUnit != DCA_UNIT.NO_UNIT &&
+            _parameter._sellDCAValue == 0
+        ) {
             revert SellDCAUnitWithoutSellDCAValue();
         }
 
-        if (_parameter._str && (_parameter._strValue == 0 || _parameter._strType == DIP_SPIKE.NO_SPIKE)) {
+        if (
+            _parameter._str &&
+            (_parameter._strValue == 0 ||
+                _parameter._strType == DIP_SPIKE.NO_SPIKE)
+        ) {
             revert StrWithoutStrValueOrType();
         }
 
@@ -133,22 +155,29 @@ contract StrategyFacet is Modifiers {
             revert BTDWithoutBTDType();
         }
 
-        if (_parameter._btdType != DIP_SPIKE.NO_SPIKE && _parameter._btdValue == 0) {
+        if (
+            _parameter._btdType != DIP_SPIKE.NO_SPIKE &&
+            _parameter._btdValue == 0
+        ) {
             revert BTDTypeWithoutBTDValue();
         }
 
-        if ((_parameter._btd || _parameter._buyTwap) && _parameter._buyDCAUnit == DCA_UNIT.NO_UNIT) {
+        if (
+            (_parameter._btd || _parameter._buyTwap) &&
+            _parameter._buyDCAUnit == DCA_UNIT.NO_UNIT
+        ) {
             revert BuyDCAWithoutBuyDCAUnit();
         }
 
-        if (_parameter._buyDCAUnit != DCA_UNIT.NO_UNIT && _parameter._buyDCAValue == 0) {
+        if (
+            _parameter._buyDCAUnit != DCA_UNIT.NO_UNIT &&
+            _parameter._buyDCAValue == 0
+        ) {
             revert BuyDCAUnitWithoutBuyDCAValue();
         }
 
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            _parameter._investToken,
-            _parameter._stableToken
-        );
+        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+            .getPrice(_parameter._investToken, _parameter._stableToken);
 
         uint256 buyValue = _parameter._buyValue;
         if (_parameter._current_price == CURRENT_PRICE.BUY_CURRENT) {
@@ -201,17 +230,25 @@ contract StrategyFacet is Modifiers {
             if (sellValue == 0) {
                 revert InvalidSellValue();
             }
-            if (_parameter._highSellValue != 0 && sellValue > _parameter._highSellValue) {
+            if (
+                _parameter._highSellValue != 0 &&
+                sellValue > _parameter._highSellValue
+            ) {
                 revert InvalidHighSellValue();
             }
         }
 
         // Check if both buy and sell are chosen
         if (_parameter._buy && _parameter._sell) {
-            if (!(_parameter._stableAmount > 0 || _parameter._investAmount > 0)) {
+            if (
+                !(_parameter._stableAmount > 0 || _parameter._investAmount > 0)
+            ) {
                 revert NoAmountProvided();
             }
-            if (buyValue >= sellValue && _parameter._sellType == SellLegType.LIMIT_PRICE) {
+            if (
+                buyValue >= sellValue &&
+                _parameter._sellType == SellLegType.LIMIT_PRICE
+            ) {
                 revert BuyAndSellAtMisorder();
             }
         }
@@ -256,7 +293,11 @@ contract StrategyFacet is Modifiers {
         }
 
         // Check if floor and buy are chosen
-        if (_parameter._floor && _parameter._buy && _parameter._floorType == FloorLegType.LIMIT_PRICE) {
+        if (
+            _parameter._floor &&
+            _parameter._buy &&
+            _parameter._floorType == FloorLegType.LIMIT_PRICE
+        ) {
             if (_parameter._floorValue >= buyValue) {
                 revert FloorValueGreaterThanBuyValue();
             }
@@ -266,14 +307,21 @@ contract StrategyFacet is Modifiers {
             revert InvalidSlippage();
         }
 
-        if ((_parameter._sellTwap || _parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
-            if (_parameter._sellDCAValue < 0 || _parameter._sellDCAValue > LibTrade.MAX_PERCENTAGE) {
+        if (
+            (_parameter._sellTwap || _parameter._str) &&
+            _parameter._sellDCAUnit == DCA_UNIT.PERCENTAGE
+        ) {
+            if (
+                _parameter._sellDCAValue < 0 ||
+                _parameter._sellDCAValue > LibTrade.MAX_PERCENTAGE
+            ) {
                 revert SellDCAValueRangeIsNotValid();
             }
         }
 
         if (
-            ((_parameter._sellTwap || _parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.FIXED) &&
+            ((_parameter._sellTwap || _parameter._str) &&
+                _parameter._sellDCAUnit == DCA_UNIT.FIXED) &&
             _parameter._investAmount > 0 &&
             (_parameter._sellDCAValue > _parameter._investAmount)
         ) {
@@ -289,13 +337,20 @@ contract StrategyFacet is Modifiers {
             revert DCAValueShouldBeLessThanIntitialAmount();
         }
 
-        if ((_parameter._buyTwap || _parameter._btd) && _parameter._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
-            if (_parameter._buyDCAValue < 0 || _parameter._buyDCAValue > LibTrade.MAX_PERCENTAGE) {
+        if (
+            (_parameter._buyTwap || _parameter._btd) &&
+            _parameter._buyDCAUnit == DCA_UNIT.PERCENTAGE
+        ) {
+            if (
+                _parameter._buyDCAValue < 0 ||
+                _parameter._buyDCAValue > LibTrade.MAX_PERCENTAGE
+            ) {
                 revert BuyDCAValueRangeIsNotValid();
             }
         }
 
-        uint256 decimals = 10 ** IERC20Metadata(_parameter._investToken).decimals();
+        uint256 decimals = 10 **
+            IERC20Metadata(_parameter._investToken).decimals();
 
         if (_parameter._investAmount > 0 && _parameter._stableAmount > 0) {
             revert BothStableAndInvestAmountProvided();

@@ -50,17 +50,25 @@ describe("Floor", function () {
   });
 
   it("floor", async () => {
-    await setup.scenarioERC20WETH.connect(setup.user).approve(setup.strategyFacet.address, budget);
+    await setup.scenarioERC20WETH
+      .connect(setup.user)
+      .approve(setup.strategyFacet.address, budget);
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 5);
 
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
 
     // 1 WETH = 1200 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20WETH.address, "120000000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20WETH.address,
+      "120000000000"
+    );
 
     // 1 USDC = 1 USD
-    await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
+    await setup.scenarioDEX.updateExchangeRate(
+      setup.scenarioERC20USDC.address,
+      "100000000"
+    );
     parameters._floor = true;
     parameters._floorType = 2;
     parameters._floorValue = "1000";
@@ -94,7 +102,7 @@ describe("Floor", function () {
       setup.floorFacet.connect(setup.user).executeFloor(1, {
         dex: setup.scenarioDEX.address,
         callData: dexCalldata,
-      }),
+      })
     ).to.be.reverted;
   });
 });

@@ -1,9 +1,8 @@
+import deployDiamond from "../scripts/deploy";
 import hre from "hardhat";
 import { ethers } from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { PriceOracleFacet, ScenarioDEX } from "typechain";
-
-import deployDiamond from "../scripts/deploy";
 
 const feeds: any = {
   goerli: {
@@ -14,7 +13,11 @@ const feeds: any = {
   },
 };
 
-module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRuntimeEnvironment) => {
+module.exports = async ({
+  network,
+  getNamedAccounts,
+  deployments,
+}: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
   const accounts = await ethers.getSigners();
   const deployer = accounts[0].address;
@@ -69,7 +72,10 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   const dex: ScenarioDEX = await hre.ethers.getContract("MockDEX");
   const diamondAddress = await deployDiamond(accounts[0], true);
 
-  const priceOracleFacet: PriceOracleFacet = await ethers.getContractAt("PriceOracleFacet", diamondAddress);
+  const priceOracleFacet: PriceOracleFacet = await ethers.getContractAt(
+    "PriceOracleFacet",
+    diamondAddress
+  );
   await priceOracleFacet.setAssetFeed(usdc.address, feeds[network.name].usdc);
   await priceOracleFacet.setAssetFeed(wbtc.address, feeds[network.name].wbtc);
   await priceOracleFacet.setAssetFeed(weth.address, feeds[network.name].eth);

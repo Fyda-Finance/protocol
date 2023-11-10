@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
-import { LibSwap } from "../libraries/LibSwap.sol";
-import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive } from "../utils/GenericErrors.sol";
-import { LibPrice } from "../libraries/LibPrice.sol";
-import { LibTime } from "../libraries/LibTime.sol";
-import { LibTrade } from "../libraries/LibTrade.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap} from "../AppStorage.sol";
+import {LibSwap} from "../libraries/LibSwap.sol";
+import {Modifiers} from "../utils/Modifiers.sol";
+import {InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive} from "../utils/GenericErrors.sol";
+import {LibPrice} from "../libraries/LibPrice.sol";
+import {LibTime} from "../libraries/LibTime.sol";
+import {LibTrade} from "../libraries/LibTrade.sol";
 
 error SellNotSelected();
 error PriceLessThanHighSellValue();
@@ -117,16 +117,20 @@ contract SellFacet is Modifiers {
         }
 
         // Retrieve the latest price and round ID from Chainlink.
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            strategy.parameters._investToken,
-            strategy.parameters._stableToken
-        );
+        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+            .getPrice(
+                strategy.parameters._investToken,
+                strategy.parameters._stableToken
+            );
 
         uint256 sellAt = strategy.parameters._sellValue;
 
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
-            uint256 sellPercentage = LibTrade.MAX_PERCENTAGE + strategy.parameters._sellValue;
-            sellAt = (strategy.investPrice * sellPercentage) / LibTrade.MAX_PERCENTAGE;
+            uint256 sellPercentage = LibTrade.MAX_PERCENTAGE +
+                strategy.parameters._sellValue;
+            sellAt =
+                (strategy.investPrice * sellPercentage) /
+                LibTrade.MAX_PERCENTAGE;
         }
 
         updateCurrentPrice(strategyId, price);
@@ -147,7 +151,15 @@ contract SellFacet is Modifiers {
         uint256 value = executionSellAmount(true, strategyId);
 
         // Perform the sell action, including transferring assets to the DEX.
-        transferSell(strategyId, value, swap, price, investRoundId, stableRoundId, sellAt);
+        transferSell(
+            strategyId,
+            value,
+            swap,
+            price,
+            investRoundId,
+            stableRoundId,
+            sellAt
+        );
 
         // If there are no further buy actions in the strategy, mark it as completed.
         if (!strategy.parameters._buy) {
@@ -182,20 +194,26 @@ contract SellFacet is Modifiers {
         }
 
         // Retrieve the latest price and round ID from Chainlink.
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            strategy.parameters._investToken,
-            strategy.parameters._stableToken
-        );
+        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+            .getPrice(
+                strategy.parameters._investToken,
+                strategy.parameters._stableToken
+            );
 
         updateCurrentPrice(strategyId, price);
         uint256 sellAt = strategy.parameters._sellValue;
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
-            uint256 sellPercentage = LibTrade.MAX_PERCENTAGE + strategy.parameters._sellValue;
-            sellAt = (strategy.investPrice * sellPercentage) / LibTrade.MAX_PERCENTAGE;
+            uint256 sellPercentage = LibTrade.MAX_PERCENTAGE +
+                strategy.parameters._sellValue;
+            sellAt =
+                (strategy.investPrice * sellPercentage) /
+                LibTrade.MAX_PERCENTAGE;
         }
 
         if (
-            price < sellAt || (strategy.parameters._highSellValue != 0 && price >= strategy.parameters._highSellValue)
+            price < sellAt ||
+            (strategy.parameters._highSellValue != 0 &&
+                price >= strategy.parameters._highSellValue)
         ) {
             revert PriceIsNotInTheRange();
         }
@@ -208,7 +226,11 @@ contract SellFacet is Modifiers {
             strategy.parameters._sellTwapTime,
             strategy.parameters._sellTwapTimeUnit
         );
-        bool execute = LibTime.getTimeDifference(block.timestamp, strategy.sellTwapExecutedAt, timeToExecute);
+        bool execute = LibTime.getTimeDifference(
+            block.timestamp,
+            strategy.sellTwapExecutedAt,
+            timeToExecute
+        );
 
         if (!execute) {
             revert TWAPTimeDifferenceIsLess();
@@ -216,10 +238,20 @@ contract SellFacet is Modifiers {
 
         // Update the TWAP execution timestamp and perform the TWAP sell action.
         strategy.sellTwapExecutedAt = block.timestamp;
-        transferSell(strategyId, value, swap, price, investRoundId, stableRoundId, sellAt);
+        transferSell(
+            strategyId,
+            value,
+            swap,
+            price,
+            investRoundId,
+            stableRoundId,
+            sellAt
+        );
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
-        if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
+        if (
+            !strategy.parameters._buy && strategy.parameters._investAmount == 0
+        ) {
             strategy.status = Status.COMPLETED;
         }
     }
@@ -262,19 +294,25 @@ contract SellFacet is Modifiers {
         }
 
         // Retrieve the latest price and round ID from Chainlink.
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            strategy.parameters._investToken,
-            strategy.parameters._stableToken
-        );
+        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+            .getPrice(
+                strategy.parameters._investToken,
+                strategy.parameters._stableToken
+            );
 
         uint256 sellAt = strategy.parameters._sellValue;
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
-            uint256 sellPercentage = LibTrade.MAX_PERCENTAGE + strategy.parameters._sellValue;
-            sellAt = (strategy.investPrice * sellPercentage) / LibTrade.MAX_PERCENTAGE;
+            uint256 sellPercentage = LibTrade.MAX_PERCENTAGE +
+                strategy.parameters._sellValue;
+            sellAt =
+                (strategy.investPrice * sellPercentage) /
+                LibTrade.MAX_PERCENTAGE;
         }
 
         if (
-            price < sellAt || (strategy.parameters._highSellValue != 0 && price >= strategy.parameters._highSellValue)
+            price < sellAt ||
+            (strategy.parameters._highSellValue != 0 &&
+                price >= strategy.parameters._highSellValue)
         ) {
             revert PriceIsNotInTheRange();
         }
@@ -291,11 +329,21 @@ contract SellFacet is Modifiers {
 
         uint256 value = executionSellAmount(false, strategyId);
 
-        transferSell(strategyId, value, swap, price, investRoundId, stableRoundId, sellAt);
+        transferSell(
+            strategyId,
+            value,
+            swap,
+            price,
+            investRoundId,
+            stableRoundId,
+            sellAt
+        );
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
 
-        if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
+        if (
+            !strategy.parameters._buy && strategy.parameters._investAmount == 0
+        ) {
             strategy.status = Status.COMPLETED;
         }
     }
@@ -307,18 +355,22 @@ contract SellFacet is Modifiers {
      * @return The calculated value to be sold, which can be based on fixed or percentage units.
      */
 
-    function executionSellAmount(bool investValue, uint256 strategyId) public view returns (uint256) {
+    function executionSellAmount(
+        bool investValue,
+        uint256 strategyId
+    ) public view returns (uint256) {
         uint256 amount;
         Strategy memory strategy = s.strategies[strategyId];
         if (investValue) {
             amount = strategy.parameters._investAmount;
         } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.FIXED) {
-            amount = (strategy.parameters._investAmount > strategy.parameters._sellDCAValue)
+            amount = (strategy.parameters._investAmount >
+                strategy.parameters._sellDCAValue)
                 ? strategy.parameters._sellDCAValue
                 : strategy.parameters._investAmount;
         } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
-            uint256 sellPercentageAmount = (strategy.parameters._sellDCAValue * strategy.parameters._investAmount) /
-                LibTrade.MAX_PERCENTAGE;
+            uint256 sellPercentageAmount = (strategy.parameters._sellDCAValue *
+                strategy.parameters._investAmount) / LibTrade.MAX_PERCENTAGE;
 
             amount = (strategy.parameters._investAmount > sellPercentageAmount)
                 ? sellPercentageAmount
@@ -362,7 +414,11 @@ contract SellFacet is Modifiers {
         // Perform the asset swap on the DEX and calculate the exchange rate.
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-        uint256 rate = LibTrade.calculateExchangeRate(strategy.parameters._investToken, value, toTokenAmount);
+        uint256 rate = LibTrade.calculateExchangeRate(
+            strategy.parameters._investToken,
+            value,
+            toTokenAmount
+        );
         // Check if the exchange rate meets the specified sell value.
         if (rate < sellValue) {
             revert InvalidExchangeRate(sellValue, rate);
@@ -371,21 +427,34 @@ contract SellFacet is Modifiers {
         // Validate slippage if the strategy is not an STR (Spike Trigger).
         uint256 slippage = 0;
         if (!strategy.parameters._str) {
-            slippage = LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, false);
+            slippage = LibTrade.validateSlippage(
+                rate,
+                price,
+                strategy.parameters._slippage,
+                false
+            );
         }
 
         // Calculate the total investment amount and check if it exceeds the budget.
 
-        uint256 decimals = 10 ** IERC20Metadata(strategy.parameters._investToken).decimals();
+        uint256 decimals = 10 **
+            IERC20Metadata(strategy.parameters._investToken).decimals();
 
-        strategy.parameters._investAmount = strategy.parameters._investAmount - value;
-        strategy.parameters._stableAmount = strategy.parameters._stableAmount + toTokenAmount;
+        strategy.parameters._investAmount =
+            strategy.parameters._investAmount -
+            value;
+        strategy.parameters._stableAmount =
+            strategy.parameters._stableAmount +
+            toTokenAmount;
 
-        uint256 totalInvestAmount = (strategy.parameters._investAmount * strategy.investPrice) / decimals;
+        uint256 totalInvestAmount = (strategy.parameters._investAmount *
+            strategy.investPrice) / decimals;
         uint256 sum = strategy.parameters._stableAmount + totalInvestAmount;
 
         if (strategy.budget < sum) {
-            strategy.parameters._stableAmount = strategy.budget - totalInvestAmount;
+            strategy.parameters._stableAmount =
+                strategy.budget -
+                totalInvestAmount;
 
             strategy.profit = sum - strategy.budget + strategy.profit;
         }
@@ -397,8 +466,11 @@ contract SellFacet is Modifiers {
         // Calculate the buy percentage amount if buy actions are based on TWAP or BTD.
 
         if (
-            (strategy.parameters._sell && !strategy.parameters._str && !strategy.parameters._sellTwap) ||
-            (strategy.parameters._sell && strategy.parameters._highSellValue > price)
+            (strategy.parameters._sell &&
+                !strategy.parameters._str &&
+                !strategy.parameters._sellTwap) ||
+            (strategy.parameters._sell &&
+                strategy.parameters._highSellValue > price)
         ) {
             emit SellExecuted(
                 strategyId,
@@ -467,10 +539,16 @@ contract SellFacet is Modifiers {
     ) internal view {
         Strategy memory strategy = s.strategies[strategyId];
 
-        if (presentInvestRound < toInvestRoundId || presentStableRound < toStableRoundId) {
+        if (
+            presentInvestRound < toInvestRoundId ||
+            presentStableRound < toStableRoundId
+        ) {
             revert WrongPreviousIDs();
         }
-        if (toInvestRoundId < fromInvestRoundId || toStableRoundId < fromStableRoundId) {
+        if (
+            toInvestRoundId < fromInvestRoundId ||
+            toStableRoundId < fromStableRoundId
+        ) {
             revert WrongPreviousIDs();
         }
 
@@ -521,9 +599,15 @@ contract SellFacet is Modifiers {
             }
         }
 
-        if ((strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE) && (strValue > toFromPriceDifference)) {
+        if (
+            (strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE) &&
+            (strValue > toFromPriceDifference)
+        ) {
             revert RoundDataDoesNotMatch();
-        } else if ((strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE) && (strValue > fromToPriceDifference)) {
+        } else if (
+            (strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE) &&
+            (strValue > fromToPriceDifference)
+        ) {
             revert RoundDataDoesNotMatch();
         } else if (
             (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY) &&

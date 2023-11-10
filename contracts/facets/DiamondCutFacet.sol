@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
-import { LibDiamond } from "../libraries/LibDiamond.sol";
-import { AppStorage } from "../AppStorage.sol";
-import { Modifiers } from "../utils/Modifiers.sol";
+import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
+import {LibDiamond} from "../libraries/LibDiamond.sol";
+import {AppStorage} from "../AppStorage.sol";
+import {Modifiers} from "../utils/Modifiers.sol";
 
 // Remember to add the loupe functions from DiamondLoupeFacet to the diamond.
 // The loupe functions are required by the EIP2535 Diamonds standard
@@ -34,13 +34,14 @@ contract DiamondCutFacet is IDiamondCut, Modifiers {
         }
         // loop through diamond cut
         for (uint256 facetIndex; facetIndex < _diamondCut.length; ) {
-            (selectorCount, selectorSlot) = LibDiamond.addReplaceRemoveFacetSelectors(
-                selectorCount,
-                selectorSlot,
-                _diamondCut[facetIndex].facetAddress,
-                _diamondCut[facetIndex].action,
-                _diamondCut[facetIndex].functionSelectors
-            );
+            (selectorCount, selectorSlot) = LibDiamond
+                .addReplaceRemoveFacetSelectors(
+                    selectorCount,
+                    selectorSlot,
+                    _diamondCut[facetIndex].facetAddress,
+                    _diamondCut[facetIndex].action,
+                    _diamondCut[facetIndex].functionSelectors
+                );
 
             unchecked {
                 facetIndex++;

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { Modifiers } from "../utils/Modifiers.sol";
-import { AppStorage, Strategy, Status, Swap, FloorLegType } from "../AppStorage.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { LibSwap } from "../libraries/LibSwap.sol";
-import { LibPrice } from "../libraries/LibPrice.sol";
-import { LibTrade } from "../libraries/LibTrade.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, StrategyIsNotActive } from "../utils/GenericErrors.sol";
+import {Modifiers} from "../utils/Modifiers.sol";
+import {AppStorage, Strategy, Status, Swap, FloorLegType} from "../AppStorage.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {LibSwap} from "../libraries/LibSwap.sol";
+import {LibPrice} from "../libraries/LibPrice.sol";
+import {LibTrade} from "../libraries/LibTrade.sol";
+import {InvalidExchangeRate, NoSwapFromZeroBalance, StrategyIsNotActive} from "../utils/GenericErrors.sol";
 error FloorNotSet();
 error PriceIsGreaterThanFloorValue();
 
@@ -66,17 +66,21 @@ contract FloorFacet is Modifiers {
             revert NoSwapFromZeroBalance();
         }
 
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            strategy.parameters._investToken,
-            strategy.parameters._stableToken
-        );
+        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice
+            .getPrice(
+                strategy.parameters._investToken,
+                strategy.parameters._stableToken
+            );
 
         uint256 floorAt;
         if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE) {
             floorAt = strategy.parameters._floorValue;
         } else if (strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
-            uint256 floorPercentage = LibTrade.MAX_PERCENTAGE - strategy.parameters._floorValue;
-            floorAt = (strategy.investPrice * floorPercentage) / LibTrade.MAX_PERCENTAGE;
+            uint256 floorPercentage = LibTrade.MAX_PERCENTAGE -
+                strategy.parameters._floorValue;
+            floorAt =
+                (strategy.investPrice * floorPercentage) /
+                LibTrade.MAX_PERCENTAGE;
         }
 
         if (price > floorAt) {
@@ -109,7 +113,12 @@ contract FloorFacet is Modifiers {
             }
 
             // Validate the slippage based on the calculated rate and the latest price.
-            uint256 slippage = LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, false);
+            uint256 slippage = LibTrade.validateSlippage(
+                rate,
+                price,
+                strategy.parameters._slippage,
+                false
+            );
 
             // Update strategy details, including timestamp, asset amounts, round ID, and invest price.
             strategy.parameters._investAmount = 0;
@@ -122,7 +131,13 @@ contract FloorFacet is Modifiers {
             if (strategy.parameters._cancelOnFloor) {
                 strategy.status = Status.CANCELLED;
             }
-            emit FloorExecuted(strategyId, price, slippage, toTokenAmount, rate);
+            emit FloorExecuted(
+                strategyId,
+                price,
+                slippage,
+                toTokenAmount,
+                rate
+            );
         }
     }
 }

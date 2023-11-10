@@ -1,8 +1,7 @@
 /* eslint prefer-const: "off" */
+import { FacetCutAction, getSelectors } from "./libraries/diamond";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "hardhat-deploy-ethers/signers";
-
-import { FacetCutAction, getSelectors } from "./libraries/diamond";
 
 async function deployDiamond(contractOwner?: SignerWithAddress, log?: boolean) {
   if (!contractOwner) {
@@ -20,7 +19,10 @@ async function deployDiamond(contractOwner?: SignerWithAddress, log?: boolean) {
 
   // deploy Diamond
   const Diamond = await ethers.getContractFactory("Diamond");
-  const diamond = await Diamond.deploy(contractOwner.address, diamondCutFacet.address);
+  const diamond = await Diamond.deploy(
+    contractOwner.address,
+    diamondCutFacet.address
+  );
   await diamond.deployed();
   if (log) {
     console.log("Diamond deployed:", diamond.address);
@@ -93,7 +95,7 @@ async function deployDiamond(contractOwner?: SignerWithAddress, log?: boolean) {
 if (require.main === module) {
   deployDiamond()
     .then(() => process.exit(0))
-    .catch(error => {
+    .catch((error) => {
       console.error(error);
       process.exit(1);
     });
