@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Modifiers} from "../utils/Modifiers.sol";
-import {LibTrade} from "../libraries/LibTrade.sol";
+import { Modifiers } from "../utils/Modifiers.sol";
+import { LibTrade } from "../libraries/LibTrade.sol";
 
 /**
  * @title LensFacet
@@ -38,7 +38,6 @@ contract LensFacet is Modifiers {
         uint256 maxSlippage,
         bool isBuy
     ) external pure returns (uint256) {
-        return
-            LibTrade.validateSlippage(exchangeRate, price, maxSlippage, isBuy);
+        return LibTrade.validateSlippage(exchangeRate, price, maxSlippage, isBuy);
     }
 }
