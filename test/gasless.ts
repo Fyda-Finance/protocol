@@ -6,49 +6,9 @@ const { expect } = require("chai");
 
 describe("Gasless", function () {
   let setup: SetupDiamondFixture; // Adjust the type as needed
-  let parameters: Parameters;
-  const budget = "1000000000"; // $1k
 
   beforeEach(async function () {
     setup = await setupDiamondFixture();
-
-    parameters = {
-      _investToken: setup.scenarioERC20WETH.address,
-      _stableToken: setup.scenarioERC20USDC.address,
-      _stableAmount: budget,
-      _investAmount: "0",
-      _slippage: 1000,
-      _floor: false,
-      _floorType: 0,
-      _floorValue: "0",
-      _liquidateOnFloor: false,
-      _cancelOnFloor: false,
-      _buy: false,
-      _buyType: 0,
-      _buyValue: "0",
-      _buyTwap: false,
-      _buyTwapTime: 0,
-      _buyTwapTimeUnit: 0,
-      _btd: false,
-      _btdValue: "0",
-      _btdType: 0,
-      _buyDCAUnit: 0,
-      _buyDCAValue: "0",
-      _sell: false,
-      _sellType: 0,
-      _sellValue: "0",
-      _highSellValue: "0",
-      _str: false,
-      _strValue: "0",
-      _strType: 0,
-      _sellDCAUnit: 0,
-      _sellDCAValue: "0",
-      _sellTwap: false,
-      _sellTwapTime: 0,
-      _sellTwapTimeUnit: 0,
-      _completeOnSell: false,
-      _current_price: 0,
-    };
   });
 
   it("gasless buy", async () => {
