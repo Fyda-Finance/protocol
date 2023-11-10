@@ -21,4 +21,16 @@ library LibUtil {
         bytes memory revertData = _res.slice(4, _res.length - 4); // Remove the selector which is the first 4 bytes
         return abi.decode(revertData, (string)); // All that remains is the revert string
     }
+
+    /**
+     * @notice Used the get the ID of the current chain.
+     * @return id The chain ID
+     */
+    function getChainID() internal view returns (uint256) {
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return id;
+    }
 }

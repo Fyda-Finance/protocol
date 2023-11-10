@@ -248,6 +248,8 @@ struct AppStorage {
     mapping(uint256 => Strategy) strategies;
     // chainlink feeds - asset => USD feed
     mapping(address => address) feeds;
+    // account => nonce
+    mapping(address => uint256) nonces;
 }
 
 /**
