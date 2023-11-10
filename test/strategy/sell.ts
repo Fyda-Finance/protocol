@@ -1,4 +1,4 @@
-import { Parameters, SetupDiamondFixture, setupDiamondFixture } from "./utils";
+import { Parameters, SetupDiamondFixture, setupDiamondFixture } from "../utils";
 
 const { expect } = require("chai");
 

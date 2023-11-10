@@ -3,9 +3,11 @@ pragma solidity ^0.8.20;
 
 import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute } from "../utils/GenericErrors.sol";
+import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
+import { LibSignature } from "../libraries/LibSignature.sol";
+import { LibUtil } from "../libraries/LibUtil.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 error BothStableAndInvestAmountProvided();
@@ -45,8 +47,7 @@ contract StrategyFacet is Modifiers {
         uint256 investRoundId,
         uint256 stableRoundId,
         uint256 price,
-        uint256 budget,
-        address user
+        uint256 budget
     );
 
     /**
@@ -62,7 +63,101 @@ contract StrategyFacet is Modifiers {
      *      If the parameters do not meet the criteria, an error is thrown.
      * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
      */
-    function createStrategy(StrategyParameters memory _parameter) external {
+    function createStrategy(StrategyParameters memory _parameter) public {
+        _createStrategy(_parameter, msg.sender);
+    }
+
+    /**
+     * @notice Cancel a trade execution strategy.
+     * @dev This function allows users to cancel a trade execution strategy based on its unique ID.
+     *      When cancelled, the strategy's status is updated to "CANCELLED."
+     * @param id The unique ID of the strategy to cancel.
+     */
+    function cancelStrategy(uint256 id) external {
+        Strategy storage strategy = s.strategies[id];
+        if (msg.sender != strategy.user) {
+            revert OnlyOwnerCanCancelStrategies();
+        }
+        strategy.status = Status.CANCELLED;
+        emit StrategyCancelled(id);
+    }
+
+    /**
+     * @notice Create a new trade execution strategy based on the provided parameters on behalf of another user.
+     * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
+     *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
+     *      If the parameters do not meet the criteria, an error is thrown.
+     * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
+     * @param account The address of the user who created the strategy.
+     * @param nonce The nonce of the user who created the strategy.
+     * @param signature The signature of the user who created the strategy.
+     */
+    function createStrategyOnBehalf(
+        StrategyParameters memory _parameter,
+        address account,
+        uint256 nonce,
+        bytes memory signature
+    ) public {
+        if (s.nonces[account] != nonce) {
+            revert InvalidNonce();
+        }
+
+        bytes32 messageHash = getMessageHash(_parameter, nonce, account);
+        bytes32 ethSignedMessageHash = LibSignature.getEthSignedMessageHash(messageHash);
+        address signer = LibSignature.recoverSigner(ethSignedMessageHash, signature);
+
+        if (signer != account) {
+            revert InvalidSigner();
+        }
+
+        _createStrategy(_parameter, account);
+    }
+
+    /**
+     * @notice Get the message hash for a given strategy.
+     * @dev This function returns the message hash that must be signed by the user in order to create a strategy on behalf of another user.
+     * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
+     * @param nonce The nonce of the user who created the strategy.
+     * @param account The address of the user who created the strategy.
+     * @return The message hash for the given strategy.
+     */
+    function getMessageHash(
+        StrategyParameters memory _parameter,
+        uint256 nonce,
+        address account
+    ) public view returns (bytes32) {
+        return keccak256(abi.encode(account, nonce, _parameter, LibUtil.getChainID()));
+    }
+
+    /**
+     * @notice Get the next available strategy ID.
+     * @dev This function returns the unique ID that will be assigned to the next created strategy.
+     * @return The next available strategy ID.
+     */
+    function nextStartegyId() external view returns (uint256) {
+        return s.nextStrategyId;
+    }
+
+    /**
+     * @notice Retrieve the details of a trade execution strategy.
+     * @dev This function allows users to query and retrieve information about a trade execution strategy
+     *      based on its unique ID.
+     * @param id The unique ID of the strategy to retrieve.
+     * @return A `Strategy` struct containing details of the specified strategy.
+     */
+    function getStrategy(uint256 id) external view returns (Strategy memory) {
+        return s.strategies[id];
+    }
+
+    /**
+     * @notice Create a new trade execution strategy based on the provided parameters.
+     * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
+     *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
+     *      If the parameters do not meet the criteria, an error is thrown.
+     * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
+     * @param user The address of the user who created the strategy.
+     */
+    function _createStrategy(StrategyParameters memory _parameter, address user) internal {
         if (_parameter._investToken == address(0)) {
             revert InvalidInvestToken();
         }
@@ -314,7 +409,7 @@ contract StrategyFacet is Modifiers {
             investPrice = price;
         }
         s.strategies[s.nextStrategyId] = Strategy({
-            user: msg.sender,
+            user: user,
             sellTwapExecutedAt: 0,
             buyTwapExecutedAt: 0,
             investRoundId: investRoundId,
@@ -336,43 +431,7 @@ contract StrategyFacet is Modifiers {
             investRoundId,
             stableRoundId,
             price,
-            budget,
-            msg.sender
+            budget
         );
-    }
-
-    /**
-     * @notice Cancel a trade execution strategy.
-     * @dev This function allows users to cancel a trade execution strategy based on its unique ID.
-     *      When cancelled, the strategy's status is updated to "CANCELLED."
-     * @param id The unique ID of the strategy to cancel.
-     */
-    function cancelStrategy(uint256 id) external {
-        Strategy storage strategy = s.strategies[id];
-        if (msg.sender != strategy.user) {
-            revert OnlyOwnerCanCancelStrategies();
-        }
-        strategy.status = Status.CANCELLED;
-        emit StrategyCancelled(id);
-    }
-
-    /**
-     * @notice Get the next available strategy ID.
-     * @dev This function returns the unique ID that will be assigned to the next created strategy.
-     * @return The next available strategy ID.
-     */
-    function nextStartegyId() external view returns (uint256) {
-        return s.nextStrategyId;
-    }
-
-    /**
-     * @notice Retrieve the details of a trade execution strategy.
-     * @dev This function allows users to query and retrieve information about a trade execution strategy
-     *      based on its unique ID.
-     * @param id The unique ID of the strategy to retrieve.
-     * @return A `Strategy` struct containing details of the specified strategy.
-     */
-    function getStrategy(uint256 id) external view returns (Strategy memory) {
-        return s.strategies[id];
     }
 }

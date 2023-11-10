@@ -3,12 +3,19 @@ pragma solidity ^0.8.0;
 
 import { Modifiers } from "../utils/Modifiers.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
+import { AppStorage } from "../AppStorage.sol";
 
 /**
  * @title LensFacet
  * @dev This contract provides functions for calculating exchange rates and validating slippage in trades.
  */
 contract LensFacet is Modifiers {
+    /**
+     * @notice The `AppStorage` state variable serves as the central data repository for this contract. Please
+     * please look at AppStorage.sol for more detail
+     */
+    AppStorage internal s;
+
     /**
      * @notice Calculate the exchange rate between two assets for a given trade.
      * @param fromAsset The address of the source asset.
@@ -39,5 +46,14 @@ contract LensFacet is Modifiers {
         bool isBuy
     ) external pure returns (uint256) {
         return LibTrade.validateSlippage(exchangeRate, price, maxSlippage, isBuy);
+    }
+
+    /**
+     * @notice Get the current nonce for a given account.
+     * @param account The address of the account.
+     * @return nonce current nonce.
+     */
+    function getNonce(address account) external view returns (uint256 nonce) {
+        return s.nonces[account];
     }
 }

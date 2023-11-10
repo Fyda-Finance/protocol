@@ -54,3 +54,5 @@ error FeedNotFound();
 error WrongPreviousIDs();
 error RoundDataDoesNotMatch();
 error StrategyIsNotActive();
+error InvalidNonce();
+error InvalidSigner();

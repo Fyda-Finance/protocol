@@ -5,6 +5,7 @@ import deployDiamond from "../../scripts/deploy";
 import {
   BuyFacet,
   FloorFacet,
+  LensFacet,
   ScenarioDEX,
   ScenarioERC20,
   ScenarioFeedAggregator,
@@ -24,6 +25,7 @@ export type SetupDiamondFixture = {
   user: SignerWithAddress;
   usdcScenarioFeedAggregator: ScenarioFeedAggregator;
   wethScenarioFeedAggregator: ScenarioFeedAggregator;
+  lensFacet: LensFacet;
 };
 
 export type Parameters = {
@@ -79,6 +81,7 @@ export async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
   await scenarioERC20WETH.mint(user.address, ethers.utils.parseUnits("20000000000000000000000", 18));
 
   const strategyFacet = await ethers.getContractAt("StrategyFacet", diamondAddress);
+  const lensFacet = await ethers.getContractAt("LensFacet", diamondAddress);
   const buyFacet = await ethers.getContractAt("BuyFacet", diamondAddress);
   const sellFacet = await ethers.getContractAt("SellFacet", diamondAddress);
   const floorFacet = await ethers.getContractAt("FloorFacet", diamondAddress);
@@ -104,5 +107,6 @@ export async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
     user,
     usdcScenarioFeedAggregator,
     wethScenarioFeedAggregator,
+    lensFacet,
   };
 }
