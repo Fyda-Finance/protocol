@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {LibDiamond} from "../libraries/LibDiamond.sol";
-import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
-import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
-import {IERC173} from "../interfaces/IERC173.sol";
-import {IERC165} from "../interfaces/IERC165.sol";
-import {AppStorage} from "../AppStorage.sol";
+import { LibDiamond } from "../libraries/LibDiamond.sol";
+import { IDiamondLoupe } from "../interfaces/IDiamondLoupe.sol";
+import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
+import { IERC173 } from "../interfaces/IERC173.sol";
+import { IERC165 } from "../interfaces/IERC165.sol";
+import { AppStorage } from "../AppStorage.sol";
 
 contract DiamondInit {
     // You can add parameters to this function in order to pass in

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {TransferFailed} from "../utils/GenericErrors.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { TransferFailed } from "../utils/GenericErrors.sol";
 
 /**
  * @title LibAsset
@@ -18,11 +18,7 @@ library LibAsset {
      * @param spender The address of the spender.
      * @param amount The amount to approve.
      */
-    function maxApprove(
-        address asset,
-        address spender,
-        uint256 amount
-    ) internal {
+    function maxApprove(address asset, address spender, uint256 amount) internal {
         if (IERC20(asset).allowance(address(this), spender) < amount) {
             SafeERC20.safeApprove(IERC20(asset), spender, 0);
             SafeERC20.safeApprove(IERC20(asset), spender, amount);
@@ -36,12 +32,7 @@ library LibAsset {
      * @param to The recipient's address.
      * @param amount The amount to transfer.
      */
-    function transferFrom(
-        address asset,
-        address from,
-        address to,
-        uint256 amount
-    ) internal {
+    function transferFrom(address asset, address from, address to, uint256 amount) internal {
         uint256 prevBalance = IERC20(asset).balanceOf(to);
         SafeERC20.safeTransferFrom(IERC20(asset), from, to, amount);
         if (IERC20(asset).balanceOf(to) - prevBalance != amount) {
@@ -69,10 +60,7 @@ library LibAsset {
      * @param account The account for which to check the balance.
      * @return The balance of the asset for the specified account.
      */
-    function balanceOf(
-        address asset,
-        address account
-    ) internal view returns (uint256) {
+    function balanceOf(address asset, address account) internal view returns (uint256) {
         return IERC20(asset).balanceOf(account);
     }
 }
