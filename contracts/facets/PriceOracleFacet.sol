@@ -31,10 +31,7 @@ contract PriceOracleFacet is Modifiers {
      * @return investRoundId The round ID of the asset's price feed.
      * @return stableRoundId The round ID of the unit's price feed.
      */
-    function getPrice(
-        address asset,
-        address unit
-    ) internal view returns (uint256 price, uint80, uint80) {
+    function getPrice(address asset, address unit) external view returns (uint256 price, uint80, uint80) {
         return LibPrice.getPrice(asset, unit);
     }
 
@@ -51,7 +48,7 @@ contract PriceOracleFacet is Modifiers {
         uint80 stableRoundId,
         address asset,
         address unit
-    ) internal view returns (uint256) {
+    ) external view returns (uint256) {
         return LibPrice.getRoundData(investRoundId, stableRoundId, asset, unit);
     }
 
@@ -60,9 +57,8 @@ contract PriceOracleFacet is Modifiers {
      * @param asset The address of the asset.
      * @return price The price of the asset in USD
      */
-    function getUSDPrice(address asset) internal view returns (uint256) {
-        (, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset])
-            .latestRoundData();
+    function getUSDPrice(address asset) external view returns (uint256) {
+        (, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).latestRoundData();
         return uint256(assetPrice);
     }
 }

@@ -1,3 +1,4 @@
+import "module-alias/register";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
@@ -5,7 +6,6 @@ import "@typechain/hardhat";
 import * as dotenv from "dotenv";
 import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
-import "module-alias/register";
 import "solidity-coverage";
 import "solidity-docgen";
 

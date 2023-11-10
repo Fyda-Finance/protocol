@@ -15,7 +15,7 @@ const addresses: any = {
     wbtc: "0xA39434A63A52E749F02807ae27335515BA4b07F7",
     eth: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
     link: "0x48731cF7e84dc94C5f84577882c14Be11a5B7456",
-    diamond: "0x29894a2F6f9FA2F3E0Be08465Af2Ca572d962687",
+    diamond: "0xD9105CaABbb953759aF7f3EeA0Ae9340D8a4B626",
   },
 };
 
@@ -76,10 +76,7 @@ module.exports = async ({
     "StrategyFacet",
     addresses[network.name].diamond
   );
-  const buyFacet: BuyFacet = await ethers.getContractAt(
-    "BuyFacet",
-    addresses[network.name].diamond
-  );
+
   const parameters = {
     _investToken: weth.address,
     _stableToken: usdc.address,
@@ -123,21 +120,21 @@ module.exports = async ({
   await createStrategy.wait();
   const strategy = await strategyFacet.getStrategy(1);
   console.log("Strategy: ", strategy);
-  let value = await buyFacet.executionBuyAmount(true, 1);
-  console.log("Value: ", value);
-  let dexCalldata = dex.interface.encodeFunctionData("swap", [
-    usdc.address,
-    weth.address,
-    value,
-  ]);
-  console.log("Dex call Data ", dexCalldata);
-  console.log("Dex address: ", dex.address);
-  const executeBuy = await buyFacet
-    .connect(accounts[1])
-    .executeBuy(1, { dex: dex.address, callData: dexCalldata });
-  await executeBuy.wait();
+  // let value = await buyFacet.executionBuyAmount(true, 1);
+  // console.log("Value: ", value);
+  // let dexCalldata = dex.interface.encodeFunctionData("swap", [
+  //   usdc.address,
+  //   weth.address,
+  //   value,
+  // ]);
+  // console.log("Dex call Data ", dexCalldata);
+  // console.log("Dex address: ", dex.address);
+  // const executeBuy = await buyFacet
+  //   .connect(accounts[1])
+  //   .executeBuy(1, { dex: dex.address, callData: dexCalldata });
+  // await executeBuy.wait();
 
-  console.log("Succefully connected with contracts");
+  // console.log("Succefully connected with contracts");
 };
 
 module.exports.tags = ["testMock"];
