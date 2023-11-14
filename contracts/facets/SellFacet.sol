@@ -37,7 +37,6 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a sell action is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the sell action is executed.
-     * @param price The price at which the  sell action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
@@ -45,7 +44,6 @@ contract SellFacet is Modifiers {
      */
     event SellExecuted(
         uint256 indexed strategyId,
-        uint256 price,
         uint256 slippage,
         uint256 stableTokenAmount,
         uint256 exchangeRate,
@@ -55,41 +53,40 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a Time-Weighted Average Price (TWAP) sell action is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the TWAP sell action was executed.
-     * @param price The price at which the TWAP sell action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
-     * @param time The time at which it was executed.
      * @param profit it is the profit made by the strategy.
      */
     event SellTwapExecuted(
         uint256 indexed strategyId,
-        uint256 price,
         uint256 slippage,
         uint256 stableTokenAmount,
         uint256 exchangeRate,
-        uint256 time,
         uint256 profit
     );
 
     /**
      * @notice Emitted when a Spike Trigger (STR) event is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the STR event was executed.
-     * @param price The price at which the STR event was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
-
      */
     event STRExecuted(
         uint256 indexed strategyId,
-        uint256 price,
         uint256 slippage,
         uint256 stableTokenAmount,
         uint256 exchangeRate,
         uint256 profit
     );
+
+    /**
+     * @notice Emitted when a trade execution strategy is completed.
+     * @param strategyId The unique ID of the completed strategy.
+     */
+    event StrategyCompleted(uint256 indexed strategyId);
 
     /**
      * @notice Execute a sell action for a trading strategy.
@@ -152,6 +149,7 @@ contract SellFacet is Modifiers {
         // If there are no further buy actions in the strategy, mark it as completed.
         if (!strategy.parameters._buy) {
             strategy.status = Status.COMPLETED;
+            emit StrategyCompleted(strategyId);
         }
     }
 
@@ -221,21 +219,21 @@ contract SellFacet is Modifiers {
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
         if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
             strategy.status = Status.COMPLETED;
+            emit StrategyCompleted(strategyId);
         }
     }
 
     /**
-   * @notice Execute a strategy based on Spike Trigger (STR) conditions for a trading strategy.
-   * @dev This function performs actions based on the specified strategy parameters and market conditions to execute Sell The Rally (STR) events.
-   *      It verifies whether the strategy's parameters meet the required conditions for executing STR events.
-   * @param strategyId The unique ID of the strategy to execute the STR actions for.
-   * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
-   * @param fromInvestRoundId The starting invest round ID for price data.
-   * @param toInvestRoundId The ending invest round ID for price data.
-   * @param fromStableRoundId The starting stable round ID for price data.
-   * @param toStableRoundId The ending stable round ID for price data.
-   
-   */
+     * @notice Execute a strategy based on Spike Trigger (STR) conditions for a trading strategy.
+     * @dev This function performs actions based on the specified strategy parameters and market conditions to execute Sell The Rally (STR) events.
+     *      It verifies whether the strategy's parameters meet the required conditions for executing STR events.
+     * @param strategyId The unique ID of the strategy to execute the STR actions for.
+     * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
+     * @param fromInvestRoundId The starting invest round ID for price data.
+     * @param toInvestRoundId The ending invest round ID for price data.
+     * @param fromStableRoundId The starting stable round ID for price data.
+     * @param toStableRoundId The ending stable round ID for price data.
+     */
     function executeSTR(
         uint256 strategyId,
         uint80 fromInvestRoundId,
@@ -297,6 +295,7 @@ contract SellFacet is Modifiers {
 
         if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
             strategy.status = Status.COMPLETED;
+            emit StrategyCompleted(strategyId);
         }
     }
 
@@ -400,11 +399,11 @@ contract SellFacet is Modifiers {
             (strategy.parameters._sell && !strategy.parameters._str && !strategy.parameters._sellTwap) ||
             (strategy.parameters._sell && strategy.parameters._highSellValue > price)
         ) {
-            emit SellExecuted(strategyId, sellValue, slippage, toTokenAmount, rate, strategy.profit);
+            emit SellExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
         } else if (strategy.parameters._str) {
-            emit STRExecuted(strategyId, price, slippage, toTokenAmount, rate, strategy.profit);
+            emit STRExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
         } else if (strategy.parameters._sellTwap) {
-            emit SellTwapExecuted(strategyId, price, slippage, toTokenAmount, rate, block.timestamp, strategy.profit);
+            emit SellTwapExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
         }
     }
 

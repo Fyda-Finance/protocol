@@ -53,23 +53,20 @@ contract StrategyFacet is Modifiers {
 
     /**
      * @notice Emitted when a new trading strategy is created.
-     * @param investToken The address of the invest token used in the strategy.
-     * @param stableToken The address of the stable token used in the strategy.
+     * @param strategyId The unique ID of the strategy.
+     * @param user address of the user whose  for whose strategy is created
      * @param parameter The strategy parameter including settings for buying and selling.
-     * @param timestamp Timestamp when the strategy is created.
      * @param investRoundId Round ID for the invest token price when the strategy is created.
      * @param stableRoundId Round ID for the stable token price when the strategy is created.
-     * @param price The price of the invest token at the time of strategy creation.
+     * @param budget total budget of the user in the stable token
      */
 
     event StrategyCreated(
-        address indexed investToken,
-        address indexed stableToken,
+        uint256 indexed strategyId,
+        address user,
         StrategyParameters parameter,
-        uint256 timestamp,
-        uint256 investRoundId,
-        uint256 stableRoundId,
-        uint256 price,
+        uint80 investRoundId,
+        uint80 stableRoundId,
         uint256 budget
     );
 
@@ -78,17 +75,6 @@ contract StrategyFacet is Modifiers {
      * @param strategyId The unique ID of the cancelled strategy.
      */
     event StrategyCancelled(uint256 indexed strategyId);
-
-    /**
-     * @notice Create a new trade execution strategy based on the provided parameters.
-     * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
-     *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
-     *      If the parameters do not meet the criteria, an error is thrown.
-     * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
-     */
-    function createStrategy(StrategyParameters memory _parameter) public {
-        _createStrategy(_parameter, msg.sender);
-    }
 
     /**
      * @notice Cancel a trade execution strategy.
@@ -103,6 +89,26 @@ contract StrategyFacet is Modifiers {
         }
         strategy.status = Status.CANCELLED;
         emit StrategyCancelled(id);
+    }
+
+    /**
+     * @notice Get the next available strategy ID.
+     * @dev This function returns the unique ID that will be assigned to the next created strategy.
+     * @return The next available strategy ID.
+     */
+    function nextStartegyId() external view returns (uint256) {
+        return s.nextStrategyId;
+    }
+
+    /**
+     * @notice Create a new trade execution strategy based on the provided parameters.
+     * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
+     *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
+     *      If the parameters do not meet the criteria, an error is thrown.
+     * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
+     */
+    function createStrategy(StrategyParameters memory _parameter) public {
+        _createStrategy(_parameter, msg.sender);
     }
 
     /**
@@ -142,6 +148,7 @@ contract StrategyFacet is Modifiers {
         bytes32 messageHash = getMessageHash(_parameter, nonce, account);
         bytes32 ethSignedMessageHash = LibSignature.getEthSignedMessageHash(messageHash);
         address signer = LibSignature.recoverSigner(ethSignedMessageHash, signature);
+        s.nonces[account] = s.nonces[account] + 1;
 
         if (signer != account) {
             revert InvalidSigner();
@@ -164,15 +171,6 @@ contract StrategyFacet is Modifiers {
         address account
     ) public view returns (bytes32) {
         return keccak256(abi.encode(account, nonce, _parameter, LibUtil.getChainID()));
-    }
-
-    /**
-     * @notice Get the next available strategy ID.
-     * @dev This function returns the unique ID that will be assigned to the next created strategy.
-     * @return The next available strategy ID.
-     */
-    function nextStartegyId() external view returns (uint256) {
-        return s.nextStrategyId;
     }
 
     /**
@@ -460,15 +458,6 @@ contract StrategyFacet is Modifiers {
 
         s.nextStrategyId++;
 
-        emit StrategyCreated(
-            _parameter._investToken,
-            _parameter._stableToken,
-            _parameter,
-            block.timestamp,
-            investRoundId,
-            stableRoundId,
-            price,
-            budget
-        );
+        emit StrategyCreated((s.nextStrategyId - 1), user, _parameter, investRoundId, stableRoundId, budget);
     }
 }

@@ -28,18 +28,16 @@ contract FloorFacet is Modifiers {
     /**
      * @notice Emitted when a floor execution is initiated for a trading strategy.
      * @param strategyId The unique ID of the strategy where the floor execution is initiated.
-     * @param price The price at which the floor action was executed.
      * @param slippage The allowable price slippage percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
-    event FloorExecuted(
-        uint256 indexed strategyId,
-        uint256 price,
-        uint256 slippage,
-        uint256 stableTokenAmount,
-        uint256 exchangeRate
-    );
+    event FloorExecuted(uint256 indexed strategyId, uint256 slippage, uint256 stableTokenAmount, uint256 exchangeRate);
+    /**
+     * @notice Emitted when a trade execution strategy is cancelled.
+     * @param strategyId The unique ID of the cancelled strategy.
+     */
+    event StrategyCancelled(uint256 indexed strategyId);
 
     /**
      * @notice Execute a floor price check and potential liquidation for a trading strategy.
@@ -121,8 +119,9 @@ contract FloorFacet is Modifiers {
             // Check if the strategy should be canceled on reaching the floor price.
             if (strategy.parameters._cancelOnFloor) {
                 strategy.status = Status.CANCELLED;
+                emit StrategyCancelled(strategyId);
             }
-            emit FloorExecuted(strategyId, price, slippage, toTokenAmount, rate);
+            emit FloorExecuted(strategyId, slippage, toTokenAmount, rate);
         }
     }
 }
