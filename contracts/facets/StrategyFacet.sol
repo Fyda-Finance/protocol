@@ -59,6 +59,7 @@ contract StrategyFacet is Modifiers {
      * @param investRoundId Round ID for the invest token price when the strategy is created.
      * @param stableRoundId Round ID for the stable token price when the strategy is created.
      * @param budget total budget of the user in the stable token
+     * @param price price of the invest token w.r.t. the stable when strategy was created
      */
 
     event StrategyCreated(
@@ -67,7 +68,8 @@ contract StrategyFacet is Modifiers {
         StrategyParameters parameter,
         uint80 investRoundId,
         uint80 stableRoundId,
-        uint256 budget
+        uint256 budget,
+        uint256 price
     );
 
     /**
@@ -458,6 +460,6 @@ contract StrategyFacet is Modifiers {
 
         s.nextStrategyId++;
 
-        emit StrategyCreated((s.nextStrategyId - 1), user, _parameter, investRoundId, stableRoundId, budget);
+        emit StrategyCreated((s.nextStrategyId - 1), user, _parameter, investRoundId, stableRoundId, budget, price);
     }
 }
