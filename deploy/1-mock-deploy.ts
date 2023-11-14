@@ -41,14 +41,14 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   });
 
   await deploy("WETH", {
-    contract: "ScenarioERC20",
+    contract: "ScenarioBasicERC20",
     from: deployer,
     args: ["Wrapped Ether", "WETH", 18],
     log: true,
   });
 
   await deploy("LINK", {
-    contract: "ScenarioERC20",
+    contract: "ScenarioBasicERC20",
     from: deployer,
     args: ["Chainlink", "LINK", 18],
     log: true,
