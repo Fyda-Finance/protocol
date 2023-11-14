@@ -73,13 +73,17 @@ contract SellFacet is Modifiers {
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
+     * @param investRoundId The round ID for invest price data.
+     * @param stableRoundId The round ID for stable price data.
      */
     event STRExecuted(
         uint256 indexed strategyId,
         uint256 slippage,
         uint256 stableTokenAmount,
         uint256 exchangeRate,
-        uint256 profit
+        uint256 profit,
+        uint80 investRoundId,
+        uint80 stableRoundId
     );
 
     /**
@@ -401,7 +405,15 @@ contract SellFacet is Modifiers {
         ) {
             emit SellExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
         } else if (strategy.parameters._str) {
-            emit STRExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
+            emit STRExecuted(
+                strategyId,
+                slippage,
+                toTokenAmount,
+                rate,
+                strategy.profit,
+                strategy.investRoundId,
+                strategy.stableRoundId
+            );
         } else if (strategy.parameters._sellTwap) {
             emit SellTwapExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
         }

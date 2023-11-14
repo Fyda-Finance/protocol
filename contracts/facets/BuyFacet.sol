@@ -71,13 +71,17 @@ contract BuyFacet is Modifiers {
      * @param investTokenAmount The amount of invest tokens bought.
      * @param investPrice the average price at which invest tokens were bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
+     * @param investRoundId The invest round ID associated with the current price data.
+     * @param stableRoundId The stable round ID associated with the current price data.
      */
     event BTDExecuted(
         uint256 indexed strategyId,
         uint256 slippage,
         uint256 investTokenAmount,
         uint256 investPrice,
-        uint256 exchangeRate
+        uint256 exchangeRate,
+        uint80 investRoundId,
+        uint80 stableRoundId
     );
 
     /**
@@ -336,7 +340,15 @@ contract BuyFacet is Modifiers {
         if (strategy.parameters._buy && !strategy.parameters._btd && !strategy.parameters._buyTwap) {
             emit BuyExecuted(strategyId, slippage, toTokenAmount, strategy.investPrice, rate);
         } else if (strategy.parameters._btd) {
-            emit BTDExecuted(strategyId, slippage, toTokenAmount, strategy.investPrice, rate);
+            emit BTDExecuted(
+                strategyId,
+                slippage,
+                toTokenAmount,
+                strategy.investPrice,
+                rate,
+                strategy.investRoundId,
+                strategy.stableRoundId
+            );
         } else if (strategy.parameters._buyTwap) {
             emit BuyTwapExecuted(strategyId, slippage, toTokenAmount, strategy.investPrice, rate);
         }
