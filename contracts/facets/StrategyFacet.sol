@@ -85,7 +85,7 @@ contract StrategyFacet is Modifiers {
      * @param strategyId The unique ID of the strategy.
      * @param updateStruct updated parameters of the strategy
      */
-    event StrategyUpdated(uint256 indexed strategyId, UpdateStruct updateStruct);
+    event StrategyUpdated(uint256 indexed strategyId, StrategyParameters updateStruct);
 
     /**
      * @notice Cancel a trade execution strategy.
@@ -524,8 +524,7 @@ contract StrategyFacet is Modifiers {
             updateStruct.toggleCompleteOnSell == false &&
             updateStruct.toggleLiquidateOnFloor == false &&
             updateStruct.toggleCancelOnFloor == false &&
-            updateStruct.currentBuy == false &&
-            updateStruct.currentSell == false
+            updateStruct._current_price == CURRENT_PRICE.NOT_SELECTED
         ) {
             revert NothingToUpdate();
         }
@@ -537,7 +536,7 @@ contract StrategyFacet is Modifiers {
             revert StrategyIsNotActive();
         }
         (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
-        if (updateStruct.currentBuy) {
+        if (updateStruct._current_price == CURRENT_PRICE.BUY_CURRENT) {
             if (strategy.parameters._buy) {
                 strategy.parameters._buyValue = price;
             } else {
@@ -545,12 +544,9 @@ contract StrategyFacet is Modifiers {
             }
         }
 
-        if (updateStruct.currentSell) {
+        if (updateStruct._current_price == CURRENT_PRICE.SELL_CURRENT) {
             if (strategy.parameters._sell && strategy.parameters._sellType == SellLegType.LIMIT_PRICE) {
                 strategy.parameters._sellValue = price;
-                if (strategy.parameters._investAmount > 0) {
-                    strategy.investPrice = price;
-                }
             } else {
                 revert SellNotSelected();
             }
@@ -740,6 +736,6 @@ contract StrategyFacet is Modifiers {
                 strategy.parameters._highSellValue = updateStruct.highSellValue;
             }
         }
-        emit StrategyUpdated(strategyId, updateStruct);
+        emit StrategyUpdated(strategyId, strategy.parameters);
     }
 }

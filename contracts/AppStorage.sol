@@ -275,6 +275,5 @@ struct UpdateStruct {
     bool toggleCompleteOnSell;
     bool toggleLiquidateOnFloor;
     bool toggleCancelOnFloor;
-    bool currentBuy;
-    bool currentSell;
+    CURRENT_PRICE _current_price;
 }
