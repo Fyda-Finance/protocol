@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE } from "../AppStorage.sol";
+import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE, UpdateStruct } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
@@ -15,6 +15,7 @@ error BothStableAndInvestAmountProvided();
 error OnlyOwnerCanCancelStrategies();
 error NoAmountProvided();
 error HighSellValueIsChosenWithoutSeLLDCA();
+error OnlyOwnerCanUpdateStrategies();
 
 /**
  * @title StrategyFacet
@@ -446,7 +447,7 @@ contract StrategyFacet is Modifiers {
         }
 
         if ((_parameter._sellTwap || _parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
-            if (_parameter._sellDCAValue < 0 || _parameter._sellDCAValue > LibTrade.MAX_PERCENTAGE) {
+            if (_parameter._sellDCAValue <= 0 || _parameter._sellDCAValue > LibTrade.MAX_PERCENTAGE) {
                 revert SellDCAValueRangeIsNotValid();
             }
         }
@@ -508,5 +509,194 @@ contract StrategyFacet is Modifiers {
         s.nextStrategyId++;
 
         emit StrategyCreated((s.nextStrategyId - 1), user, _parameter, investRoundId, stableRoundId, budget, price);
+    }
+
+    function UpdateStrategy(uint256 strategyId, UpdateStruct calldata updateStruct) public {
+        Strategy storage strategy = s.strategies[strategyId];
+        if (strategy.user != msg.sender) {
+            revert OnlyOwnerCanUpdateStrategies();
+        }
+        if (
+            updateStruct.floorLimitPrice > 0 &&
+            updateStruct.buyLimitPrice > 0 &&
+            strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
+            strategy.parameters._buyType == BuyLegType.LIMIT_PRICE &&
+            updateStruct.floorLimitPrice >= updateStruct.buyLimitPrice
+        ) {
+            revert FloorValueGreaterThanBuyValue();
+        }
+
+        if (
+            updateStruct.floorLimitPrice > 0 &&
+            strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
+            strategy.parameters._buyType == BuyLegType.LIMIT_PRICE &&
+            updateStruct.floorLimitPrice >= strategy.parameters._buyValue
+        ) {
+            revert FloorValueGreaterThanBuyValue();
+        }
+
+        if (
+            updateStruct.floorLimitPrice > 0 &&
+            updateStruct.sellLimitPrice > 0 &&
+            strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
+            strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
+            updateStruct.floorLimitPrice >= updateStruct.sellLimitPrice
+        ) {
+            revert FloorValueGreaterThanSellValue();
+        }
+
+        if (
+            updateStruct.floorLimitPrice > 0 &&
+            strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
+            strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
+            updateStruct.floorLimitPrice >= strategy.parameters._sellValue
+        ) {
+            revert FloorValueGreaterThanSellValue();
+        }
+
+        if (
+            updateStruct.buyLimitPrice > 0 &&
+            updateStruct.sellLimitPrice > 0 &&
+            strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
+            strategy.parameters._buyType == BuyLegType.LIMIT_PRICE &&
+            updateStruct.buyLimitPrice >= updateStruct.sellLimitPrice
+        ) {
+            revert BuyAndSellAtMisorder();
+        }
+
+        if (
+            updateStruct.buyLimitPrice > 0 &&
+            strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
+            strategy.parameters._buyType == BuyLegType.LIMIT_PRICE &&
+            updateStruct.buyLimitPrice >= strategy.parameters._sellValue
+        ) {
+            revert BuyAndSellAtMisorder();
+        }
+
+        if (
+            strategy.parameters._floor &&
+            strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
+            updateStruct.floorLimitPrice > 0
+        ) {
+            strategy.parameters._floorValue = updateStruct.floorLimitPrice;
+        }
+
+        if (
+            strategy.parameters._buy &&
+            strategy.parameters._buyType == BuyLegType.LIMIT_PRICE &&
+            updateStruct.buyLimitPrice > 0
+        ) {
+            strategy.parameters._buyValue = updateStruct.buyLimitPrice;
+        }
+
+        if (
+            strategy.parameters._sell &&
+            strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
+            updateStruct.sellLimitPrice > 0
+        ) {
+            strategy.parameters._sellValue = updateStruct.sellLimitPrice;
+        }
+
+        if (
+            (strategy.parameters._buyTwap || strategy.parameters._btd) &&
+            strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE
+        ) {
+            if (updateStruct._buyDCAValue <= 0 || updateStruct._buyDCAValue > LibTrade.MAX_PERCENTAGE) {
+                revert BuyDCAValueRangeIsNotValid();
+            }
+        }
+
+        if (
+            ((strategy.parameters._buyTwap || strategy.parameters._btd) &&
+                strategy.parameters._buyDCAUnit == DCA_UNIT.FIXED) &&
+            strategy.parameters._stableAmount > 0 &&
+            (updateStruct._buyDCAValue > strategy.parameters._stableAmount)
+        ) {
+            revert DCAValueShouldBeLessThanIntitialAmount();
+        }
+
+        if (strategy.parameters._btd || strategy.parameters._buyTwap) {
+            strategy.parameters._buyDCAValue = updateStruct._buyDCAValue;
+        }
+
+        if (
+            (strategy.parameters._sellTwap || strategy.parameters._str) &&
+            strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE
+        ) {
+            if (updateStruct._sellDCAValue <= 0 || updateStruct._sellDCAValue > LibTrade.MAX_PERCENTAGE) {
+                revert SellDCAValueRangeIsNotValid();
+            }
+        }
+
+        if (
+            ((strategy.parameters._sellTwap || strategy.parameters._str) &&
+                strategy.parameters._sellDCAUnit == DCA_UNIT.FIXED) &&
+            strategy.parameters._investAmount > 0 &&
+            (updateStruct._sellDCAValue > strategy.parameters._investAmount)
+        ) {
+            revert DCAValueShouldBeLessThanIntitialAmount();
+        }
+
+        if (strategy.parameters._str || strategy.parameters._sellTwap) {
+            strategy.parameters._sellDCAValue = updateStruct._sellDCAValue;
+        }
+
+        if (
+            strategy.parameters._buyTwap &&
+            (updateStruct._buyTwapTime != strategy.parameters._buyTwapTime ||
+                updateStruct._buyTwapTimeUnit != strategy.parameters._buyTwapTimeUnit)
+        ) {
+            if (updateStruct._buyTwapTime > 0) {
+                strategy.parameters._buyTwapTime = updateStruct._buyTwapTime;
+            }
+            if (
+                updateStruct._buyTwapTimeUnit != strategy.parameters._buyTwapTimeUnit &&
+                updateStruct._buyTwapTimeUnit != TimeUnit.NO_UNIT
+            ) {
+                strategy.parameters._buyTwapTimeUnit = updateStruct._buyTwapTimeUnit;
+            }
+        }
+
+        if (
+            strategy.parameters._sellTwap &&
+            (updateStruct._sellTwapTime != strategy.parameters._sellTwapTime ||
+                updateStruct._sellTwapTimeUnit != strategy.parameters._sellTwapTimeUnit)
+        ) {
+            if (updateStruct._sellTwapTime > 0) {
+                strategy.parameters._sellTwapTime = updateStruct._sellTwapTime;
+            }
+            if (
+                updateStruct._sellTwapTimeUnit != strategy.parameters._sellTwapTimeUnit &&
+                updateStruct._sellTwapTimeUnit != TimeUnit.NO_UNIT
+            ) {
+                strategy.parameters._sellTwapTimeUnit = updateStruct._sellTwapTimeUnit;
+            }
+        }
+
+        if (updateStruct.toggleCompleteOnSell) {
+            strategy.parameters._completeOnSell = !strategy.parameters._completeOnSell;
+        }
+        if (updateStruct.toggleLiquidateOnFloor) {
+            strategy.parameters._liquidateOnFloor = !strategy.parameters._liquidateOnFloor;
+        }
+        if (updateStruct.toggleCancelOnFloor) {
+            strategy.parameters._cancelOnFloor = !strategy.parameters._cancelOnFloor;
+        }
+
+        if (strategy.parameters._highSellValue != 0) {
+            if (!(strategy.parameters._str || strategy.parameters._sellTwap)) {
+                revert HighSellValueIsChosenWithoutSeLLDCA();
+            }
+        }
+
+        if (strategy.parameters._str || strategy.parameters._sellTwap) {
+            if (
+                updateStruct.highSellValue != 0 && strategy.parameters._sellValue > strategy.parameters._highSellValue
+            ) {
+                revert InvalidHighSellValue();
+            } else {
+                strategy.parameters._highSellValue = updateStruct.highSellValue;
+            }
+        }
     }
 }

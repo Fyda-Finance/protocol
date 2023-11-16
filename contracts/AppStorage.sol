@@ -262,3 +262,28 @@ struct Swap {
     address dex;
     bytes callData;
 }
+
+struct UpdateStruct {
+    uint256 sellLimitPrice;
+    uint256 buyLimitPrice;
+    uint256 floorLimitPrice;
+    uint256 highSellValue;
+    // @param _buyTwapTime The time interval for TWAP buying (if buy is set).
+    uint256 _buyTwapTime;
+    // @param _buyTwapTimeUnit The unit of time for TWAP buying .
+    TimeUnit _buyTwapTimeUnit;
+    // @param _buyDCAValue The value for buy DCA.
+    uint256 _buyDCAValue;
+    // @param _sellDCAValue The value for sell DCA.
+    uint256 _sellDCAValue;
+    // @param _sellTwapTime The time interval for TWAP selling (if sell is set).
+    uint256 _sellTwapTime;
+    //  @param _sellTwapTimeUnit The unit of time for TWAP selling (if sell is set).
+    TimeUnit _sellTwapTimeUnit;
+    // @param _completeOnSell A flag to complete the strategy on selling (if sell is set).
+    bool toggleCompleteOnSell;
+    // @param _liquidateOnFloor A flag to trigger liquidation when the floor price is reached (if floor is set)..
+    bool toggleLiquidateOnFloor;
+    // @param _cancelOnFloor A flag to cancel the strategy when the floor price is reached (if floor is set).
+    bool toggleCancelOnFloor;
+}
