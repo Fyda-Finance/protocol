@@ -81,6 +81,13 @@ contract StrategyFacet is Modifiers {
     event StrategyCancelled(uint256 indexed strategyId);
 
     /**
+     * @notice Emitted when a strategy is updated.
+     * @param strategyId The unique ID of the strategy.
+     * @param updateStruct updated parameters of the strategy
+     */
+    event StrategyUpdated(uint256 indexed strategyId, UpdateStruct updateStruct);
+
+    /**
      * @notice Cancel a trade execution strategy.
      * @dev This function allows users to cancel a trade execution strategy based on its unique ID.
      *      When cancelled, the strategy's status is updated to "CANCELLED."
@@ -733,5 +740,6 @@ contract StrategyFacet is Modifiers {
                 strategy.parameters._highSellValue = updateStruct.highSellValue;
             }
         }
+        emit StrategyUpdated(strategyId, updateStruct);
     }
 }
