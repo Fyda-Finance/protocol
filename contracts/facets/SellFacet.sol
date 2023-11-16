@@ -5,12 +5,11 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, SellNotSelected } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 
-error SellNotSelected();
 error PriceLessThanHighSellValue();
 error SellDCASelected();
 error SellTwapNotSelected();
@@ -130,7 +129,6 @@ contract SellFacet is Modifiers {
             sellAt = (strategy.investPrice * sellPercentage) / LibTrade.MAX_PERCENTAGE;
         }
 
-        updateCurrentPrice(strategyId, price);
         if (sellAt > price) {
             revert PriceLessThanSellValue();
         }
@@ -189,7 +187,6 @@ contract SellFacet is Modifiers {
             strategy.parameters._stableToken
         );
 
-        updateCurrentPrice(strategyId, price);
         uint256 sellAt = strategy.parameters._sellValue;
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
             uint256 sellPercentage = LibTrade.MAX_PERCENTAGE + strategy.parameters._sellValue;
@@ -416,21 +413,6 @@ contract SellFacet is Modifiers {
             );
         } else if (strategy.parameters._sellTwap) {
             emit SellTwapExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
-        }
-    }
-
-    /**
-     * @notice Update the current price of a trading strategy based on the given price.
-     * @param strategyId The unique ID of the strategy to update.
-     * @param price The new price to set as the current price.
-     */
-    function updateCurrentPrice(uint256 strategyId, uint256 price) internal {
-        Strategy storage strategy = s.strategies[strategyId];
-
-        // Check the current price source selected in the strategy parameters.
-        if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
-            strategy.parameters._sellValue = price;
-            strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
         }
     }
 

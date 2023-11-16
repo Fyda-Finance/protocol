@@ -57,3 +57,5 @@ error StrategyIsNotActive();
 error InvalidNonce();
 error InvalidSigner();
 error AlreadyCancelled();
+error BuyNotSet();
+error SellNotSelected();

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE, UpdateStruct } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce } from "../utils/GenericErrors.sol";
+import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce, StrategyIsNotActive, BuyNotSet, SellNotSelected } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 import { LibSignature } from "../libraries/LibSignature.sol";
@@ -16,6 +16,7 @@ error OnlyOwnerCanCancelStrategies();
 error NoAmountProvided();
 error HighSellValueIsChosenWithoutSeLLDCA();
 error OnlyOwnerCanUpdateStrategies();
+error NothingToUpdate();
 
 /**
  * @title StrategyFacet
@@ -330,27 +331,17 @@ contract StrategyFacet is Modifiers {
             _parameter._stableToken
         );
 
-        uint256 buyValue = _parameter._buyValue;
         if (_parameter._current_price == CURRENT_PRICE.BUY_CURRENT) {
-            buyValue = price;
             _parameter._buyType = BuyLegType.LIMIT_PRICE;
-            if (_parameter._btd) {
-                _parameter._buyValue = price;
-                _parameter._current_price = CURRENT_PRICE.EXECUTED;
-            }
+            _parameter._buyValue = price;
         }
-        uint256 sellValue = _parameter._sellValue;
         if (_parameter._current_price == CURRENT_PRICE.SELL_CURRENT) {
-            sellValue = price;
             _parameter._sellType = SellLegType.LIMIT_PRICE;
-            if (_parameter._str) {
-                _parameter._sellValue = price;
-                _parameter._current_price = CURRENT_PRICE.EXECUTED;
-            }
+            _parameter._sellValue = price;
         }
 
         if (_parameter._buy) {
-            if (buyValue == 0) {
+            if (_parameter._buyValue == 0) {
                 revert InvalidBuyValue();
             }
             if (_parameter._buyType == BuyLegType.NO_TYPE) {
@@ -378,10 +369,10 @@ contract StrategyFacet is Modifiers {
             if (_parameter._sellType == SellLegType.NO_TYPE) {
                 revert InvalidSellType();
             }
-            if (sellValue == 0) {
+            if (_parameter._sellValue == 0) {
                 revert InvalidSellValue();
             }
-            if (_parameter._highSellValue != 0 && sellValue > _parameter._highSellValue) {
+            if (_parameter._highSellValue != 0 && _parameter._sellValue > _parameter._highSellValue) {
                 revert InvalidHighSellValue();
             }
         }
@@ -391,7 +382,7 @@ contract StrategyFacet is Modifiers {
             if (!(_parameter._stableAmount > 0 || _parameter._investAmount > 0)) {
                 revert NoAmountProvided();
             }
-            if (buyValue >= sellValue && _parameter._sellType == SellLegType.LIMIT_PRICE) {
+            if (_parameter._buyValue >= _parameter._sellValue && _parameter._sellType == SellLegType.LIMIT_PRICE) {
                 revert BuyAndSellAtMisorder();
             }
         }
@@ -430,14 +421,14 @@ contract StrategyFacet is Modifiers {
             _parameter._sellType == SellLegType.LIMIT_PRICE &&
             _parameter._floorType == FloorLegType.LIMIT_PRICE
         ) {
-            if (_parameter._floorValue >= sellValue) {
+            if (_parameter._floorValue >= _parameter._sellValue) {
                 revert FloorValueGreaterThanSellValue();
             }
         }
 
         // Check if floor and buy are chosen
         if (_parameter._floor && _parameter._buy && _parameter._floorType == FloorLegType.LIMIT_PRICE) {
-            if (_parameter._floorValue >= buyValue) {
+            if (_parameter._floorValue >= _parameter._buyValue) {
                 revert FloorValueGreaterThanBuyValue();
             }
         }
@@ -512,15 +503,56 @@ contract StrategyFacet is Modifiers {
     }
 
     function UpdateStrategy(uint256 strategyId, UpdateStruct calldata updateStruct) public {
+        if (
+            updateStruct.sellLimitPrice == 0 &&
+            updateStruct.buyLimitPrice == 0 &&
+            updateStruct.floorLimitPrice == 0 &&
+            updateStruct.highSellValue == 0 &&
+            updateStruct._buyTwapTime == 0 &&
+            updateStruct._buyTwapTimeUnit == TimeUnit.NO_UNIT &&
+            updateStruct._buyDCAValue == 0 &&
+            updateStruct._sellDCAValue == 0 &&
+            updateStruct._sellTwapTime == 0 &&
+            updateStruct._sellTwapTimeUnit == TimeUnit.NO_UNIT &&
+            updateStruct.toggleCompleteOnSell == false &&
+            updateStruct.toggleLiquidateOnFloor == false &&
+            updateStruct.toggleCancelOnFloor == false &&
+            updateStruct.currentBuy == false &&
+            updateStruct.currentSell == false
+        ) {
+            revert NothingToUpdate();
+        }
         Strategy storage strategy = s.strategies[strategyId];
         if (strategy.user != msg.sender) {
             revert OnlyOwnerCanUpdateStrategies();
+        }
+        if (strategy.status != Status.ACTIVE) {
+            revert StrategyIsNotActive();
+        }
+        (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
+        if (updateStruct.currentBuy) {
+            if (strategy.parameters._buy) {
+                strategy.parameters._buyValue = price;
+            } else {
+                revert BuyNotSet();
+            }
+        }
+
+        if (updateStruct.currentSell) {
+            if (strategy.parameters._sell && strategy.parameters._sellType == SellLegType.LIMIT_PRICE) {
+                strategy.parameters._sellValue = price;
+                if (strategy.parameters._investAmount > 0) {
+                    strategy.investPrice = price;
+                }
+            } else {
+                revert SellNotSelected();
+            }
         }
         if (
             updateStruct.floorLimitPrice > 0 &&
             updateStruct.buyLimitPrice > 0 &&
             strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
-            strategy.parameters._buyType == BuyLegType.LIMIT_PRICE &&
+            strategy.parameters._buy &&
             updateStruct.floorLimitPrice >= updateStruct.buyLimitPrice
         ) {
             revert FloorValueGreaterThanBuyValue();
@@ -529,7 +561,7 @@ contract StrategyFacet is Modifiers {
         if (
             updateStruct.floorLimitPrice > 0 &&
             strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
-            strategy.parameters._buyType == BuyLegType.LIMIT_PRICE &&
+            strategy.parameters._buy &&
             updateStruct.floorLimitPrice >= strategy.parameters._buyValue
         ) {
             revert FloorValueGreaterThanBuyValue();
@@ -539,6 +571,7 @@ contract StrategyFacet is Modifiers {
             updateStruct.floorLimitPrice > 0 &&
             updateStruct.sellLimitPrice > 0 &&
             strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
+            strategy.parameters._sell &&
             strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
             updateStruct.floorLimitPrice >= updateStruct.sellLimitPrice
         ) {
@@ -548,6 +581,7 @@ contract StrategyFacet is Modifiers {
         if (
             updateStruct.floorLimitPrice > 0 &&
             strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
+            strategy.parameters._sell &&
             strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
             updateStruct.floorLimitPrice >= strategy.parameters._sellValue
         ) {
@@ -557,8 +591,9 @@ contract StrategyFacet is Modifiers {
         if (
             updateStruct.buyLimitPrice > 0 &&
             updateStruct.sellLimitPrice > 0 &&
+            strategy.parameters._buy &&
+            strategy.parameters._sell &&
             strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
-            strategy.parameters._buyType == BuyLegType.LIMIT_PRICE &&
             updateStruct.buyLimitPrice >= updateStruct.sellLimitPrice
         ) {
             revert BuyAndSellAtMisorder();
