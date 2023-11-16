@@ -65,7 +65,7 @@ describe("Gasless", function () {
     await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
 
     //sign strategy
-    const messageHash = await setup.strategyFacet.getMessageHash(
+    const messageHash = await setup.strategyFacet.getMessageHashToCreate(
       parameters,
       await setup.lensFacet.getNonce(setup.user.address),
       setup.user.address,
@@ -174,7 +174,7 @@ describe("Gasless", function () {
     await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
 
     //sign strategy
-    const messageHash = await setup.strategyFacet.getMessageHash(
+    const messageHash = await setup.strategyFacet.getMessageHashToCreate(
       parameters,
       await setup.lensFacet.getNonce(setup.user.address),
       setup.user.address,
@@ -230,5 +230,72 @@ describe("Gasless", function () {
         callData: dexCalldata,
       }),
     ).to.be.reverted;
+  });
+
+  it("gasless cancel", async () => {
+    const budget = "1000000000"; // $1k
+
+    await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
+
+    const parameters = {
+      _investToken: setup.scenarioERC20WETH.address,
+      _stableToken: setup.scenarioERC20USDC.address,
+      _stableAmount: budget,
+      _investAmount: "0",
+      _slippage: 1000,
+      _floor: false,
+      _floorType: 0,
+      _floorValue: "0",
+      _liquidateOnFloor: false,
+      _cancelOnFloor: false,
+      _buy: true,
+      _buyType: 1,
+      _buyValue: "1500000000",
+      _sell: false,
+      _sellType: 0,
+      _sellValue: "0",
+      _highSellValue: 0,
+      _str: false,
+      _strValue: 0,
+      _strType: 0,
+      _sellDCAUnit: 0,
+      _sellDCAValue: "0",
+      _sellTwap: false,
+      _sellTwapTime: 0,
+      _sellTwapTimeUnit: 0,
+      _completeOnSell: false,
+      _buyTwap: false,
+      _buyTwapTime: 0,
+      _buyTwapTimeUnit: 0,
+      _btd: false,
+      _btdValue: "0",
+      _btdType: 0,
+      _buyDCAUnit: 0,
+      _buyDCAValue: "0",
+      _current_price: 0,
+    };
+
+    await setup.wethScenarioFeedAggregator.setPrice("120000000000", 25);
+
+    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
+
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+
+    await expect(setup.strategyFacet.cancelStrategy(0)).to.be.reverted;
+
+    const hash = await setup.strategyFacet.getMessageHashToCancel(
+      0,
+      await setup.lensFacet.getNonce(setup.user.address),
+      setup.user.address,
+    );
+    const messageHashBinary = ethers.utils.arrayify(hash);
+    const signature = await setup.user.signMessage(messageHashBinary);
+
+    await setup.strategyFacet.cancelStrategyOnBehalf(
+      0,
+      await setup.lensFacet.getNonce(setup.user.address),
+      signature,
+      setup.user.address,
+    );
   });
 });

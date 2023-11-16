@@ -56,3 +56,4 @@ error RoundDataDoesNotMatch();
 error StrategyIsNotActive();
 error InvalidNonce();
 error InvalidSigner();
+error AlreadyCancelled();

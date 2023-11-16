@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce } from "../utils/GenericErrors.sol";
+import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 import { LibSignature } from "../libraries/LibSignature.sol";
@@ -85,10 +85,45 @@ contract StrategyFacet is Modifiers {
      * @param id The unique ID of the strategy to cancel.
      */
     function cancelStrategy(uint256 id) external {
+        _cancelStrategy(msg.sender, id);
+    }
+
+    /**
+     * @notice Cancel a trade execution strategy on behalf of another user.
+     * @dev This function allows users to cancel a trade execution strategy based on its unique ID.
+     *      When cancelled, the strategy's status is updated to "CANCELLED."
+     * @param id The unique ID of the strategy to cancel.
+     */
+    function cancelStrategyOnBehalf(uint256 id, uint256 nonce, bytes memory signature, address account) external {
+        bytes32 messageHash = getMessageHashToCancel(id, nonce, account);
+        bytes32 ethSignedMessageHash = LibSignature.getEthSignedMessageHash(messageHash);
+        address signer = LibSignature.recoverSigner(ethSignedMessageHash, signature);
+        s.nonces[account] = s.nonces[account] + 1;
+
+        if (signer != account) {
+            revert InvalidSigner();
+        }
+
+        _cancelStrategy(account, id);
+    }
+
+    /**
+     * @notice Cancel a trade execution strategy.
+     * @dev This function allows users to cancel a trade execution strategy based on its unique ID.
+     *      When cancelled, the strategy's status is updated to "CANCELLED."
+     * @param user The address of the user who created the strategy.
+     * @param id The unique ID of the strategy to cancel.
+     */
+    function _cancelStrategy(address user, uint256 id) internal {
         Strategy storage strategy = s.strategies[id];
-        if (msg.sender != strategy.user) {
+        if (user != strategy.user) {
             revert OnlyOwnerCanCancelStrategies();
         }
+
+        if (strategy.status == Status.CANCELLED) {
+            revert AlreadyCancelled();
+        }
+
         strategy.status = Status.CANCELLED;
         emit StrategyCancelled(id);
     }
@@ -147,7 +182,7 @@ contract StrategyFacet is Modifiers {
             revert InvalidNonce();
         }
 
-        bytes32 messageHash = getMessageHash(_parameter, nonce, account);
+        bytes32 messageHash = getMessageHashToCreate(_parameter, nonce, account);
         bytes32 ethSignedMessageHash = LibSignature.getEthSignedMessageHash(messageHash);
         address signer = LibSignature.recoverSigner(ethSignedMessageHash, signature);
         s.nonces[account] = s.nonces[account] + 1;
@@ -160,19 +195,31 @@ contract StrategyFacet is Modifiers {
     }
 
     /**
-     * @notice Get the message hash for a given strategy.
+     * @notice Get the message hash for a given strategy to create it.
      * @dev This function returns the message hash that must be signed by the user in order to create a strategy on behalf of another user.
      * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
      * @param nonce The nonce of the user who created the strategy.
      * @param account The address of the user who created the strategy.
      * @return The message hash for the given strategy.
      */
-    function getMessageHash(
+    function getMessageHashToCreate(
         StrategyParameters memory _parameter,
         uint256 nonce,
         address account
     ) public view returns (bytes32) {
         return keccak256(abi.encode(account, nonce, _parameter, LibUtil.getChainID()));
+    }
+
+    /**
+     * @notice Get the message hash for a given strategy to cancel.
+     * @dev This function returns the message hash that must be signed by the user in order to cancel a strategy on behalf of another user.
+     * @param id The strategy id
+     * @param nonce The nonce of the user who created the strategy.
+     * @param account The address of the user who created the strategy.
+     * @return The message hash for the given strategy.
+     */
+    function getMessageHashToCancel(uint256 id, uint256 nonce, address account) public view returns (bytes32) {
+        return keccak256(abi.encode(account, nonce, id, LibUtil.getChainID()));
     }
 
     /**
