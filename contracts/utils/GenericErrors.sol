@@ -60,3 +60,5 @@ error AlreadyCancelled();
 error BuyNotSet();
 error SellNotSelected();
 error PercentageNotInRange();
+error BuyTwapNotSelected();
+error SellTwapNotSelected();
