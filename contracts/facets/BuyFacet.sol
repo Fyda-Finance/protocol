@@ -4,15 +4,13 @@ pragma solidity ^0.8.20;
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, BuyNotSet, BuyTwapNotSelected } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 
-error BuyNotSet();
 error BuyDCAIsSet();
-error BuyTwapNotSelected();
 error ExpectedTimeNotElapsed();
 error BTDNotSelected();
 error PriceIsGreaterThanBuyValue();
@@ -35,7 +33,7 @@ contract BuyFacet is Modifiers {
     /**
      * @notice Emitted when a buy action is executed for a trading strategy.
      * @param strategyId The unique ID of the strategy where the buy action was executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param investTokenAmount The amount of invest tokens bought.
      * @param investPrice the average price at which invest tokens were bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
@@ -43,7 +41,7 @@ contract BuyFacet is Modifiers {
 
     event BuyExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 investTokenAmount,
         uint256 investPrice,
         uint256 exchangeRate
@@ -52,14 +50,14 @@ contract BuyFacet is Modifiers {
     /**
      * @notice Emitted when a Buy on Time-Weighted Average Price (TWAP) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
      * @param strategyId The unique ID of the strategy where the Buy on TWAP action was executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param investTokenAmount The amount of invest tokens bought.
      * @param investPrice the average price at which invest tokens were bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
     event BuyTwapExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 investTokenAmount,
         uint256 investPrice,
         uint256 exchangeRate
@@ -67,7 +65,7 @@ contract BuyFacet is Modifiers {
     /**
      * @notice Emitted when a Buy The Dip (BTD) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
      * @param strategyId The unique ID of the strategy where the BTD action was executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param investTokenAmount The amount of invest tokens bought.
      * @param investPrice the average price at which invest tokens were bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
@@ -76,7 +74,7 @@ contract BuyFacet is Modifiers {
      */
     event BTDExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 investTokenAmount,
         uint256 investPrice,
         uint256 exchangeRate,
@@ -103,10 +101,10 @@ contract BuyFacet is Modifiers {
             revert StrategyIsNotActive();
         }
 
-        if (!strategy.parameters._buy) {
+        if (strategy.parameters._buyValue == 0) {
             revert BuyNotSet();
         }
-        if (strategy.parameters._btd || strategy.parameters._buyTwap) {
+        if (strategy.parameters._btdValue > 0 || strategy.parameters._buyTwapTime > 0) {
             revert BuyDCAIsSet();
         }
         if (strategy.parameters._stableAmount == 0) {
@@ -117,12 +115,11 @@ contract BuyFacet is Modifiers {
             strategy.parameters._stableToken
         );
 
-        updateCurrentPrice(strategyId, price);
         uint256 value = executionBuyAmount(true, strategyId);
 
         transferBuy(strategyId, value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue);
 
-        if (!strategy.parameters._sell && !strategy.parameters._floor) {
+        if (strategy.parameters._sellValue == 0 && strategy.parameters._floorValue == 0) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -140,7 +137,7 @@ contract BuyFacet is Modifiers {
             revert StrategyIsNotActive();
         }
 
-        if (!strategy.parameters._buyTwap) {
+        if (strategy.parameters._buyTwapTime == 0) {
             revert BuyTwapNotSelected();
         }
         if (strategy.parameters._stableAmount == 0) {
@@ -151,8 +148,6 @@ contract BuyFacet is Modifiers {
             strategy.parameters._investToken,
             strategy.parameters._stableToken
         );
-
-        updateCurrentPrice(strategyId, price);
 
         uint256 timeToExecute = LibTime.convertToSeconds(
             strategy.parameters._buyTwapTime,
@@ -169,7 +164,11 @@ contract BuyFacet is Modifiers {
 
         transferBuy(strategyId, value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue);
         strategy.buyTwapExecutedAt = block.timestamp;
-        if (!strategy.parameters._sell && !strategy.parameters._floor && strategy.parameters._stableAmount == 0) {
+        if (
+            strategy.parameters._sellValue == 0 &&
+            strategy.parameters._floorValue == 0 &&
+            strategy.parameters._stableAmount == 0
+        ) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -199,7 +198,7 @@ contract BuyFacet is Modifiers {
             revert StrategyIsNotActive();
         }
 
-        if (!strategy.parameters._btd) {
+        if (strategy.parameters._btdValue == 0) {
             revert BTDNotSelected();
         }
         if (strategy.parameters._stableAmount == 0) {
@@ -224,7 +223,11 @@ contract BuyFacet is Modifiers {
         uint256 value = executionBuyAmount(false, strategyId);
 
         transferBuy(strategyId, value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue);
-        if (!strategy.parameters._sell && !strategy.parameters._floor && strategy.parameters._stableAmount == 0) {
+        if (
+            strategy.parameters._sellValue == 0 &&
+            strategy.parameters._floorValue == 0 &&
+            strategy.parameters._stableAmount == 0
+        ) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -257,20 +260,6 @@ contract BuyFacet is Modifiers {
     }
 
     /**
-     * @notice Update the current price of a trading strategy based on the given price.
-     * @param strategyId The unique ID of the strategy to update.
-     * @param price The new price to set as the current price.
-     */
-    function updateCurrentPrice(uint256 strategyId, uint256 price) internal {
-        Strategy storage strategy = s.strategies[strategyId];
-
-        if (strategy.parameters._current_price == CURRENT_PRICE.BUY_CURRENT) {
-            strategy.parameters._buyValue = price;
-            strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
-        }
-    }
-
-    /**
      * @notice Internal function to execute a "Buy" action within a specified price range.
      * @dev This function transfers assets from stable tokens to investment tokens on a DEX.
      * @param strategyId The unique ID of the trading strategy where the BTD action is executed.
@@ -296,7 +285,7 @@ contract BuyFacet is Modifiers {
             revert PriceIsGreaterThanBuyValue();
         }
 
-        if (strategy.parameters._floor && strategy.parameters._floorValue > 0) {
+        if (strategy.parameters._floorValue > 0) {
             uint256 floorAt;
             if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE) {
                 floorAt = strategy.parameters._floorValue;
@@ -335,22 +324,26 @@ contract BuyFacet is Modifiers {
         strategy.investRoundId = investRoundId;
         strategy.stableRoundId = stableRoundId;
 
-        uint256 slippage = LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, true);
+        uint256 impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, true);
 
-        if (strategy.parameters._buy && !strategy.parameters._btd && !strategy.parameters._buyTwap) {
-            emit BuyExecuted(strategyId, slippage, toTokenAmount, strategy.investPrice, rate);
-        } else if (strategy.parameters._btd) {
+        if (
+            strategy.parameters._buyValue > 0 &&
+            strategy.parameters._btdValue == 0 &&
+            strategy.parameters._buyTwapTime == 0
+        ) {
+            emit BuyExecuted(strategyId, impact, toTokenAmount, strategy.investPrice, rate);
+        } else if (strategy.parameters._btdValue > 0) {
             emit BTDExecuted(
                 strategyId,
-                slippage,
+                impact,
                 toTokenAmount,
                 strategy.investPrice,
                 rate,
                 strategy.investRoundId,
                 strategy.stableRoundId
             );
-        } else if (strategy.parameters._buyTwap) {
-            emit BuyTwapExecuted(strategyId, slippage, toTokenAmount, strategy.investPrice, rate);
+        } else if (strategy.parameters._buyTwapTime > 0) {
+            emit BuyTwapExecuted(strategyId, impact, toTokenAmount, strategy.investPrice, rate);
         }
     }
 

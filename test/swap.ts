@@ -27,7 +27,7 @@ type SetupDiamondFixture = {
   wethScenarioFeedAggregator: ScenarioFeedAggregator;
 };
 
-describe("Swap and Slippage", function () {
+describe("Swap and Impact", function () {
   async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
     const [owner, user] = await ethers.getSigners();
 
@@ -85,32 +85,25 @@ describe("Swap and Slippage", function () {
       _stableToken: setup.scenarioERC20USDC.address,
       _stableAmount: budget,
       _investAmount: 0,
-      _slippage: 1000,
-      _floor: false,
+      _impact: 1000,
       _floorType: 0,
       _floorValue: 0,
       _liquidateOnFloor: false,
       _cancelOnFloor: false,
-      _buy: true,
       _buyType: 1,
       _buyValue: "150000000000",
-      _sell: false,
       _sellType: 0,
       _sellValue: 0,
       _highSellValue: 0,
-      _str: false,
       _strValue: 0,
       _strType: 0,
       _sellDCAUnit: 0,
       _sellDCAValue: 0,
-      _sellTwap: false,
       _sellTwapTime: 0,
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
-      _buyTwap: false,
       _buyTwapTime: 0,
       _buyTwapTimeUnit: 0,
-      _btd: false,
       _btdValue: 0,
       _btdType: 0,
       _buyDCAUnit: 0,
@@ -130,7 +123,7 @@ describe("Swap and Slippage", function () {
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
-    const strategy = await setup.strategyFacet.nextStartegyId();
+    const strategy = await setup.strategyFacet.nextStrategyId();
     expect(strategy).to.equal(1);
 
     const dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
@@ -155,33 +148,26 @@ describe("Swap and Slippage", function () {
       _stableToken: setup.scenarioERC20USDC.address,
       _stableAmount: budget,
       _investAmount: 0,
-      _slippage: 1000,
-      _floor: false,
+      _impact: 1000,
       _floorType: 0,
       _floorValue: 0,
       _liquidateOnFloor: false,
       _cancelOnFloor: false,
-      _buy: true,
       _buyType: 1,
       _buyAt: 1500000000,
       _buyValue: 1,
-      _sell: false,
       _sellType: 0,
       _sellValue: 0,
       _highSellValue: 0,
-      _str: false,
       _strValue: 0,
       _strType: 0,
       _sellDCAUnit: 0,
       _sellDCAValue: 0,
-      _sellTwap: false,
       _sellTwapTime: 0,
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
-      _buyTwap: false,
       _buyTwapTime: 0,
       _buyTwapTimeUnit: 0,
-      _btd: false,
       _btdValue: 0,
       _btdType: 0,
       _buyDCAUnit: 0,
@@ -200,7 +186,7 @@ describe("Swap and Slippage", function () {
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
-    const strategy = await setup.strategyFacet.nextStartegyId();
+    const strategy = await setup.strategyFacet.nextStrategyId();
     expect(strategy).to.equal(1);
 
     const dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
@@ -258,29 +244,29 @@ describe("Swap and Slippage", function () {
     expect(rate.toString()).to.equal("25000000000");
   });
 
-  it("slippage", async function () {
+  it("Impact", async function () {
     // buy with better rate example
     // price = 1500,000000
     // exchangeRate = 1450,000000
-    // slippage = (1500 * 10000) / 1450 = 103.44%
-    await expect(setup.lensFacet.validateSlippage(1450000000, 1500000000, 500, true)).to.not.be.reverted;
+    // Impact = (1500 * 10000) / 1450 = 103.44%
+    await expect(setup.lensFacet.validateImpact(1450000000, 1500000000, 500, true)).to.not.be.reverted;
 
     // buy with bad rate example
     // price = 1500,000000
     // exchangeRate = 1550,000000
-    // slippage = (1500 * 10000) / 1550 = 96.77%
-    await expect(setup.lensFacet.validateSlippage(1550000000, 1500000000, 200, true)).to.be.reverted;
+    // Impact = (1500 * 10000) / 1550 = 96.77%
+    await expect(setup.lensFacet.validateImpact(1550000000, 1500000000, 200, true)).to.be.reverted;
 
     // sell with better rate example
     // price = 1500,000000
     // exchangeRate = 1600,000000
-    // slippage = (1500 * 10000) / 1600 = 93.75%
-    await expect(setup.lensFacet.validateSlippage(1600000000, 1500000000, 500, false)).to.not.be.reverted;
+    // Impact = (1500 * 10000) / 1600 = 93.75%
+    await expect(setup.lensFacet.validateImpact(1600000000, 1500000000, 500, false)).to.not.be.reverted;
 
     // sell with bad rate example
     // price = 1500,000000
     // exchangeRate = 1300,000000
-    // slippage = (1500 * 10000) / 1300 = 115.38%
-    await expect(setup.lensFacet.validateSlippage(1300000000, 1500000000, 500, false)).to.be.reverted;
+    // Impact = (1500 * 10000) / 1300 = 115.38%
+    await expect(setup.lensFacet.validateImpact(1300000000, 1500000000, 500, false)).to.be.reverted;
   });
 });

@@ -5,15 +5,13 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, SellNotSelected, SellTwapNotSelected } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 
-error SellNotSelected();
 error PriceLessThanHighSellValue();
 error SellDCASelected();
-error SellTwapNotSelected();
 error ValueGreaterThanHighSellValue();
 error TWAPTimeDifferenceIsLess();
 error STRNotSelected();
@@ -37,14 +35,14 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a sell action is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the sell action is executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
      */
     event SellExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 stableTokenAmount,
         uint256 exchangeRate,
         uint256 profit
@@ -53,14 +51,14 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a Time-Weighted Average Price (TWAP) sell action is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the TWAP sell action was executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
      */
     event SellTwapExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 stableTokenAmount,
         uint256 exchangeRate,
         uint256 profit
@@ -69,7 +67,7 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a Spike Trigger (STR) event is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the STR event was executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
@@ -78,7 +76,7 @@ contract SellFacet is Modifiers {
      */
     event STRExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 stableTokenAmount,
         uint256 exchangeRate,
         uint256 profit,
@@ -108,7 +106,7 @@ contract SellFacet is Modifiers {
         }
 
         // Ensure that selling is selected in the strategy parameters.
-        if (!strategy.parameters._sell) {
+        if (strategy.parameters._sellValue == 0) {
             revert SellNotSelected();
         }
 
@@ -130,7 +128,6 @@ contract SellFacet is Modifiers {
             sellAt = (strategy.investPrice * sellPercentage) / LibTrade.MAX_PERCENTAGE;
         }
 
-        updateCurrentPrice(strategyId, price);
         if (sellAt > price) {
             revert PriceLessThanSellValue();
         }
@@ -141,7 +138,7 @@ contract SellFacet is Modifiers {
             if (price < sellAt) {
                 revert PriceLessThanHighSellValue();
             }
-        } else if (strategy.parameters._str || strategy.parameters._sellTwap) {
+        } else if (strategy.parameters._strValue > 0 || strategy.parameters._sellTwapTime > 0) {
             // If neither high sell value nor "sell the rally" nor "sell TWAP" is selected, throw an error.
             revert SellDCASelected();
         }
@@ -151,7 +148,7 @@ contract SellFacet is Modifiers {
         transferSell(strategyId, value, swap, price, investRoundId, stableRoundId, sellAt);
 
         // If there are no further buy actions in the strategy, mark it as completed.
-        if (!strategy.parameters._buy) {
+        if (strategy.parameters._buyValue == 0 || strategy.parameters._completeOnSell) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -174,7 +171,7 @@ contract SellFacet is Modifiers {
         }
 
         // Ensure that TWAP sell is selected in the strategy parameters.
-        if (!strategy.parameters._sellTwap) {
+        if (strategy.parameters._sellTwapTime == 0) {
             revert SellTwapNotSelected();
         }
 
@@ -189,7 +186,6 @@ contract SellFacet is Modifiers {
             strategy.parameters._stableToken
         );
 
-        updateCurrentPrice(strategyId, price);
         uint256 sellAt = strategy.parameters._sellValue;
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
             uint256 sellPercentage = LibTrade.MAX_PERCENTAGE + strategy.parameters._sellValue;
@@ -221,7 +217,10 @@ contract SellFacet is Modifiers {
         transferSell(strategyId, value, swap, price, investRoundId, stableRoundId, sellAt);
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
-        if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
+        if (
+            strategy.parameters._buyValue == 0 ||
+            (strategy.parameters._investAmount == 0 && strategy.parameters._completeOnSell)
+        ) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -254,7 +253,7 @@ contract SellFacet is Modifiers {
         }
 
         // Ensure that STR events are selected in the strategy parameters.
-        if (!strategy.parameters._str) {
+        if (strategy.parameters._strValue == 0) {
             revert STRNotSelected();
         }
 
@@ -297,7 +296,10 @@ contract SellFacet is Modifiers {
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
 
-        if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
+        if (
+            strategy.parameters._buyValue == 0 ||
+            (strategy.parameters._investAmount == 0 && strategy.parameters._completeOnSell)
+        ) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -371,10 +373,13 @@ contract SellFacet is Modifiers {
             revert InvalidExchangeRate(sellValue, rate);
         }
 
-        // Validate slippage if the strategy is not an STR (Spike Trigger).
-        uint256 slippage = 0;
-        if (!strategy.parameters._str) {
-            slippage = LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, false);
+        // Validate impact if the strategy is not an STR (Spike Trigger).
+        uint256 impact = 0;
+        if (
+            strategy.parameters._strValue == 0 ||
+            (strategy.parameters._highSellValue != 0 && strategy.parameters._highSellValue > price)
+        ) {
+            impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, false);
         }
 
         // Calculate the total investment amount and check if it exceeds the budget.
@@ -400,37 +405,24 @@ contract SellFacet is Modifiers {
         // Calculate the buy percentage amount if buy actions are based on TWAP or BTD.
 
         if (
-            (strategy.parameters._sell && !strategy.parameters._str && !strategy.parameters._sellTwap) ||
-            (strategy.parameters._sell && strategy.parameters._highSellValue > price)
+            (strategy.parameters._sellValue > 0 &&
+                strategy.parameters._strValue == 0 &&
+                strategy.parameters._sellTwapTime == 0) ||
+            (strategy.parameters._sellValue > 0 && strategy.parameters._highSellValue > price)
         ) {
-            emit SellExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
-        } else if (strategy.parameters._str) {
+            emit SellExecuted(strategyId, impact, toTokenAmount, rate, strategy.profit);
+        } else if (strategy.parameters._strValue > 0) {
             emit STRExecuted(
                 strategyId,
-                slippage,
+                impact,
                 toTokenAmount,
                 rate,
                 strategy.profit,
                 strategy.investRoundId,
                 strategy.stableRoundId
             );
-        } else if (strategy.parameters._sellTwap) {
-            emit SellTwapExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
-        }
-    }
-
-    /**
-     * @notice Update the current price of a trading strategy based on the given price.
-     * @param strategyId The unique ID of the strategy to update.
-     * @param price The new price to set as the current price.
-     */
-    function updateCurrentPrice(uint256 strategyId, uint256 price) internal {
-        Strategy storage strategy = s.strategies[strategyId];
-
-        // Check the current price source selected in the strategy parameters.
-        if (strategy.parameters._current_price == CURRENT_PRICE.SELL_CURRENT) {
-            strategy.parameters._sellValue = price;
-            strategy.parameters._current_price = CURRENT_PRICE.EXECUTED;
+        } else if (strategy.parameters._sellTwapTime > 0) {
+            emit SellTwapExecuted(strategyId, impact, toTokenAmount, rate, strategy.profit);
         }
     }
 

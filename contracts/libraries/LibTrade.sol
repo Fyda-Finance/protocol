@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { HighSlippage } from "../utils/GenericErrors.sol";
+import { HighImpact } from "../utils/GenericErrors.sol";
 
 /**
  * @title LibTrade
@@ -29,23 +29,23 @@ library LibTrade {
     }
 
     /**
-     * @notice Validate the slippage of a swap.
+     * @notice Validate the Impact of a swap.
      * @param exchangeRate The calculated exchange rate for the swap.
      * @param price The reference price for the swap.
-     * @param maxSlippage The maximum allowed slippage percentage.
+     * @param maxImpact The maximum allowed Impact percentage.
      * @param isBuy A flag indicating if it's a buy operation (true) or not (false).
-     * @return uint256 Returns the calculated slippage percentage.
+     * @return uint256 Returns the calculated Impact percentage.
      */
-    function validateSlippage(
+    function validateImpact(
         uint256 exchangeRate,
         uint256 price,
-        uint256 maxSlippage,
+        uint256 maxImpact,
         bool isBuy
     ) internal pure returns (uint256) {
-        uint256 slippage = (price * MAX_PERCENTAGE) / exchangeRate;
+        uint256 impact = (price * MAX_PERCENTAGE) / exchangeRate;
 
-        if (isBuy && slippage < MAX_PERCENTAGE && MAX_PERCENTAGE - slippage > maxSlippage) revert HighSlippage();
-        if (!isBuy && slippage > MAX_PERCENTAGE && slippage - MAX_PERCENTAGE > maxSlippage) revert HighSlippage();
-        return slippage;
+        if (isBuy && impact < MAX_PERCENTAGE && MAX_PERCENTAGE - impact > maxImpact) revert HighImpact();
+        if (!isBuy && impact > MAX_PERCENTAGE && impact - MAX_PERCENTAGE > maxImpact) revert HighImpact();
+        return impact;
     }
 }
