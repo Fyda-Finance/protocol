@@ -101,10 +101,10 @@ contract BuyFacet is Modifiers {
             revert StrategyIsNotActive();
         }
 
-        if (!strategy.parameters._buy) {
+        if (strategy.parameters._buyValue == 0) {
             revert BuyNotSet();
         }
-        if (strategy.parameters._btd || strategy.parameters._buyTwap) {
+        if (strategy.parameters._btdValue > 0 || strategy.parameters._buyTwapTime > 0) {
             revert BuyDCAIsSet();
         }
         if (strategy.parameters._stableAmount == 0) {
@@ -119,7 +119,7 @@ contract BuyFacet is Modifiers {
 
         transferBuy(strategyId, value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue);
 
-        if (!strategy.parameters._sell && !strategy.parameters._floor) {
+        if (strategy.parameters._sellValue == 0 && strategy.parameters._floorValue == 0) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -137,7 +137,7 @@ contract BuyFacet is Modifiers {
             revert StrategyIsNotActive();
         }
 
-        if (!strategy.parameters._buyTwap) {
+        if (strategy.parameters._buyTwapTime == 0) {
             revert BuyTwapNotSelected();
         }
         if (strategy.parameters._stableAmount == 0) {
@@ -164,7 +164,11 @@ contract BuyFacet is Modifiers {
 
         transferBuy(strategyId, value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue);
         strategy.buyTwapExecutedAt = block.timestamp;
-        if (!strategy.parameters._sell && !strategy.parameters._floor && strategy.parameters._stableAmount == 0) {
+        if (
+            strategy.parameters._sellValue == 0 &&
+            strategy.parameters._floorValue == 0 &&
+            strategy.parameters._stableAmount == 0
+        ) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -194,7 +198,7 @@ contract BuyFacet is Modifiers {
             revert StrategyIsNotActive();
         }
 
-        if (!strategy.parameters._btd) {
+        if (strategy.parameters._btdValue == 0) {
             revert BTDNotSelected();
         }
         if (strategy.parameters._stableAmount == 0) {
@@ -219,7 +223,11 @@ contract BuyFacet is Modifiers {
         uint256 value = executionBuyAmount(false, strategyId);
 
         transferBuy(strategyId, value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue);
-        if (!strategy.parameters._sell && !strategy.parameters._floor && strategy.parameters._stableAmount == 0) {
+        if (
+            strategy.parameters._sellValue == 0 &&
+            strategy.parameters._floorValue == 0 &&
+            strategy.parameters._stableAmount == 0
+        ) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -277,7 +285,7 @@ contract BuyFacet is Modifiers {
             revert PriceIsGreaterThanBuyValue();
         }
 
-        if (strategy.parameters._floor && strategy.parameters._floorValue > 0) {
+        if (strategy.parameters._floorValue > 0) {
             uint256 floorAt;
             if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE) {
                 floorAt = strategy.parameters._floorValue;
@@ -318,9 +326,13 @@ contract BuyFacet is Modifiers {
 
         uint256 impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, true);
 
-        if (strategy.parameters._buy && !strategy.parameters._btd && !strategy.parameters._buyTwap) {
+        if (
+            strategy.parameters._buyValue > 0 &&
+            strategy.parameters._btdValue == 0 &&
+            strategy.parameters._buyTwapTime == 0
+        ) {
             emit BuyExecuted(strategyId, impact, toTokenAmount, strategy.investPrice, rate);
-        } else if (strategy.parameters._btd) {
+        } else if (strategy.parameters._btdValue > 0) {
             emit BTDExecuted(
                 strategyId,
                 impact,
@@ -330,7 +342,7 @@ contract BuyFacet is Modifiers {
                 strategy.investRoundId,
                 strategy.stableRoundId
             );
-        } else if (strategy.parameters._buyTwap) {
+        } else if (strategy.parameters._buyTwapTime > 0) {
             emit BuyTwapExecuted(strategyId, impact, toTokenAmount, strategy.investPrice, rate);
         }
     }

@@ -86,31 +86,24 @@ describe("Swap and Impact", function () {
       _stableAmount: budget,
       _investAmount: 0,
       _impact: 1000,
-      _floor: false,
       _floorType: 0,
       _floorValue: 0,
       _liquidateOnFloor: false,
       _cancelOnFloor: false,
-      _buy: true,
       _buyType: 1,
       _buyValue: "150000000000",
-      _sell: false,
       _sellType: 0,
       _sellValue: 0,
       _highSellValue: 0,
-      _str: false,
       _strValue: 0,
       _strType: 0,
       _sellDCAUnit: 0,
       _sellDCAValue: 0,
-      _sellTwap: false,
       _sellTwapTime: 0,
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
-      _buyTwap: false,
       _buyTwapTime: 0,
       _buyTwapTimeUnit: 0,
-      _btd: false,
       _btdValue: 0,
       _btdType: 0,
       _buyDCAUnit: 0,
@@ -130,7 +123,7 @@ describe("Swap and Impact", function () {
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
-    const strategy = await setup.strategyFacet.nextStartegyId();
+    const strategy = await setup.strategyFacet.nextStrategyId();
     expect(strategy).to.equal(1);
 
     const dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
@@ -156,32 +149,25 @@ describe("Swap and Impact", function () {
       _stableAmount: budget,
       _investAmount: 0,
       _impact: 1000,
-      _floor: false,
       _floorType: 0,
       _floorValue: 0,
       _liquidateOnFloor: false,
       _cancelOnFloor: false,
-      _buy: true,
       _buyType: 1,
       _buyAt: 1500000000,
       _buyValue: 1,
-      _sell: false,
       _sellType: 0,
       _sellValue: 0,
       _highSellValue: 0,
-      _str: false,
       _strValue: 0,
       _strType: 0,
       _sellDCAUnit: 0,
       _sellDCAValue: 0,
-      _sellTwap: false,
       _sellTwapTime: 0,
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
-      _buyTwap: false,
       _buyTwapTime: 0,
       _buyTwapTimeUnit: 0,
-      _btd: false,
       _btdValue: 0,
       _btdType: 0,
       _buyDCAUnit: 0,
@@ -200,7 +186,7 @@ describe("Swap and Impact", function () {
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
-    const strategy = await setup.strategyFacet.nextStartegyId();
+    const strategy = await setup.strategyFacet.nextStrategyId();
     expect(strategy).to.equal(1);
 
     const dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [

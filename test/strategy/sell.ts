@@ -16,32 +16,25 @@ describe("Sell", function () {
       _stableAmount: "0",
       _investAmount: "0",
       _impact: 1000,
-      _floor: false,
       _floorType: 0,
       _floorValue: "0",
       _liquidateOnFloor: false,
       _cancelOnFloor: false,
-      _buy: false,
       _buyType: 0,
       _buyValue: "0",
-      _buyTwap: false,
       _buyTwapTime: 0,
       _buyTwapTimeUnit: 0,
-      _btd: false,
       _btdValue: "0",
       _btdType: 0,
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
-      _sell: false,
       _sellType: 0,
       _sellValue: "0",
       _highSellValue: "0",
-      _str: false,
       _strValue: "0",
       _strType: 0,
       _sellDCAUnit: 0,
       _sellDCAValue: "0",
-      _sellTwap: false,
       _sellTwapTime: 0,
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
@@ -62,13 +55,11 @@ describe("Sell", function () {
     await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20WETH.address, "160000000000");
     // 1 USDC = 1 USD
     await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
-    parameters._sell = true;
     parameters._sellType = 1;
     parameters._sellValue = "1500000000";
     parameters._investAmount = "1000000000000000000000";
     parameters._sellDCAUnit = 2;
     parameters._sellDCAValue = "100000000000000000000";
-    parameters._str = true;
     parameters._strValue = "100000000";
     parameters._strType = 3;
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
@@ -201,13 +192,11 @@ describe("Sell", function () {
 
     // 1 USDC = 1 USD
     await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
-    parameters._sell = true;
     parameters._sellType = 1;
     parameters._sellValue = "1200000000";
     parameters._investAmount = "1000000000000000000000";
     parameters._sellDCAUnit = 2;
     parameters._sellDCAValue = "100000000000000000000";
-    parameters._sellTwap = true;
     parameters._sellTwapTime = 1;
     parameters._sellTwapTimeUnit = 1;
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
@@ -245,7 +234,6 @@ describe("Sell", function () {
 
     // 1 USDC = 1 USD
     await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
-    parameters._sell = true;
     parameters._sellType = 2;
     parameters._sellValue = "1000";
     parameters._investAmount = "100000000000000000000";
@@ -276,7 +264,6 @@ describe("Sell", function () {
     parameters._sellType = 1;
     parameters._sellDCAUnit = 2;
     parameters._sellDCAValue = "100000000000000000000";
-    parameters._sellTwap = true;
     parameters._sellTwapTime = 1;
     parameters._sellTwapTimeUnit = 1;
     parameters._highSellValue = "2000000000";
@@ -333,7 +320,6 @@ describe("Sell", function () {
 
     // 1 USDC = 1 USD
     await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20USDC.address, "100000000");
-    parameters._sell = true;
     parameters._sellType = 1;
     parameters._sellValue = "1200000000";
     parameters._investAmount = "100000000000000000000";

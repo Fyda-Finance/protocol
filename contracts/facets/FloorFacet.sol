@@ -55,7 +55,7 @@ contract FloorFacet is Modifiers {
         }
 
         // Check if the floor price is set in the strategy parameters.
-        if (!strategy.parameters._floor) {
+        if (strategy.parameters._floorValue == 0) {
             revert FloorNotSet();
         }
 

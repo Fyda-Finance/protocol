@@ -122,8 +122,6 @@ struct StrategyParameters {
     uint256 _stableAmount;
     // @param _impact The impact tolerance for the strategy.
     uint256 _impact;
-    //  @param _floor A flag indicating whether a floor price is set.
-    bool _floor;
     // @param _floorType The type of floor price (if floor is set).
     FloorLegType _floorType;
     // @param _floorValue The value of the floor price (if floor is set).
@@ -132,20 +130,14 @@ struct StrategyParameters {
     bool _liquidateOnFloor;
     // @param _cancelOnFloor A flag to cancel the strategy when the floor price is reached (if floor is set).
     bool _cancelOnFloor;
-    // @param _buy A flag indicating whether a buy price is set.
-    bool _buy;
     // @param _buyType The type of buy action (if buy is set).
     BuyLegType _buyType;
     // @param _buyValue The value of the buy action (if buy is set).
     uint256 _buyValue;
-    //  @param _buyTwap A flag indicating the use of TWAP for buying (if buy is set).
-    bool _buyTwap;
     // @param _buyTwapTime The time interval for TWAP buying (if buy is set).
     uint256 _buyTwapTime;
     // @param _buyTwapTimeUnit The unit of time for TWAP buying .
     TimeUnit _buyTwapTimeUnit;
-    // @param _btd A flag indicating a buy the dip action (if buy is set).
-    bool _btd;
     // @param _btdValue The value for buying the dip (if buy is set).
     uint256 _btdValue;
     // @param _btdType The type of buy the dip action (if buy is set).
@@ -154,16 +146,12 @@ struct StrategyParameters {
     DCA_UNIT _buyDCAUnit;
     // @param _buyDCAValue The value for buy DCA.
     uint256 _buyDCAValue;
-    // @param _sell A flag indicating whether a sell price is set.
-    bool _sell;
     // @param _sellType The type of sell action (if sell is set).
     SellLegType _sellType;
     // @param _sellValue The value of the sell action (if sell is set).
     uint256 _sellValue;
     // @param if sell DCA is selected, _highSellValue is used to trigger complete sell when the high sell value is reached (if sell is set).
     uint256 _highSellValue;
-    // @param _str A flag indicating whether Sell the rally feature of the Sell DCA is selected or not (if sell is set).
-    bool _str;
     // @param _strValue The value of the str if it is set to true (if sell is set).
     uint256 _strValue;
     // @param _strType The type of str.
@@ -172,8 +160,6 @@ struct StrategyParameters {
     DCA_UNIT _sellDCAUnit;
     // @param _sellDCAValue The value for sell DCA.
     uint256 _sellDCAValue;
-    // @param _sellTwap A flag indicating the use of TWAP (Time-Weighted Average Price) for selling (if sell is set).
-    bool _sellTwap;
     // @param _sellTwapTime The time interval for TWAP selling (if sell is set).
     uint256 _sellTwapTime;
     //  @param _sellTwapTimeUnit The unit of time for TWAP selling (if sell is set).

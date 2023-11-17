@@ -106,7 +106,7 @@ contract SellFacet is Modifiers {
         }
 
         // Ensure that selling is selected in the strategy parameters.
-        if (!strategy.parameters._sell) {
+        if (strategy.parameters._sellValue == 0) {
             revert SellNotSelected();
         }
 
@@ -138,7 +138,7 @@ contract SellFacet is Modifiers {
             if (price < sellAt) {
                 revert PriceLessThanHighSellValue();
             }
-        } else if (strategy.parameters._str || strategy.parameters._sellTwap) {
+        } else if (strategy.parameters._strValue > 0 || strategy.parameters._sellTwapTime > 0) {
             // If neither high sell value nor "sell the rally" nor "sell TWAP" is selected, throw an error.
             revert SellDCASelected();
         }
@@ -148,7 +148,7 @@ contract SellFacet is Modifiers {
         transferSell(strategyId, value, swap, price, investRoundId, stableRoundId, sellAt);
 
         // If there are no further buy actions in the strategy, mark it as completed.
-        if (!strategy.parameters._buy) {
+        if (strategy.parameters._buyValue == 0 || strategy.parameters._completeOnSell) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -171,7 +171,7 @@ contract SellFacet is Modifiers {
         }
 
         // Ensure that TWAP sell is selected in the strategy parameters.
-        if (!strategy.parameters._sellTwap) {
+        if (strategy.parameters._sellTwapTime == 0) {
             revert SellTwapNotSelected();
         }
 
@@ -217,7 +217,10 @@ contract SellFacet is Modifiers {
         transferSell(strategyId, value, swap, price, investRoundId, stableRoundId, sellAt);
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
-        if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
+        if (
+            strategy.parameters._buyValue == 0 ||
+            (strategy.parameters._investAmount == 0 && strategy.parameters._completeOnSell)
+        ) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -250,7 +253,7 @@ contract SellFacet is Modifiers {
         }
 
         // Ensure that STR events are selected in the strategy parameters.
-        if (!strategy.parameters._str) {
+        if (strategy.parameters._strValue == 0) {
             revert STRNotSelected();
         }
 
@@ -293,7 +296,10 @@ contract SellFacet is Modifiers {
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
 
-        if (!strategy.parameters._buy && strategy.parameters._investAmount == 0) {
+        if (
+            strategy.parameters._buyValue == 0 ||
+            (strategy.parameters._investAmount == 0 && strategy.parameters._completeOnSell)
+        ) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
@@ -369,7 +375,10 @@ contract SellFacet is Modifiers {
 
         // Validate impact if the strategy is not an STR (Spike Trigger).
         uint256 impact = 0;
-        if (!strategy.parameters._str) {
+        if (
+            strategy.parameters._strValue == 0 ||
+            (strategy.parameters._highSellValue != 0 && strategy.parameters._highSellValue > price)
+        ) {
             impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, false);
         }
 
@@ -396,11 +405,13 @@ contract SellFacet is Modifiers {
         // Calculate the buy percentage amount if buy actions are based on TWAP or BTD.
 
         if (
-            (strategy.parameters._sell && !strategy.parameters._str && !strategy.parameters._sellTwap) ||
-            (strategy.parameters._sell && strategy.parameters._highSellValue > price)
+            (strategy.parameters._sellValue > 0 &&
+                strategy.parameters._strValue == 0 &&
+                strategy.parameters._sellTwapTime == 0) ||
+            (strategy.parameters._sellValue > 0 && strategy.parameters._highSellValue > price)
         ) {
             emit SellExecuted(strategyId, impact, toTokenAmount, rate, strategy.profit);
-        } else if (strategy.parameters._str) {
+        } else if (strategy.parameters._strValue > 0) {
             emit STRExecuted(
                 strategyId,
                 impact,
@@ -410,7 +421,7 @@ contract SellFacet is Modifiers {
                 strategy.investRoundId,
                 strategy.stableRoundId
             );
-        } else if (strategy.parameters._sellTwap) {
+        } else if (strategy.parameters._sellTwapTime > 0) {
             emit SellTwapExecuted(strategyId, impact, toTokenAmount, rate, strategy.profit);
         }
     }

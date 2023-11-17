@@ -16,32 +16,25 @@ describe("Buy", function () {
       _stableAmount: budget,
       _investAmount: "0",
       _impact: 1000,
-      _floor: false,
       _floorType: 0,
       _floorValue: "0",
       _liquidateOnFloor: false,
       _cancelOnFloor: false,
-      _buy: false,
       _buyType: 0,
       _buyValue: "0",
-      _buyTwap: false,
       _buyTwapTime: 0,
       _buyTwapTimeUnit: 0,
-      _btd: false,
       _btdValue: "0",
       _btdType: 0,
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
-      _sell: false,
       _sellType: 0,
       _sellValue: "0",
       _highSellValue: "0",
-      _str: false,
       _strValue: "0",
       _strType: 0,
       _sellDCAUnit: 0,
       _sellDCAValue: "0",
-      _sellTwap: false,
       _sellTwapTime: 0,
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
@@ -52,10 +45,8 @@ describe("Buy", function () {
   // Your test cases go here
   it("Buy the dip", async () => {
     await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
-    parameters._buy = true;
     parameters._buyType = 1;
     parameters._buyValue = "1500000000";
-    parameters._btd = true;
     parameters._btdValue = "50000000";
     parameters._btdType = 3;
     parameters._buyDCAUnit = 2;
@@ -195,10 +186,8 @@ describe("Buy", function () {
 
     await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
 
-    parameters._buy = true;
     parameters._buyType = 1;
     parameters._buyValue = "1500000000";
-    parameters._buyTwap = true;
     parameters._buyTwapTime = 1;
     parameters._buyTwapTimeUnit = 1;
     parameters._buyDCAUnit = 2;
@@ -252,32 +241,25 @@ describe("Buy", function () {
       _stableAmount: budget,
       _investAmount: "0",
       _impact: 1000,
-      _floor: true,
       _floorType: 1,
       _floorValue: "1000000000",
       _liquidateOnFloor: false,
       _cancelOnFloor: false,
-      _buy: true,
       _buyType: 1,
       _buyValue: "1500000000",
-      _buyTwap: false,
       _buyTwapTime: 0,
       _buyTwapTimeUnit: 0,
-      _btd: false,
       _btdValue: 0,
       _btdType: 0,
       _buyDCAUnit: 2,
       _buyDCAValue: "100000000",
-      _sell: false,
       _sellType: 0,
       _sellValue: "0",
       _highSellValue: 0,
-      _str: false,
       _strValue: 0,
       _strType: 0,
       _sellDCAUnit: 0,
       _sellDCAValue: "0",
-      _sellTwap: false,
       _sellTwapTime: 0,
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
