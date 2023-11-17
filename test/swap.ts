@@ -27,7 +27,7 @@ type SetupDiamondFixture = {
   wethScenarioFeedAggregator: ScenarioFeedAggregator;
 };
 
-describe("Swap and Slippage", function () {
+describe("Swap and Impact", function () {
   async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
     const [owner, user] = await ethers.getSigners();
 
@@ -85,7 +85,7 @@ describe("Swap and Slippage", function () {
       _stableToken: setup.scenarioERC20USDC.address,
       _stableAmount: budget,
       _investAmount: 0,
-      _slippage: 1000,
+      _impact: 1000,
       _floor: false,
       _floorType: 0,
       _floorValue: 0,
@@ -155,7 +155,7 @@ describe("Swap and Slippage", function () {
       _stableToken: setup.scenarioERC20USDC.address,
       _stableAmount: budget,
       _investAmount: 0,
-      _slippage: 1000,
+      _impact: 1000,
       _floor: false,
       _floorType: 0,
       _floorValue: 0,
@@ -258,29 +258,29 @@ describe("Swap and Slippage", function () {
     expect(rate.toString()).to.equal("25000000000");
   });
 
-  it("slippage", async function () {
+  it("Impact", async function () {
     // buy with better rate example
     // price = 1500,000000
     // exchangeRate = 1450,000000
-    // slippage = (1500 * 10000) / 1450 = 103.44%
-    await expect(setup.lensFacet.validateSlippage(1450000000, 1500000000, 500, true)).to.not.be.reverted;
+    // Impact = (1500 * 10000) / 1450 = 103.44%
+    await expect(setup.lensFacet.validateImpact(1450000000, 1500000000, 500, true)).to.not.be.reverted;
 
     // buy with bad rate example
     // price = 1500,000000
     // exchangeRate = 1550,000000
-    // slippage = (1500 * 10000) / 1550 = 96.77%
-    await expect(setup.lensFacet.validateSlippage(1550000000, 1500000000, 200, true)).to.be.reverted;
+    // Impact = (1500 * 10000) / 1550 = 96.77%
+    await expect(setup.lensFacet.validateImpact(1550000000, 1500000000, 200, true)).to.be.reverted;
 
     // sell with better rate example
     // price = 1500,000000
     // exchangeRate = 1600,000000
-    // slippage = (1500 * 10000) / 1600 = 93.75%
-    await expect(setup.lensFacet.validateSlippage(1600000000, 1500000000, 500, false)).to.not.be.reverted;
+    // Impact = (1500 * 10000) / 1600 = 93.75%
+    await expect(setup.lensFacet.validateImpact(1600000000, 1500000000, 500, false)).to.not.be.reverted;
 
     // sell with bad rate example
     // price = 1500,000000
     // exchangeRate = 1300,000000
-    // slippage = (1500 * 10000) / 1300 = 115.38%
-    await expect(setup.lensFacet.validateSlippage(1300000000, 1500000000, 500, false)).to.be.reverted;
+    // Impact = (1500 * 10000) / 1300 = 115.38%
+    await expect(setup.lensFacet.validateImpact(1300000000, 1500000000, 500, false)).to.be.reverted;
   });
 });

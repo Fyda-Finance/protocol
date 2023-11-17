@@ -4,6 +4,7 @@ import { SignerWithAddress } from "hardhat-deploy-ethers/signers";
 
 import deployDiamond from "../scripts/deploy";
 import { BuyFacet, ScenarioDEX, ScenarioERC20, ScenarioFeedAggregator, StrategyFacet } from "../typechain-types";
+import { Parameters } from "./utils";
 
 const { expect } = require("chai");
 
@@ -60,9 +61,47 @@ describe("Strategy", function () {
   }
 
   let setup: SetupDiamondFixture;
+  let parameters: Parameters;
 
   beforeEach(async function () {
     setup = await loadFixture(setupDiamondFixture);
+    parameters = {
+      _investToken: setup.scenarioERC20WETH.address,
+      _stableToken: setup.scenarioERC20USDC.address,
+      _stableAmount: "0",
+      _investAmount: "0",
+      _impact: 1000,
+      _floor: false,
+      _floorType: 0,
+      _floorValue: "0",
+      _liquidateOnFloor: false,
+      _cancelOnFloor: false,
+      _buy: false,
+      _buyType: 0,
+      _buyValue: "0",
+      _sell: false,
+      _sellType: 0,
+      _sellValue: "0",
+      _highSellValue: "0",
+      _str: false,
+      _strValue: "0",
+      _strType: 0,
+      _sellDCAUnit: 0,
+      _sellDCAValue: "0",
+      _sellTwap: false,
+      _sellTwapTime: 0,
+      _sellTwapTimeUnit: 0,
+      _completeOnSell: false,
+      _buyTwap: false,
+      _buyTwapTime: 0,
+      _buyTwapTimeUnit: 0,
+      _btd: false,
+      _btdValue: "0",
+      _btdType: 0,
+      _buyDCAUnit: 0,
+      _buyDCAValue: "0",
+      _current_price: 0,
+    };
   });
 
   it("Error Checks", async function () {
@@ -75,7 +114,7 @@ describe("Strategy", function () {
       _stableToken: setup.scenarioERC20USDC.address,
       _stableAmount: budget,
       _investAmount: "0",
-      _slippage: 1000,
+      _impact: 1000,
       _floor: false,
       _floorType: 0,
       _floorValue: "0",
@@ -171,7 +210,7 @@ describe("Strategy", function () {
       _stableToken: setup.scenarioERC20WETH.address,
       _stableAmount: budget,
       _investAmount: budget,
-      _slippage: 1000,
+      _impact: 1000,
       _floor: true,
       _floorType: 1,
       _floorValue: "1600000000",
@@ -232,5 +271,84 @@ describe("Strategy", function () {
     await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
     parameters._btdValue = "1000";
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+  });
+
+  it("Update Strategy", async function () {
+    const budget = "1000000000"; // $1k
+
+    await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
+
+    await setup.wethScenarioFeedAggregator.setPrice("120000000000", 25);
+
+    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
+    parameters._buy = true;
+    parameters._buyType = 1;
+    parameters._buyValue = "1500000000";
+    parameters._stableAmount = budget;
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    const param = {
+      sellLimitPrice: "0",
+      buyLimitPrice: "0",
+      floorLimitPrice: "0",
+      highSellValue: "0",
+      floorPercentageValue: "0",
+      sellPercentageValue: "0",
+      _buyTwapTime: 0,
+      _buyTwapTimeUnit: 0,
+      _buyDCAValue: "0",
+      _sellDCAValue: "0",
+      _sellTwapTime: 0,
+      _sellTwapTimeUnit: 0,
+      _strValue: "0",
+      _btdValue: "0",
+      toggleCompleteOnSell: false,
+      toggleLiquidateOnFloor: false,
+      toggleCancelOnFloor: false,
+      _current_price: 0,
+    };
+    await expect(setup.strategyFacet.connect(setup.owner).updateStrategy(0, param)).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(0, param)).to.be.reverted;
+    param.sellLimitPrice = "10000";
+    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(0, param)).to.be.reverted;
+    await setup.strategyFacet.connect(setup.user).cancelStrategy(0);
+    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(0, param)).to.be.reverted;
+    parameters._sell = true;
+    parameters._sellType = 1;
+    parameters._sellValue = "1600000000";
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(1, param)).to.be.reverted;
+    param._btdValue = "50000";
+    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(1, param)).to.be.reverted;
+    parameters._btd = true;
+    parameters._btdType = 3;
+    parameters._btdValue = "500000000";
+    parameters._buyDCAUnit = 2;
+    parameters._buyDCAValue = "500000000";
+    param.sellLimitPrice = "1900000000";
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).updateStrategy(2, param);
+    param._buyTwapTime = 1;
+    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(2, param)).to.be.reverted;
+    parameters._btd = false;
+    parameters._btdType = 0;
+    parameters._btdValue = "0";
+    param._btdValue = "0";
+    parameters._buyTwap = true;
+    parameters._buyTwapTime = 2;
+    parameters._buyTwapTimeUnit = 1;
+    param._buyTwapTime = 1;
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).updateStrategy(3, param);
+    let strategy = await setup.strategyFacet.getStrategy(3);
+    expect(strategy.parameters._buyTwapTime).to.equal(1);
+    param.toggleCancelOnFloor = true;
+    param.toggleCompleteOnSell = true;
+    param.toggleLiquidateOnFloor = true;
+    await setup.strategyFacet.connect(setup.user).updateStrategy(3, param);
+    strategy = await setup.strategyFacet.getStrategy(3);
+    console.log("Cancel: ", strategy.parameters._cancelOnFloor);
+    expect(strategy.parameters._cancelOnFloor).to.equal(true);
+    expect(strategy.parameters._liquidateOnFloor).to.equal(true);
+    expect(strategy.parameters._completeOnSell).to.equal(true);
   });
 });

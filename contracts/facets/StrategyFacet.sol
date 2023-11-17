@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE, UpdateStruct } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce, StrategyIsNotActive, BuyNotSet, SellNotSelected, PercentageNotInRange, BuyTwapNotSelected, SellTwapNotSelected } from "../utils/GenericErrors.sol";
+import { InvalidImpact, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce, StrategyIsNotActive, BuyNotSet, SellNotSelected, PercentageNotInRange, BuyTwapNotSelected, SellTwapNotSelected } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 import { LibSignature } from "../libraries/LibSignature.sol";
@@ -24,6 +24,8 @@ error FloorPercentageNotSelected();
 error FloorLimitPriceNotSelected();
 error SellDCANotSet();
 error BuyDCANotSet();
+error STRIsNotSet();
+error BTDIsNotSet();
 
 /**
  * @title StrategyFacet
@@ -459,8 +461,8 @@ contract StrategyFacet is Modifiers {
             }
         }
 
-        if (_parameter._slippage > LibTrade.MAX_PERCENTAGE) {
-            revert InvalidSlippage();
+        if (_parameter._impact > LibTrade.MAX_PERCENTAGE) {
+            revert InvalidImpact();
         }
 
         if ((_parameter._sellTwap || _parameter._str) && _parameter._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
@@ -533,7 +535,7 @@ contract StrategyFacet is Modifiers {
      * @param strategyId The unique identifier of the strategy to update.
      * @param updateStruct A struct containing the updated parameters for the strategy.
      */
-    function UpdateStrategy(uint256 strategyId, UpdateStruct calldata updateStruct) public {
+    function updateStrategy(uint256 strategyId, UpdateStruct calldata updateStruct) public {
         if (
             updateStruct.sellLimitPrice == 0 &&
             updateStruct.buyLimitPrice == 0 &&
@@ -545,6 +547,8 @@ contract StrategyFacet is Modifiers {
             updateStruct._buyTwapTimeUnit == TimeUnit.NO_UNIT &&
             updateStruct._buyDCAValue == 0 &&
             updateStruct._sellDCAValue == 0 &&
+            updateStruct._strValue == 0 &&
+            updateStruct._btdValue == 0 &&
             updateStruct._sellTwapTime == 0 &&
             updateStruct._sellTwapTimeUnit == TimeUnit.NO_UNIT &&
             updateStruct.toggleCompleteOnSell == false &&
@@ -599,6 +603,56 @@ contract StrategyFacet is Modifiers {
             (!strategy.parameters._str || !strategy.parameters._sellTwap)
         ) {
             revert SellDCANotSet();
+        }
+
+        if (!strategy.parameters._str && updateStruct._strValue > 0) {
+            revert STRIsNotSet();
+        }
+
+        if (
+            updateStruct._strValue > LibTrade.MAX_PERCENTAGE &&
+            (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY ||
+                strategy.parameters._strType == DIP_SPIKE.DECREASE_BY)
+        ) {
+            revert PercentageNotInRange();
+        } else if (
+            updateStruct._strValue > 0 &&
+            (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY ||
+                strategy.parameters._strType == DIP_SPIKE.DECREASE_BY)
+        ) {
+            strategy.parameters._strValue = updateStruct._strValue;
+        }
+        if (
+            updateStruct._strValue > 0 &&
+            (strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE ||
+                strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE)
+        ) {
+            strategy.parameters._strValue = updateStruct._strValue;
+        }
+
+        if (!strategy.parameters._btd && updateStruct._btdValue > 0) {
+            revert BTDIsNotSet();
+        }
+
+        if (
+            updateStruct._btdValue > LibTrade.MAX_PERCENTAGE &&
+            (strategy.parameters._btdType == DIP_SPIKE.INCREASE_BY ||
+                strategy.parameters._btdType == DIP_SPIKE.DECREASE_BY)
+        ) {
+            revert PercentageNotInRange();
+        } else if (
+            updateStruct._btdValue > 0 &&
+            (strategy.parameters._btdType == DIP_SPIKE.INCREASE_BY ||
+                strategy.parameters._btdType == DIP_SPIKE.DECREASE_BY)
+        ) {
+            strategy.parameters._btdValue = updateStruct._btdValue;
+        }
+        if (
+            updateStruct._btdValue > 0 &&
+            (strategy.parameters._btdType == DIP_SPIKE.FIXED_DECREASE ||
+                strategy.parameters._btdType == DIP_SPIKE.FIXED_INCREASE)
+        ) {
+            strategy.parameters._btdValue = updateStruct._btdValue;
         }
 
         if (updateStruct._buyDCAValue > 0 && (!strategy.parameters._btd || !strategy.parameters._buyTwap)) {
@@ -681,6 +735,16 @@ contract StrategyFacet is Modifiers {
         }
 
         if (
+            updateStruct.sellLimitPrice > 0 &&
+            strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
+            strategy.parameters._sell &&
+            strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
+            strategy.parameters._floorValue >= updateStruct.sellLimitPrice
+        ) {
+            revert FloorValueGreaterThanSellValue();
+        }
+
+        if (
             updateStruct.floorLimitPrice > 0 &&
             strategy.parameters._floorType == FloorLegType.LIMIT_PRICE &&
             strategy.parameters._sell &&
@@ -706,6 +770,16 @@ contract StrategyFacet is Modifiers {
             strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
             strategy.parameters._buyType == BuyLegType.LIMIT_PRICE &&
             updateStruct.buyLimitPrice >= strategy.parameters._sellValue
+        ) {
+            revert BuyAndSellAtMisorder();
+        }
+
+        if (
+            updateStruct.sellLimitPrice > 0 &&
+            strategy.parameters._buy &&
+            strategy.parameters._sell &&
+            strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
+            strategy.parameters._buyValue >= updateStruct.sellLimitPrice
         ) {
             revert BuyAndSellAtMisorder();
         }

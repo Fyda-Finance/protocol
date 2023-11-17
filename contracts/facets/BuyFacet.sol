@@ -33,7 +33,7 @@ contract BuyFacet is Modifiers {
     /**
      * @notice Emitted when a buy action is executed for a trading strategy.
      * @param strategyId The unique ID of the strategy where the buy action was executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param investTokenAmount The amount of invest tokens bought.
      * @param investPrice the average price at which invest tokens were bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
@@ -41,7 +41,7 @@ contract BuyFacet is Modifiers {
 
     event BuyExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 investTokenAmount,
         uint256 investPrice,
         uint256 exchangeRate
@@ -50,14 +50,14 @@ contract BuyFacet is Modifiers {
     /**
      * @notice Emitted when a Buy on Time-Weighted Average Price (TWAP) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
      * @param strategyId The unique ID of the strategy where the Buy on TWAP action was executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param investTokenAmount The amount of invest tokens bought.
      * @param investPrice the average price at which invest tokens were bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
     event BuyTwapExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 investTokenAmount,
         uint256 investPrice,
         uint256 exchangeRate
@@ -65,7 +65,7 @@ contract BuyFacet is Modifiers {
     /**
      * @notice Emitted when a Buy The Dip (BTD) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
      * @param strategyId The unique ID of the strategy where the BTD action was executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param investTokenAmount The amount of invest tokens bought.
      * @param investPrice the average price at which invest tokens were bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
@@ -74,7 +74,7 @@ contract BuyFacet is Modifiers {
      */
     event BTDExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 investTokenAmount,
         uint256 investPrice,
         uint256 exchangeRate,
@@ -316,14 +316,14 @@ contract BuyFacet is Modifiers {
         strategy.investRoundId = investRoundId;
         strategy.stableRoundId = stableRoundId;
 
-        uint256 slippage = LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, true);
+        uint256 impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, true);
 
         if (strategy.parameters._buy && !strategy.parameters._btd && !strategy.parameters._buyTwap) {
-            emit BuyExecuted(strategyId, slippage, toTokenAmount, strategy.investPrice, rate);
+            emit BuyExecuted(strategyId, impact, toTokenAmount, strategy.investPrice, rate);
         } else if (strategy.parameters._btd) {
             emit BTDExecuted(
                 strategyId,
-                slippage,
+                impact,
                 toTokenAmount,
                 strategy.investPrice,
                 rate,
@@ -331,7 +331,7 @@ contract BuyFacet is Modifiers {
                 strategy.stableRoundId
             );
         } else if (strategy.parameters._buyTwap) {
-            emit BuyTwapExecuted(strategyId, slippage, toTokenAmount, strategy.investPrice, rate);
+            emit BuyTwapExecuted(strategyId, impact, toTokenAmount, strategy.investPrice, rate);
         }
     }
 

@@ -35,14 +35,14 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a sell action is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the sell action is executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
      */
     event SellExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 stableTokenAmount,
         uint256 exchangeRate,
         uint256 profit
@@ -51,14 +51,14 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a Time-Weighted Average Price (TWAP) sell action is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the TWAP sell action was executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
      */
     event SellTwapExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 stableTokenAmount,
         uint256 exchangeRate,
         uint256 profit
@@ -67,7 +67,7 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a Spike Trigger (STR) event is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the STR event was executed.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
@@ -76,7 +76,7 @@ contract SellFacet is Modifiers {
      */
     event STRExecuted(
         uint256 indexed strategyId,
-        uint256 slippage,
+        uint256 impact,
         uint256 stableTokenAmount,
         uint256 exchangeRate,
         uint256 profit,
@@ -367,10 +367,10 @@ contract SellFacet is Modifiers {
             revert InvalidExchangeRate(sellValue, rate);
         }
 
-        // Validate slippage if the strategy is not an STR (Spike Trigger).
-        uint256 slippage = 0;
+        // Validate impact if the strategy is not an STR (Spike Trigger).
+        uint256 impact = 0;
         if (!strategy.parameters._str) {
-            slippage = LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, false);
+            impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, false);
         }
 
         // Calculate the total investment amount and check if it exceeds the budget.
@@ -399,11 +399,11 @@ contract SellFacet is Modifiers {
             (strategy.parameters._sell && !strategy.parameters._str && !strategy.parameters._sellTwap) ||
             (strategy.parameters._sell && strategy.parameters._highSellValue > price)
         ) {
-            emit SellExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
+            emit SellExecuted(strategyId, impact, toTokenAmount, rate, strategy.profit);
         } else if (strategy.parameters._str) {
             emit STRExecuted(
                 strategyId,
-                slippage,
+                impact,
                 toTokenAmount,
                 rate,
                 strategy.profit,
@@ -411,7 +411,7 @@ contract SellFacet is Modifiers {
                 strategy.stableRoundId
             );
         } else if (strategy.parameters._sellTwap) {
-            emit SellTwapExecuted(strategyId, slippage, toTokenAmount, rate, strategy.profit);
+            emit SellTwapExecuted(strategyId, impact, toTokenAmount, rate, strategy.profit);
         }
     }
 

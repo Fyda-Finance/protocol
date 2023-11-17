@@ -120,8 +120,8 @@ struct StrategyParameters {
     address _stableToken;
     // @param _stableAmount The amount of stable token to be used.
     uint256 _stableAmount;
-    // @param _slippage The slippage tolerance for the strategy.
-    uint256 _slippage;
+    // @param _impact The impact tolerance for the strategy.
+    uint256 _impact;
     //  @param _floor A flag indicating whether a floor price is set.
     bool _floor;
     // @param _floorType The type of floor price (if floor is set).
@@ -266,6 +266,8 @@ struct UpdateStruct {
     uint256 sellLimitPrice;
     uint256 sellPercentageValue;
     uint256 buyLimitPrice;
+    uint256 _strValue;
+    uint256 _btdValue;
     uint256 floorPercentageValue;
     uint256 floorLimitPrice;
     uint256 highSellValue;

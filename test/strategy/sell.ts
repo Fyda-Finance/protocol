@@ -15,7 +15,7 @@ describe("Sell", function () {
       _stableToken: setup.scenarioERC20USDC.address,
       _stableAmount: "0",
       _investAmount: "0",
-      _slippage: 1000,
+      _impact: 1000,
       _floor: false,
       _floorType: 0,
       _floorValue: "0",

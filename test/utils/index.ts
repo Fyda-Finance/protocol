@@ -33,7 +33,7 @@ export type Parameters = {
   _stableToken: string;
   _stableAmount: string;
   _investAmount: string;
-  _slippage: number;
+  _impact: number;
   _floor: boolean;
   _floorType: number;
   _floorValue: string;

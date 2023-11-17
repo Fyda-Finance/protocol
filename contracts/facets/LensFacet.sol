@@ -8,7 +8,7 @@ import { AppStorage } from "../AppStorage.sol";
 
 /**
  * @title LensFacet
- * @dev This contract provides functions for calculating exchange rates and validating slippage in trades.
+ * @dev This contract provides functions for calculating exchange rates and validating impact in trades.
  */
 contract LensFacet is Modifiers {
     /**
@@ -33,20 +33,20 @@ contract LensFacet is Modifiers {
     }
 
     /**
-     * @notice Validate slippage for a trade based on exchange rate, price, and maximum allowed slippage.
+     * @notice Validate impact for a trade based on exchange rate, price, and maximum allowed impact.
      * @param exchangeRate The calculated exchange rate for the trade.
      * @param price The current market price.
-     * @param maxSlippage The maximum allowable slippage percentage.
+     * @param maxImpact The maximum allowable impact percentage.
      * @param isBuy A flag indicating whether it's a buy (true) or sell (false) trade.
-     * @return The validated slippage for the trade.
+     * @return The validated impact for the trade.
      */
-    function validateSlippage(
+    function validateImpact(
         uint256 exchangeRate,
         uint256 price,
-        uint256 maxSlippage,
+        uint256 maxImpact,
         bool isBuy
     ) external pure returns (uint256) {
-        return LibTrade.validateSlippage(exchangeRate, price, maxSlippage, isBuy);
+        return LibTrade.validateImpact(exchangeRate, price, maxImpact, isBuy);
     }
 
     /**

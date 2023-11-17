@@ -28,11 +28,11 @@ contract FloorFacet is Modifiers {
     /**
      * @notice Emitted when a floor execution is initiated for a trading strategy.
      * @param strategyId The unique ID of the strategy where the floor execution is initiated.
-     * @param slippage The allowable price slippage percentage for the buy action.
+     * @param impact The allowable price impact percentage for the buy action.
      * @param stableTokenAmount The amount of stable tokens bought.
      * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
-    event FloorExecuted(uint256 indexed strategyId, uint256 slippage, uint256 stableTokenAmount, uint256 exchangeRate);
+    event FloorExecuted(uint256 indexed strategyId, uint256 impact, uint256 stableTokenAmount, uint256 exchangeRate);
     /**
      * @notice Emitted when a trade execution strategy is cancelled.
      * @param strategyId The unique ID of the cancelled strategy.
@@ -106,8 +106,8 @@ contract FloorFacet is Modifiers {
                 revert InvalidExchangeRate(floorAt, rate);
             }
 
-            // Validate the slippage based on the calculated rate and the latest price.
-            uint256 slippage = LibTrade.validateSlippage(rate, price, strategy.parameters._slippage, false);
+            // Validate the impact based on the calculated rate and the latest price.
+            uint256 impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, false);
 
             // Update strategy details, including timestamp, asset amounts, round ID, and invest price.
             strategy.parameters._investAmount = 0;
@@ -121,7 +121,7 @@ contract FloorFacet is Modifiers {
                 strategy.status = Status.CANCELLED;
                 emit StrategyCancelled(strategyId);
             }
-            emit FloorExecuted(strategyId, slippage, toTokenAmount, rate);
+            emit FloorExecuted(strategyId, impact, toTokenAmount, rate);
         }
     }
 }
