@@ -59,3 +59,4 @@ error InvalidSigner();
 error AlreadyCancelled();
 error BuyNotSet();
 error SellNotSelected();
+error PercentageNotInRange();

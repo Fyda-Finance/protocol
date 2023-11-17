@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE, UpdateStruct } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce, StrategyIsNotActive, BuyNotSet, SellNotSelected } from "../utils/GenericErrors.sol";
+import { InvalidSlippage, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrValueOrType, BTDWithoutBTDType, BTDTypeWithoutBTDValue, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce, StrategyIsNotActive, BuyNotSet, SellNotSelected, PercentageNotInRange } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 import { LibSignature } from "../libraries/LibSignature.sol";
@@ -433,6 +433,18 @@ contract StrategyFacet is Modifiers {
             }
         }
 
+        if (_parameter._floor && _parameter._floorType == FloorLegType.DECREASE_BY) {
+            if (_parameter._floorValue <= 0 || _parameter._floorValue > LibTrade.MAX_PERCENTAGE) {
+                revert PercentageNotInRange();
+            }
+        }
+
+        if (_parameter._sell && _parameter._sellType == SellLegType.INCREASE_BY) {
+            if (_parameter._sellValue <= 0 || _parameter._sellValue > LibTrade.MAX_PERCENTAGE) {
+                revert PercentageNotInRange();
+            }
+        }
+
         // Check if floor and buy are chosen
         if (_parameter._floor && _parameter._buy && _parameter._floorType == FloorLegType.LIMIT_PRICE) {
             if (_parameter._floorValue >= _parameter._buyValue) {
@@ -509,12 +521,19 @@ contract StrategyFacet is Modifiers {
         emit StrategyCreated((s.nextStrategyId - 1), user, _parameter, investRoundId, stableRoundId, budget, price);
     }
 
+    /**
+     * @dev Update an existing strategy with new parameters.
+     * @param strategyId The unique identifier of the strategy to update.
+     * @param updateStruct A struct containing the updated parameters for the strategy.
+     */
     function UpdateStrategy(uint256 strategyId, UpdateStruct calldata updateStruct) public {
         if (
             updateStruct.sellLimitPrice == 0 &&
             updateStruct.buyLimitPrice == 0 &&
             updateStruct.floorLimitPrice == 0 &&
             updateStruct.highSellValue == 0 &&
+            updateStruct.floorPercentageValue == 0 &&
+            updateStruct.sellPercentageValue == 0 &&
             updateStruct._buyTwapTime == 0 &&
             updateStruct._buyTwapTimeUnit == TimeUnit.NO_UNIT &&
             updateStruct._buyDCAValue == 0 &&
@@ -568,6 +587,22 @@ contract StrategyFacet is Modifiers {
             updateStruct.floorLimitPrice >= strategy.parameters._buyValue
         ) {
             revert FloorValueGreaterThanBuyValue();
+        }
+
+        if (updateStruct.floorPercentageValue > 0 && strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
+            if (updateStruct.floorPercentageValue > LibTrade.MAX_PERCENTAGE) {
+                revert PercentageNotInRange();
+            } else {
+                strategy.parameters._floorValue = updateStruct.floorPercentageValue;
+            }
+        }
+
+        if (updateStruct.sellPercentageValue > 0 && strategy.parameters._sellType == SellLegType.INCREASE_BY) {
+            if (updateStruct.sellPercentageValue > LibTrade.MAX_PERCENTAGE) {
+                revert PercentageNotInRange();
+            } else {
+                strategy.parameters._sellValue = updateStruct.sellPercentageValue;
+            }
         }
 
         if (

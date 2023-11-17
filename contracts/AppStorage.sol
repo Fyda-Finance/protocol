@@ -261,9 +261,12 @@ struct Swap {
     bytes callData;
 }
 
+// Struct representing the parameters to update in a strategy
 struct UpdateStruct {
     uint256 sellLimitPrice;
+    uint256 sellPercentageValue;
     uint256 buyLimitPrice;
+    uint256 floorPercentageValue;
     uint256 floorLimitPrice;
     uint256 highSellValue;
     uint256 _buyTwapTime;
