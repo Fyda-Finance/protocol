@@ -61,3 +61,4 @@ error SellNotSelected();
 error PercentageNotInRange();
 error BuyTwapNotSelected();
 error SellTwapNotSelected();
+error FloorNotSet();

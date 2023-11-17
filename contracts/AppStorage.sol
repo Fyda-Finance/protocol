@@ -249,22 +249,20 @@ struct Swap {
 
 // Struct representing the parameters to update in a strategy
 struct UpdateStruct {
-    uint256 sellLimitPrice;
-    uint256 sellPercentageValue;
-    uint256 buyLimitPrice;
-    uint256 _strValue;
-    uint256 _btdValue;
-    uint256 floorPercentageValue;
-    uint256 floorLimitPrice;
+    uint256 sellValue;
+    uint256 buyValue;
+    uint256 strValue;
+    uint256 btdValue;
+    uint256 floorValue;
     uint256 highSellValue;
-    uint256 _buyTwapTime;
-    TimeUnit _buyTwapTimeUnit;
-    uint256 _buyDCAValue;
-    uint256 _sellDCAValue;
-    uint256 _sellTwapTime;
-    TimeUnit _sellTwapTimeUnit;
+    uint256 buyTwapTime;
+    TimeUnit buyTwapTimeUnit;
+    uint256 buyDCAValue;
+    uint256 sellDCAValue;
+    uint256 sellTwapTime;
+    TimeUnit sellTwapTimeUnit;
     bool toggleCompleteOnSell;
     bool toggleLiquidateOnFloor;
     bool toggleCancelOnFloor;
-    CURRENT_PRICE _current_price;
+    CURRENT_PRICE current_price;
 }

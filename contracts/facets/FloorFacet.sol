@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import { Modifiers } from "../utils/Modifiers.sol";
 import { AppStorage, Strategy, Status, Swap, FloorLegType } from "../AppStorage.sol";
@@ -7,8 +7,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, StrategyIsNotActive } from "../utils/GenericErrors.sol";
-error FloorNotSet();
+import { InvalidExchangeRate, NoSwapFromZeroBalance, StrategyIsNotActive, FloorNotSet } from "../utils/GenericErrors.sol";
 error PriceIsGreaterThanFloorValue();
 
 /**
