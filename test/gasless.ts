@@ -11,7 +11,7 @@ describe("Gasless", function () {
     setup = await setupDiamondFixture();
   });
 
-  it("buy", async () => {
+  it("create", async () => {
     const budget = "1000000000"; // $1k
 
     await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
@@ -105,7 +105,7 @@ describe("Gasless", function () {
     ).to.be.reverted;
   });
 
-  it("permit buy", async () => {
+  it("permit create", async () => {
     const budget = "1000000000"; // $1k
 
     // await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
