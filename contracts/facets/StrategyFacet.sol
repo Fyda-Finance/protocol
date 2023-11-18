@@ -519,7 +519,66 @@ contract StrategyFacet is Modifiers {
      * @param strategyId The unique identifier of the strategy to update.
      * @param updateStruct A struct containing the updated parameters for the strategy.
      */
-    function updateStrategy(uint256 strategyId, UpdateStruct calldata updateStruct) public {
+    function updateStrategy(uint256 strategyId, UpdateStruct calldata updateStruct) external {
+        _updateStrategy(msg.sender, strategyId, updateStruct);
+    }
+
+    /**
+     * @notice Get the message hash for a given strategy to update it.
+     * @dev This function returns the message hash that must be signed by the user in order to update a strategy on behalf of another user.
+     * @param id The strategy id
+     * @param updateStruct updated parameters of the strategy
+     * @param nonce The nonce of the user who created the strategy.
+     * @param account The address of the user who created the strategy.
+     * @return The message hash for the given strategy.
+     */
+    function getMessageHashToUpdate(
+        uint256 id,
+        UpdateStruct calldata updateStruct,
+        uint256 nonce,
+        address account
+    ) public view returns (bytes32) {
+        return keccak256(abi.encode(account, nonce, id, updateStruct, LibUtil.getChainID()));
+    }
+
+    /**
+     * @dev Update an existing strategy with new parameters on behalf of another user.
+     * @param strategyId The unique identifier of the strategy to update.
+     * @param updateStruct A struct containing the updated parameters for the strategy.
+     * @param account The address of the user who created the strategy.
+     * @param nonce The nonce of the user who created the strategy.
+     * @param signature The signature of the user who created the strategy.
+     */
+    function updateStrategyOnBehalf(
+        uint256 strategyId,
+        UpdateStruct calldata updateStruct,
+        address account,
+        uint256 nonce,
+        bytes memory signature
+    ) external {
+        if (s.nonces[account] != nonce) {
+            revert InvalidNonce();
+        }
+
+        bytes32 messageHash = getMessageHashToUpdate(strategyId, updateStruct, nonce, account);
+        bytes32 ethSignedMessageHash = LibSignature.getEthSignedMessageHash(messageHash);
+        address signer = LibSignature.recoverSigner(ethSignedMessageHash, signature);
+        s.nonces[account] = s.nonces[account] + 1;
+
+        if (signer != account) {
+            revert InvalidSigner();
+        }
+
+        _updateStrategy(signer, strategyId, updateStruct);
+    }
+
+    /**
+     * @dev Update an existing strategy with new parameters.
+     * @param account The address of the user who created the strategy.
+     * @param strategyId The unique identifier of the strategy to update.
+     * @param updateStruct A struct containing the updated parameters for the strategy.
+     */
+    function _updateStrategy(address account, uint256 strategyId, UpdateStruct calldata updateStruct) internal {
         if (
             updateStruct.sellValue == 0 &&
             updateStruct.buyValue == 0 &&
@@ -541,7 +600,7 @@ contract StrategyFacet is Modifiers {
             revert NothingToUpdate();
         }
         Strategy storage strategy = s.strategies[strategyId];
-        if (strategy.user != msg.sender) {
+        if (strategy.user != account) {
             revert OnlyOwnerCanUpdateStrategies();
         }
         if (strategy.status != Status.ACTIVE) {

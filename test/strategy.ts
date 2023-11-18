@@ -300,7 +300,6 @@ describe("Strategy", function () {
     param.toggleLiquidateOnFloor = true;
     await setup.strategyFacet.connect(setup.user).updateStrategy(3, param);
     strategy = await setup.strategyFacet.getStrategy(3);
-    console.log("Cancel: ", strategy.parameters._cancelOnFloor);
     expect(strategy.parameters._cancelOnFloor).to.equal(true);
     expect(strategy.parameters._liquidateOnFloor).to.equal(true);
     expect(strategy.parameters._completeOnSell).to.equal(true);
