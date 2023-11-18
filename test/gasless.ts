@@ -323,7 +323,7 @@ describe("Gasless", function () {
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
     const param = {
       sellValue: "0",
-      buyValue: "0",
+      buyValue: "1400000000",
       floorValue: "0",
       highSellValue: "0",
       buyTwapTime: 0,
@@ -339,44 +339,26 @@ describe("Gasless", function () {
       toggleCancelOnFloor: false,
       current_price: 0,
     };
-    await expect(setup.strategyFacet.connect(setup.owner).updateStrategy(0, param)).to.be.reverted;
-    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(0, param)).to.be.reverted;
-    param.sellValue = "10000";
-    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(0, param)).to.be.reverted;
-    await setup.strategyFacet.connect(setup.user).cancelStrategy(0);
-    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(0, param)).to.be.reverted;
-    parameters._sellType = 1;
-    parameters._sellValue = "1600000000";
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
-    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(1, param)).to.be.reverted;
-    param.btdValue = "50000";
-    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(1, param)).to.be.reverted;
-    parameters._btdType = 3;
-    parameters._btdValue = "500000000";
-    parameters._buyDCAUnit = 2;
-    parameters._buyDCAValue = "500000000";
-    param.sellValue = "1900000000";
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
-    await setup.strategyFacet.connect(setup.user).updateStrategy(2, param);
-    param.buyTwapTime = 1;
-    await expect(setup.strategyFacet.connect(setup.user).updateStrategy(2, param)).to.be.reverted;
-    parameters._btdType = 0;
-    parameters._btdValue = "0";
-    param.btdValue = "0";
-    parameters._buyTwapTime = 2;
-    parameters._buyTwapTimeUnit = 1;
-    param.buyTwapTime = 1;
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
-    await setup.strategyFacet.connect(setup.user).updateStrategy(3, param);
-    let strategy = await setup.strategyFacet.getStrategy(3);
-    expect(strategy.parameters._buyTwapTime).to.equal(1);
-    param.toggleCancelOnFloor = true;
-    param.toggleCompleteOnSell = true;
-    param.toggleLiquidateOnFloor = true;
-    await setup.strategyFacet.connect(setup.user).updateStrategy(3, param);
-    strategy = await setup.strategyFacet.getStrategy(3);
-    expect(strategy.parameters._cancelOnFloor).to.equal(true);
-    expect(strategy.parameters._liquidateOnFloor).to.equal(true);
-    expect(strategy.parameters._completeOnSell).to.equal(true);
+
+    const hash = await setup.strategyFacet.getMessageHashToUpdate(
+      0,
+      param,
+      await setup.lensFacet.getNonce(setup.user.address),
+      setup.user.address,
+    );
+
+    const messageHashBinary = ethers.utils.arrayify(hash);
+    const signature = await setup.user.signMessage(messageHashBinary);
+
+    await setup.strategyFacet.updateStrategyOnBehalf(
+      0,
+      param,
+      setup.user.address,
+      await setup.lensFacet.getNonce(setup.user.address),
+      signature,
+    );
+
+    const strategy = await setup.strategyFacet.getStrategy(0);
+    expect(strategy.parameters._buyValue).to.be.equal("1400000000");
   });
 });
