@@ -148,7 +148,10 @@ contract SellFacet is Modifiers {
         transferSell(strategyId, value, swap, price, investRoundId, stableRoundId, sellAt);
 
         // If there are no further buy actions in the strategy, mark it as completed.
-        if (strategy.parameters._buyValue == 0 || strategy.parameters._completeOnSell) {
+        if (
+            (strategy.parameters._buyValue == 0 || strategy.parameters._completeOnSell) &&
+            strategy.parameters._investAmount == 0
+        ) {
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId);
         }
