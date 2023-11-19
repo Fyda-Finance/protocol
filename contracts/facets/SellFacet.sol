@@ -380,7 +380,7 @@ contract SellFacet is Modifiers {
         uint256 impact = 0;
         if (
             strategy.parameters._strValue == 0 ||
-            (strategy.parameters._highSellValue != 0 && strategy.parameters._highSellValue > price)
+            (strategy.parameters._highSellValue != 0 && price > strategy.parameters._highSellValue)
         ) {
             impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, false);
         }
