@@ -85,8 +85,10 @@ contract BuyFacet is Modifiers {
     /**
      * @notice Emitted when a trade execution strategy is completed.
      * @param strategyId The unique ID of the completed strategy.
+     * @param investTokenPrice The price of the invest token w.r.t. stable token.
+     * @param stableTokenPrice The price of the stable token w.r.t. invest token.
      */
-    event StrategyCompleted(uint256 indexed strategyId);
+    event StrategyCompleted(uint256 indexed strategyId, uint256 investTokenPrice, uint256 stableTokenPrice);
 
     /**
      * @notice Executes a buy action for a trading strategy based on specified conditions.
@@ -121,7 +123,11 @@ contract BuyFacet is Modifiers {
 
         if (strategy.parameters._sellValue == 0 && strategy.parameters._floorValue == 0) {
             strategy.status = Status.COMPLETED;
-            emit StrategyCompleted(strategyId);
+            (uint256 stablePrice, , ) = LibPrice.getPrice(
+                strategy.parameters._stableToken,
+                strategy.parameters._investToken
+            );
+            emit StrategyCompleted(strategyId, price, stablePrice);
         }
     }
 
@@ -170,7 +176,11 @@ contract BuyFacet is Modifiers {
             strategy.parameters._stableAmount == 0
         ) {
             strategy.status = Status.COMPLETED;
-            emit StrategyCompleted(strategyId);
+            (uint256 stablePrice, , ) = LibPrice.getPrice(
+                strategy.parameters._stableToken,
+                strategy.parameters._investToken
+            );
+            emit StrategyCompleted(strategyId, price, stablePrice);
         }
     }
 
@@ -229,7 +239,11 @@ contract BuyFacet is Modifiers {
             strategy.parameters._stableAmount == 0
         ) {
             strategy.status = Status.COMPLETED;
-            emit StrategyCompleted(strategyId);
+            (uint256 stablePrice, , ) = LibPrice.getPrice(
+                strategy.parameters._stableToken,
+                strategy.parameters._investToken
+            );
+            emit StrategyCompleted(strategyId, price, stablePrice);
         }
     }
 
