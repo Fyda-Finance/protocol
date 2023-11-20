@@ -85,8 +85,10 @@ contract BuyFacet is Modifiers {
     /**
      * @notice Emitted when a trade execution strategy is completed.
      * @param strategyId The unique ID of the completed strategy.
+     * @param investTokenPrice The price of the invest token in USD.
+     * @param stableTokenPrice The price of the stable token in USD.
      */
-    event StrategyCompleted(uint256 indexed strategyId);
+    event StrategyCompleted(uint256 indexed strategyId, uint256 investTokenPrice, uint256 stableTokenPrice);
 
     /**
      * @notice Executes a buy action for a trading strategy based on specified conditions.
@@ -120,8 +122,9 @@ contract BuyFacet is Modifiers {
         transferBuy(strategyId, value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue);
 
         if (strategy.parameters._sellValue == 0 && strategy.parameters._floorValue == 0) {
-            strategy.status = Status.COMPLETED;
-            emit StrategyCompleted(strategyId);
+            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
+            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
+            emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
     }
 
@@ -170,7 +173,9 @@ contract BuyFacet is Modifiers {
             strategy.parameters._stableAmount == 0
         ) {
             strategy.status = Status.COMPLETED;
-            emit StrategyCompleted(strategyId);
+            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
+            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
+            emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
     }
 
@@ -229,7 +234,9 @@ contract BuyFacet is Modifiers {
             strategy.parameters._stableAmount == 0
         ) {
             strategy.status = Status.COMPLETED;
-            emit StrategyCompleted(strategyId);
+            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
+            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
+            emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
     }
 

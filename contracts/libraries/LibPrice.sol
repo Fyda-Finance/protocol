@@ -76,4 +76,41 @@ library LibPrice {
 
         return price;
     }
+
+    /**
+     * @notice Get the price of an asset in USD.
+     * @param asset The address of the asset.
+     * @return price The price of the asset in USD
+     */
+    function getUSDPrice(address asset) internal view returns (uint256) {
+        AppStorage storage s = LibDiamond.diamondStorage();
+
+        if (s.feeds[asset] == address(0)) {
+            revert FeedNotFound();
+        }
+        (, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).latestRoundData();
+        if (assetPrice == 0) {
+            revert InvalidPrice();
+        }
+        return uint256(assetPrice);
+    }
+
+    /**
+     * @notice Get the price of an asset in USD.
+     * @param asset The address of the asset.
+     * @param roundId the round for which price is required.
+     * @return price The price of the asset based on round Id
+     */
+    function getPriceBasedOnRoundId(address asset, uint80 roundId) internal view returns (uint256) {
+        AppStorage storage s = LibDiamond.diamondStorage();
+
+        if (s.feeds[asset] == address(0)) {
+            revert FeedNotFound();
+        }
+        (, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).getRoundData(roundId);
+        if (assetPrice == 0) {
+            revert InvalidPrice();
+        }
+        return uint256(assetPrice);
+    }
 }
