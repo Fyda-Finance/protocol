@@ -81,8 +81,8 @@ contract StrategyFacet is Modifiers {
     /**
      * @notice Emitted when a trade execution strategy is cancelled.
      * @param strategyId The unique ID of the cancelled strategy.
-     * @param investTokenPrice The price of the invest token w.r.t. stable token.
-     * @param stableTokenPrice The price of the stable token w.r.t. invest token.
+     * @param investTokenPrice The price of the invest token in USD.
+     * @param stableTokenPrice The price of the stable token in USD.
      */
     event StrategyCancelled(uint256 indexed strategyId, uint256 investTokenPrice, uint256 stableTokenPrice);
 
@@ -140,12 +140,9 @@ contract StrategyFacet is Modifiers {
         }
 
         strategy.status = Status.CANCELLED;
-        (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
-        (uint256 stablePrice, , ) = LibPrice.getPrice(
-            strategy.parameters._stableToken,
-            strategy.parameters._investToken
-        );
-        emit StrategyCancelled(id, price, stablePrice);
+        uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
+        uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
+        emit StrategyCancelled(id, investPrice, stablePrice);
     }
 
     /**

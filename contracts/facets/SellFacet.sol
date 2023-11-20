@@ -87,8 +87,8 @@ contract SellFacet is Modifiers {
     /**
      * @notice Emitted when a trade execution strategy is completed.
      * @param strategyId The unique ID of the completed strategy.
-     * @param investTokenPrice The price of the invest token w.r.t. stable token.
-     * @param stableTokenPrice The price of the stable token w.r.t. invest token.
+     * @param investTokenPrice The price of the invest token in USD.
+     * @param stableTokenPrice The price of the stable token in USD.
      */
     event StrategyCompleted(uint256 indexed strategyId, uint256 investTokenPrice, uint256 stableTokenPrice);
 
@@ -155,12 +155,10 @@ contract SellFacet is Modifiers {
             strategy.parameters._investAmount == 0
         ) {
             // Retrieve the latest price and round ID from Chainlink.
-            (uint256 stablePrice, , ) = LibPrice.getPrice(
-                strategy.parameters._stableToken,
-                strategy.parameters._investToken
-            );
+            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
+            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
             strategy.status = Status.COMPLETED;
-            emit StrategyCompleted(strategyId, price, stablePrice);
+            emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
     }
 
@@ -231,12 +229,10 @@ contract SellFacet is Modifiers {
             (strategy.parameters._buyValue == 0 || strategy.parameters._completeOnSell) &&
             strategy.parameters._investAmount == 0
         ) {
-            (uint256 stablePrice, , ) = LibPrice.getPrice(
-                strategy.parameters._stableToken,
-                strategy.parameters._investToken
-            );
+            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
+            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
             strategy.status = Status.COMPLETED;
-            emit StrategyCompleted(strategyId, price, stablePrice);
+            emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
     }
 
@@ -314,12 +310,10 @@ contract SellFacet is Modifiers {
             (strategy.parameters._buyValue == 0 || strategy.parameters._completeOnSell) &&
             strategy.parameters._investAmount == 0
         ) {
-            (uint256 stablePrice, , ) = LibPrice.getPrice(
-                strategy.parameters._stableToken,
-                strategy.parameters._investToken
-            );
+            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
+            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
             strategy.status = Status.COMPLETED;
-            emit StrategyCompleted(strategyId, price, stablePrice);
+            emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
     }
 
