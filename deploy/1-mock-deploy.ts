@@ -81,6 +81,8 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   await dex.updateFeed(link.address, feeds[network.name].link);
 
   await dex.updateSlippage(10); // 0.1%;
+
+  console.log("Deployed completed");
 };
 
 module.exports.tags = ["deployMock"];
