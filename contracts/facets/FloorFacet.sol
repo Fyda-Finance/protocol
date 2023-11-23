@@ -28,6 +28,8 @@ contract FloorFacet is Modifiers {
      * @notice Emitted when a floor execution is initiated for a trading strategy.
      * @param strategyId The unique ID of the strategy where the floor execution is initiated.
      * @param impact The allowable price impact percentage for the buy action.
+     * @param tokens tokens substracted and added into the users wallet
+     *@param stablePriceInUSD price of stable token in USD
      */
     event FloorExecuted(uint256 indexed strategyId, uint256 impact, TokensTransaction tokens, uint256 stablePriceInUSD);
     /**
