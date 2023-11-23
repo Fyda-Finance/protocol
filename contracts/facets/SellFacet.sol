@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap, TokensTransaction } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, SellNotSelected, SellTwapNotSelected } from "../utils/GenericErrors.sol";
@@ -36,40 +36,34 @@ contract SellFacet is Modifiers {
      * @notice Emitted when a sell action is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the sell action is executed.
      * @param impact The allowable price impact percentage for the buy action.
-     * @param stableTokenAmount The amount of stable tokens bought.
-     * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
      */
     event SellExecuted(
         uint256 indexed strategyId,
         uint256 impact,
-        uint256 stableTokenAmount,
-        uint256 exchangeRate,
-        uint256 profit
+        TokensTransaction tokens,
+        uint256 profit,
+        uint256 stablePriceInUSD
     );
 
     /**
      * @notice Emitted when a Time-Weighted Average Price (TWAP) sell action is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the TWAP sell action was executed.
      * @param impact The allowable price impact percentage for the buy action.
-     * @param stableTokenAmount The amount of stable tokens bought.
-     * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
      */
     event SellTwapExecuted(
         uint256 indexed strategyId,
         uint256 impact,
-        uint256 stableTokenAmount,
-        uint256 exchangeRate,
-        uint256 profit
+        TokensTransaction tokens,
+        uint256 profit,
+        uint256 stablePriceInUSD
     );
 
     /**
      * @notice Emitted when a Spike Trigger (STR) event is executed for a trading strategy using a specific DEX and call data.
      * @param strategyId The unique ID of the strategy where the STR event was executed.
      * @param impact The allowable price impact percentage for the buy action.
-     * @param stableTokenAmount The amount of stable tokens bought.
-     * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param profit it is the profit made by the strategy.
      * @param investRoundId The round ID for invest price data.
      * @param stableRoundId The round ID for stable price data.
@@ -77,8 +71,7 @@ contract SellFacet is Modifiers {
     event STRExecuted(
         uint256 indexed strategyId,
         uint256 impact,
-        uint256 stableTokenAmount,
-        uint256 exchangeRate,
+        TokensTransaction tokens,
         uint256 profit,
         uint80 investRoundId,
         uint80 stableRoundId
@@ -413,7 +406,8 @@ contract SellFacet is Modifiers {
 
         strategy.investRoundId = investRoundId;
         strategy.stableRoundId = stableRoundId;
-        // Calculate the buy percentage amount if buy actions are based on TWAP or BTD.
+        uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
+        uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
 
         if (
             (strategy.parameters._sellValue > 0 &&
@@ -421,19 +415,30 @@ contract SellFacet is Modifiers {
                 strategy.parameters._sellTwapTime == 0) ||
             (strategy.parameters._sellValue > 0 && strategy.parameters._highSellValue > price)
         ) {
-            emit SellExecuted(strategyId, impact, toTokenAmount, rate, strategy.profit);
+            emit SellExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({ tokenSubstracted: value, tokenAdded: toTokenAmount }),
+                strategy.profit,
+                stablePrice
+            );
         } else if (strategy.parameters._strValue > 0) {
             emit STRExecuted(
                 strategyId,
                 impact,
-                toTokenAmount,
-                rate,
+                TokensTransaction({ tokenSubstracted: value, tokenAdded: toTokenAmount }),
                 strategy.profit,
                 strategy.investRoundId,
                 strategy.stableRoundId
             );
         } else if (strategy.parameters._sellTwapTime > 0) {
-            emit SellTwapExecuted(strategyId, impact, toTokenAmount, rate, strategy.profit);
+            emit SellTwapExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({ tokenSubstracted: value, tokenAdded: toTokenAmount }),
+                strategy.profit,
+                stablePrice
+            );
         }
     }
 

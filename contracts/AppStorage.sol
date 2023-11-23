@@ -266,3 +266,8 @@ struct UpdateStruct {
     bool toggleCancelOnFloor;
     CURRENT_PRICE current_price;
 }
+
+struct TokensTransaction {
+    uint256 tokenSubstracted;
+    uint256 tokenAdded;
+}

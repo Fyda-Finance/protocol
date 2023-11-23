@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE, Swap, TokensTransaction } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, BuyNotSet, BuyTwapNotSelected } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
@@ -34,50 +34,43 @@ contract BuyFacet is Modifiers {
      * @notice Emitted when a buy action is executed for a trading strategy.
      * @param strategyId The unique ID of the strategy where the buy action was executed.
      * @param impact The allowable price impact percentage for the buy action.
-     * @param investTokenAmount The amount of invest tokens bought.
      * @param investPrice the average price at which invest tokens were bought.
-     * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
 
     event BuyExecuted(
         uint256 indexed strategyId,
         uint256 impact,
-        uint256 investTokenAmount,
+        TokensTransaction tokens,
         uint256 investPrice,
-        uint256 exchangeRate
+        uint256 stablePriceInUSD
     );
 
     /**
      * @notice Emitted when a Buy on Time-Weighted Average Price (TWAP) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
      * @param strategyId The unique ID of the strategy where the Buy on TWAP action was executed.
      * @param impact The allowable price impact percentage for the buy action.
-     * @param investTokenAmount The amount of invest tokens bought.
      * @param investPrice the average price at which invest tokens were bought.
-     * @param exchangeRate The exchange rate at which the tokens were acquired.
      */
     event BuyTwapExecuted(
         uint256 indexed strategyId,
         uint256 impact,
-        uint256 investTokenAmount,
+        TokensTransaction tokens,
         uint256 investPrice,
-        uint256 exchangeRate
+        uint256 stablePriceInUSD
     );
     /**
      * @notice Emitted when a Buy The Dip (BTD) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
      * @param strategyId The unique ID of the strategy where the BTD action was executed.
      * @param impact The allowable price impact percentage for the buy action.
-     * @param investTokenAmount The amount of invest tokens bought.
      * @param investPrice the average price at which invest tokens were bought.
-     * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param investRoundId The invest round ID associated with the current price data.
      * @param stableRoundId The stable round ID associated with the current price data.
      */
     event BTDExecuted(
         uint256 indexed strategyId,
         uint256 impact,
-        uint256 investTokenAmount,
+        TokensTransaction tokens,
         uint256 investPrice,
-        uint256 exchangeRate,
         uint80 investRoundId,
         uint80 stableRoundId
     );
@@ -332,25 +325,37 @@ contract BuyFacet is Modifiers {
         strategy.stableRoundId = stableRoundId;
 
         uint256 impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, true);
+        uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
 
         if (
             strategy.parameters._buyValue > 0 &&
             strategy.parameters._btdValue == 0 &&
             strategy.parameters._buyTwapTime == 0
         ) {
-            emit BuyExecuted(strategyId, impact, toTokenAmount, strategy.investPrice, rate);
+            emit BuyExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({ tokenSubstracted: value, tokenAdded: toTokenAmount }),
+                strategy.investPrice,
+                stablePrice
+            );
         } else if (strategy.parameters._btdValue > 0) {
             emit BTDExecuted(
                 strategyId,
                 impact,
-                toTokenAmount,
+                TokensTransaction({ tokenSubstracted: value, tokenAdded: toTokenAmount }),
                 strategy.investPrice,
-                rate,
                 strategy.investRoundId,
                 strategy.stableRoundId
             );
         } else if (strategy.parameters._buyTwapTime > 0) {
-            emit BuyTwapExecuted(strategyId, impact, toTokenAmount, strategy.investPrice, rate);
+            emit BuyTwapExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({ tokenSubstracted: value, tokenAdded: toTokenAmount }),
+                strategy.investPrice,
+                stablePrice
+            );
         }
     }
 
