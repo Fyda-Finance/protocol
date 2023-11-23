@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE, Swap } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE, Swap, TokensTransaction } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, BuyNotSet, BuyTwapNotSelected } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
@@ -15,6 +15,29 @@ error ExpectedTimeNotElapsed();
 error BTDNotSelected();
 error PriceIsGreaterThanBuyValue();
 error PriceDippedBelowFloorValue();
+
+/**
+ * @title TransferObject
+ * @notice This struct represents an object used for transferring information related to a swap operation.
+ * @dev The TransferObject struct is designed to encapsulate essential information related to a swap, facilitating the transfer of tokens.
+ *
+ * Struct Fields:
+ * @param value: the quantity or value associated with the transfer.
+ * @param dexSwap: A Swap enum indicating the type of decentralized exchange used for the swap operation.
+ * @param price: the price of the invest token with respect to the stable token.
+ * @param investRoundId:  the round ID associated with the investment asset's price feed.
+ * @param stableRoundId:  the round ID associated with the stable asset's price feed.
+ * @param buyValue: the value associated with a buy operation within the strategy object.
+ */
+
+struct TransferObject {
+    uint256 value;
+    Swap dexSwap;
+    uint256 price;
+    uint80 investRoundId;
+    uint80 stableRoundId;
+    uint256 buyValue;
+}
 
 /**
  * @title BuyFacet
@@ -34,50 +57,48 @@ contract BuyFacet is Modifiers {
      * @notice Emitted when a buy action is executed for a trading strategy.
      * @param strategyId The unique ID of the strategy where the buy action was executed.
      * @param impact The allowable price impact percentage for the buy action.
-     * @param investTokenAmount The amount of invest tokens bought.
+     * @param tokens tokens substracted and added into the users wallet
      * @param investPrice the average price at which invest tokens were bought.
-     * @param exchangeRate The exchange rate at which the tokens were acquired.
+     *@param stablePriceInUSD price of stable token in USD
      */
 
     event BuyExecuted(
         uint256 indexed strategyId,
         uint256 impact,
-        uint256 investTokenAmount,
+        TokensTransaction tokens,
         uint256 investPrice,
-        uint256 exchangeRate
+        uint256 stablePriceInUSD
     );
 
     /**
      * @notice Emitted when a Buy on Time-Weighted Average Price (TWAP) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
      * @param strategyId The unique ID of the strategy where the Buy on TWAP action was executed.
      * @param impact The allowable price impact percentage for the buy action.
-     * @param investTokenAmount The amount of invest tokens bought.
+     * @param tokens tokens substracted and added into the users wallet
      * @param investPrice the average price at which invest tokens were bought.
-     * @param exchangeRate The exchange rate at which the tokens were acquired.
+     *@param stablePriceInUSD price of stable token in USD
      */
     event BuyTwapExecuted(
         uint256 indexed strategyId,
         uint256 impact,
-        uint256 investTokenAmount,
+        TokensTransaction tokens,
         uint256 investPrice,
-        uint256 exchangeRate
+        uint256 stablePriceInUSD
     );
     /**
      * @notice Emitted when a Buy The Dip (BTD) action is executed for a trading strategy using a specific DEX, call data, buy value, and execution time.
      * @param strategyId The unique ID of the strategy where the BTD action was executed.
      * @param impact The allowable price impact percentage for the buy action.
-     * @param investTokenAmount The amount of invest tokens bought.
+     * @param tokens tokens substracted and added into the users wallet
      * @param investPrice the average price at which invest tokens were bought.
-     * @param exchangeRate The exchange rate at which the tokens were acquired.
      * @param investRoundId The invest round ID associated with the current price data.
      * @param stableRoundId The stable round ID associated with the current price data.
      */
     event BTDExecuted(
         uint256 indexed strategyId,
         uint256 impact,
-        uint256 investTokenAmount,
+        TokensTransaction tokens,
         uint256 investPrice,
-        uint256 exchangeRate,
         uint80 investRoundId,
         uint80 stableRoundId
     );
@@ -119,7 +140,10 @@ contract BuyFacet is Modifiers {
 
         uint256 value = executionBuyAmount(true, strategyId);
 
-        transferBuy(strategyId, value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue);
+        transferBuy(
+            strategyId,
+            TransferObject(value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue)
+        );
 
         if (strategy.parameters._sellValue == 0 && strategy.parameters._floorValue == 0) {
             uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
@@ -165,7 +189,10 @@ contract BuyFacet is Modifiers {
 
         uint256 value = executionBuyAmount(false, strategyId);
 
-        transferBuy(strategyId, value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue);
+        transferBuy(
+            strategyId,
+            TransferObject(value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue)
+        );
         strategy.buyTwapExecutedAt = block.timestamp;
         if (
             strategy.parameters._sellValue == 0 &&
@@ -227,7 +254,10 @@ contract BuyFacet is Modifiers {
 
         uint256 value = executionBuyAmount(false, strategyId);
 
-        transferBuy(strategyId, value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue);
+        transferBuy(
+            strategyId,
+            TransferObject(value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue)
+        );
         if (
             strategy.parameters._sellValue == 0 &&
             strategy.parameters._floorValue == 0 &&
@@ -270,25 +300,11 @@ contract BuyFacet is Modifiers {
      * @notice Internal function to execute a "Buy" action within a specified price range.
      * @dev This function transfers assets from stable tokens to investment tokens on a DEX.
      * @param strategyId The unique ID of the trading strategy where the BTD action is executed.
-     * @param value The value to be transferred from stable tokens to investment tokens.
-     * @param dexSwap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
-     * @param price The current price of the investment token.
-     * @param investRoundId The invest round ID associated with the current price data.
-     * @param stableRoundId The stable round ID associated with the current price data.
-     * @param buyValue The target price at which the "Buy" action should be executed.
+     * @param transferObject The TransferBuy struct containing the parameters for executing the buy action.
      */
-
-    function transferBuy(
-        uint256 strategyId,
-        uint256 value,
-        Swap memory dexSwap,
-        uint256 price,
-        uint80 investRoundId,
-        uint80 stableRoundId,
-        uint256 buyValue
-    ) internal {
+    function transferBuy(uint256 strategyId, TransferObject memory transferObject) internal {
         Strategy storage strategy = s.strategies[strategyId];
-        if (price > buyValue) {
+        if (transferObject.price > transferObject.buyValue) {
             revert PriceIsGreaterThanBuyValue();
         }
 
@@ -301,56 +317,77 @@ contract BuyFacet is Modifiers {
                 floorAt = (strategy.investPrice * floorPercentage) / LibTrade.MAX_PERCENTAGE;
             }
 
-            if (floorAt > price) {
+            if (floorAt > transferObject.price) {
                 revert FloorGreaterThanPrice();
             }
         }
         LibSwap.SwapData memory swap = LibSwap.SwapData(
-            dexSwap.dex,
+            transferObject.dexSwap.dex,
             strategy.parameters._stableToken,
             strategy.parameters._investToken,
-            value,
-            dexSwap.callData,
+            transferObject.value,
+            transferObject.dexSwap.callData,
             strategy.user
         );
 
         uint256 toTokenAmount = LibSwap.swap(swap);
 
-        uint256 rate = LibTrade.calculateExchangeRate(strategy.parameters._investToken, toTokenAmount, value);
+        uint256 rate = LibTrade.calculateExchangeRate(
+            strategy.parameters._investToken,
+            toTokenAmount,
+            transferObject.value
+        );
 
-        if (rate > buyValue) {
-            revert InvalidExchangeRate(buyValue, rate);
+        if (rate > transferObject.buyValue) {
+            revert InvalidExchangeRate(transferObject.buyValue, rate);
         }
 
-        strategy.parameters._stableAmount -= value;
+        strategy.parameters._stableAmount -= transferObject.value;
         uint256 previousValue = strategy.parameters._investAmount * strategy.investPrice;
         strategy.parameters._investAmount = strategy.parameters._investAmount + toTokenAmount;
 
-        strategy.investPrice = (previousValue + (toTokenAmount * price)) / strategy.parameters._investAmount;
+        strategy.investPrice =
+            (previousValue + (toTokenAmount * transferObject.price)) /
+            strategy.parameters._investAmount;
 
-        strategy.investRoundId = investRoundId;
-        strategy.stableRoundId = stableRoundId;
+        strategy.investRoundId = transferObject.investRoundId;
+        strategy.stableRoundId = transferObject.stableRoundId;
 
-        uint256 impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, true);
+        uint256 impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, true);
+        uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(
+            strategy.parameters._stableToken,
+            transferObject.stableRoundId
+        );
 
         if (
             strategy.parameters._buyValue > 0 &&
             strategy.parameters._btdValue == 0 &&
             strategy.parameters._buyTwapTime == 0
         ) {
-            emit BuyExecuted(strategyId, impact, toTokenAmount, strategy.investPrice, rate);
+            emit BuyExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({ tokenSubstracted: transferObject.value, tokenAdded: toTokenAmount }),
+                strategy.investPrice,
+                stablePrice
+            );
         } else if (strategy.parameters._btdValue > 0) {
             emit BTDExecuted(
                 strategyId,
                 impact,
-                toTokenAmount,
+                TokensTransaction({ tokenSubstracted: transferObject.value, tokenAdded: toTokenAmount }),
                 strategy.investPrice,
-                rate,
                 strategy.investRoundId,
                 strategy.stableRoundId
             );
         } else if (strategy.parameters._buyTwapTime > 0) {
-            emit BuyTwapExecuted(strategyId, impact, toTokenAmount, strategy.investPrice, rate);
+            emit BuyTwapExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({ tokenSubstracted: transferObject.value, tokenAdded: toTokenAmount }),
+                strategy.investPrice,
+                stablePrice
+            );
         }
     }
 

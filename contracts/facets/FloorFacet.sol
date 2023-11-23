@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { Modifiers } from "../utils/Modifiers.sol";
-import { AppStorage, Strategy, Status, Swap, FloorLegType } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status, Swap, FloorLegType, TokensTransaction } from "../AppStorage.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
@@ -28,10 +28,10 @@ contract FloorFacet is Modifiers {
      * @notice Emitted when a floor execution is initiated for a trading strategy.
      * @param strategyId The unique ID of the strategy where the floor execution is initiated.
      * @param impact The allowable price impact percentage for the buy action.
-     * @param stableTokenAmount The amount of stable tokens bought.
-     * @param exchangeRate The exchange rate at which the tokens were acquired.
+     * @param tokens tokens substracted and added into the users wallet
+     *@param stablePriceInUSD price of stable token in USD
      */
-    event FloorExecuted(uint256 indexed strategyId, uint256 impact, uint256 stableTokenAmount, uint256 exchangeRate);
+    event FloorExecuted(uint256 indexed strategyId, uint256 impact, TokensTransaction tokens, uint256 stablePriceInUSD);
     /**
      * @notice Emitted when a trade execution strategy is cancelled.
      * @param strategyId The unique ID of the cancelled strategy.
@@ -111,20 +111,26 @@ contract FloorFacet is Modifiers {
             uint256 impact = LibTrade.validateImpact(rate, price, strategy.parameters._impact, false);
 
             // Update strategy details, including timestamp, asset amounts, round ID, and invest price.
+            uint256 value = strategy.parameters._investAmount;
             strategy.parameters._investAmount = 0;
             strategy.parameters._stableAmount += toTokenAmount;
             strategy.investRoundId = investRoundId;
             strategy.stableRoundId = stableRoundId;
             strategy.investPrice = 0;
+            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
+            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
 
             // Check if the strategy should be canceled on reaching the floor price.
             if (strategy.parameters._cancelOnFloor) {
-                uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
-                uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
                 strategy.status = Status.CANCELLED;
                 emit StrategyCancelled(strategyId, investPrice, stablePrice);
             }
-            emit FloorExecuted(strategyId, impact, toTokenAmount, rate);
+            emit FloorExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({ tokenSubstracted: value, tokenAdded: toTokenAmount }),
+                stablePrice
+            );
         }
     }
 }
