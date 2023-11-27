@@ -27,6 +27,7 @@ const config: HardhatUserConfig = {
       accounts: [process.env.PRIVATE_KEY || ""],
       url: process.env.RPC_URL || "",
       chainId: 5,
+      gasMultiplier: 1.5,
     },
   },
   etherscan: {

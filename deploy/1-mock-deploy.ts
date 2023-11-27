@@ -70,17 +70,26 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   const diamondAddress = await deployDiamond(accounts[0], true);
 
   const priceOracleFacet: PriceOracleFacet = await ethers.getContractAt("PriceOracleFacet", diamondAddress);
-  await priceOracleFacet.setAssetFeed(usdc.address, feeds[network.name].usdc);
-  await priceOracleFacet.setAssetFeed(wbtc.address, feeds[network.name].wbtc);
-  await priceOracleFacet.setAssetFeed(weth.address, feeds[network.name].eth);
-  await priceOracleFacet.setAssetFeed(link.address, feeds[network.name].link);
+  let tx = await priceOracleFacet.setAssetFeed(usdc.address, feeds[network.name].usdc);
+  await tx.wait();
+  tx = await priceOracleFacet.setAssetFeed(wbtc.address, feeds[network.name].wbtc);
+  await tx.wait();
+  tx = await priceOracleFacet.setAssetFeed(weth.address, feeds[network.name].eth);
+  await tx.wait();
+  tx = await priceOracleFacet.setAssetFeed(link.address, feeds[network.name].link);
+  await tx.wait();
 
-  await dex.updateFeed(usdc.address, feeds[network.name].usdc);
-  await dex.updateFeed(wbtc.address, feeds[network.name].wbtc);
-  await dex.updateFeed(weth.address, feeds[network.name].eth);
-  await dex.updateFeed(link.address, feeds[network.name].link);
+  tx = await dex.updateFeed(usdc.address, feeds[network.name].usdc);
+  await tx.wait();
+  tx = await dex.updateFeed(wbtc.address, feeds[network.name].wbtc);
+  await tx.wait();
+  tx = await dex.updateFeed(weth.address, feeds[network.name].eth);
+  await tx.wait();
+  tx = await dex.updateFeed(link.address, feeds[network.name].link);
+  await tx.wait();
 
-  await dex.updateSlippage(10); // 0.1%;
+  tx = await dex.updateSlippage(10); // 0.1%;
+  await tx.wait();
 
   console.log("Deployed completed");
 };
