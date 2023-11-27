@@ -51,6 +51,7 @@ contract FloorFacet is Modifiers {
     function executeFloor(uint256 strategyId, Swap calldata dexSwap) external {
         // Retrieve the strategy details.
         Strategy storage strategy = s.strategies[strategyId];
+        uint256 stablePrice;
         if (strategy.status != Status.ACTIVE) {
             revert StrategyIsNotActive();
         }
@@ -117,20 +118,23 @@ contract FloorFacet is Modifiers {
             strategy.investRoundId = investRoundId;
             strategy.stableRoundId = stableRoundId;
             strategy.investPrice = 0;
-            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
-            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
+            stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
 
             // Check if the strategy should be canceled on reaching the floor price.
-            if (strategy.parameters._cancelOnFloor) {
-                strategy.status = Status.CANCELLED;
-                emit StrategyCancelled(strategyId, investPrice, stablePrice);
-            }
+
             emit FloorExecuted(
                 strategyId,
                 impact,
                 TokensTransaction({ tokenSubstracted: value, tokenAdded: toTokenAmount }),
                 stablePrice
             );
+        }
+        uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
+        stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
+
+        if (strategy.parameters._cancelOnFloor) {
+            strategy.status = Status.CANCELLED;
+            emit StrategyCancelled(strategyId, investPrice, stablePrice);
         }
     }
 }
