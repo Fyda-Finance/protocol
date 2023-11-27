@@ -57,9 +57,9 @@ contract PriceOracleFacet is Modifiers {
      * @param asset The address of the asset.
      * @return price The price of the asset in USD
      */
-    function getUSDPrice(address asset) external view returns (uint256) {
-        (, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).latestRoundData();
-        return uint256(assetPrice);
+    function getUSDPrice(address asset) external view returns (uint80, int256) {
+        (uint80 roundId, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).latestRoundData();
+        return (roundId, assetPrice);
     }
 
     /**
