@@ -21,6 +21,7 @@ error SellDCANotSet();
 error BuyDCANotSet();
 error STRIsNotSet();
 error BTDIsNotSet();
+error InvestAmountMustBeProvided();
 
 /**
  * @title StrategyFacet
@@ -378,8 +379,8 @@ contract StrategyFacet is Modifiers {
         }
 
         // Check if both buy and sell are chosen
-        if (_parameter._buyValue > 0 && _parameter._sellValue > 0) {
-            if (!(_parameter._stableAmount > 0 || _parameter._investAmount > 0)) {
+        if (_parameter._buyValue > 0 && (_parameter._sellValue > 0 || _parameter._floorValue > 0)) {
+            if (_parameter._stableAmount == 0 && _parameter._investAmount == 0) {
                 revert NoAmountProvided();
             }
             if (_parameter._buyValue >= _parameter._sellValue && _parameter._sellType == SellLegType.LIMIT_PRICE) {
@@ -402,13 +403,20 @@ contract StrategyFacet is Modifiers {
             }
         }
 
-        // Check if only sell is chosen
+        if (
+            (_parameter._sellValue > 0 || _parameter._floorValue > 0) &&
+            _parameter._investAmount == 0 &&
+            _parameter._buyValue == 0
+        ) {
+            revert InvestAmountMustBeProvided();
+        }
         if (
             (_parameter._sellValue > 0 || _parameter._floorValue > 0) &&
             _parameter._investAmount > 0 &&
             (_parameter._completeOnSell || _parameter._cancelOnFloor) &&
             _parameter._buyValue > 0
-        ) {
+        ) // Check if only sell is chosen
+        {
             revert BuyNeverExecute();
         }
 
