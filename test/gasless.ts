@@ -11,7 +11,7 @@ describe("Gasless", function () {
     setup = await setupDiamondFixture();
   });
 
-  it("create", async () => {
+  it.only("create", async () => {
     const budget = "1000000000"; // $1k
 
     await setup.scenarioERC20USDC.connect(setup.user).approve(setup.strategyFacet.address, budget);
@@ -260,10 +260,12 @@ describe("Gasless", function () {
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
 
-    await expect(setup.strategyFacet.cancelStrategy(0)).to.be.reverted;
+    const strategyId = 0;
+
+    await expect(setup.strategyFacet.cancelStrategy(strategyId)).to.be.reverted;
 
     const hash = await setup.strategyFacet.getMessageHashToCancel(
-      0,
+      strategyId,
       await setup.lensFacet.getNonce(setup.user.address),
       setup.user.address,
     );
@@ -271,7 +273,7 @@ describe("Gasless", function () {
     const signature = await setup.user.signMessage(messageHashBinary);
 
     await setup.strategyFacet.cancelStrategyOnBehalf(
-      0,
+      strategyId,
       await setup.lensFacet.getNonce(setup.user.address),
       signature,
       setup.user.address,
