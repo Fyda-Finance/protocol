@@ -175,8 +175,8 @@ contract SellFacet is Modifiers {
             strategy.parameters._investAmount == 0
         ) {
             // Retrieve the latest price and round ID from Chainlink.
-            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
-            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
+            uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
+            uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
@@ -249,8 +249,8 @@ contract SellFacet is Modifiers {
             (strategy.parameters._buyValue == 0 || strategy.parameters._completeOnSell) &&
             strategy.parameters._investAmount == 0
         ) {
-            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
-            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
+            uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
+            uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
@@ -310,15 +310,7 @@ contract SellFacet is Modifiers {
             revert PriceIsNotInTheRange();
         }
 
-        checkRoundPrices(
-            strategyId,
-            fromInvestRoundId,
-            fromStableRoundId,
-            toInvestRoundId,
-            toStableRoundId,
-            investRoundId,
-            stableRoundId
-        );
+        checkRoundPrices(strategyId, fromInvestRoundId, fromStableRoundId, toInvestRoundId, toStableRoundId);
 
         uint256 value = executionSellAmount(false, strategyId);
 
@@ -330,8 +322,8 @@ contract SellFacet is Modifiers {
             (strategy.parameters._buyValue == 0 || strategy.parameters._completeOnSell) &&
             strategy.parameters._investAmount == 0
         ) {
-            uint256 investPrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._investToken, investRoundId);
-            uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(strategy.parameters._stableToken, stableRoundId);
+            uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
+            uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
@@ -424,10 +416,7 @@ contract SellFacet is Modifiers {
 
         strategy.investRoundId = transferObject.investRoundId;
         strategy.stableRoundId = transferObject.stableRoundId;
-        uint256 stablePrice = LibPrice.getPriceBasedOnRoundId(
-            strategy.parameters._stableToken,
-            transferObject.stableRoundId
-        );
+        uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
 
         if (
             (strategy.parameters._sellValue > 0 &&
@@ -470,31 +459,24 @@ contract SellFacet is Modifiers {
      * @param fromStableRoundId The round ID for the stable token's price data to start checking from.
      * @param toInvestRoundId The round ID for the investment token's price data to check up to.
      * @param toStableRoundId The round ID for the stable token's price data to check up to.
-     * @param presentInvestRound The present round ID for the invest token's price.
-     * @param presentStableRound The present round ID for the stable token's price.
      */
     function checkRoundPrices(
         uint256 strategyId,
         uint80 fromInvestRoundId,
         uint80 fromStableRoundId,
         uint80 toInvestRoundId,
-        uint80 toStableRoundId,
-        uint80 presentInvestRound,
-        uint80 presentStableRound
+        uint80 toStableRoundId
     ) internal view {
         Strategy memory strategy = s.strategies[strategyId];
 
-        if (presentInvestRound < toInvestRoundId || presentStableRound < toStableRoundId) {
-            revert WrongPreviousIDs();
-        }
         if (toInvestRoundId < fromInvestRoundId || toStableRoundId < fromStableRoundId) {
             revert WrongPreviousIDs();
         }
 
         if (
-            strategy.investRoundId >= fromInvestRoundId ||
+            strategy.investRoundId > fromInvestRoundId ||
             strategy.investRoundId >= toInvestRoundId ||
-            strategy.stableRoundId >= fromStableRoundId ||
+            strategy.stableRoundId > fromStableRoundId ||
             strategy.stableRoundId >= toStableRoundId
         ) {
             revert WrongPreviousIDs();
