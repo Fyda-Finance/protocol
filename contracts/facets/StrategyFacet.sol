@@ -278,11 +278,11 @@ contract StrategyFacet is Modifiers {
 
         if (_parameter._current_price == CURRENT_PRICE.BUY_CURRENT) {
             _parameter._buyType = BuyLegType.LIMIT_PRICE;
-            _parameter._buyValue = price + (price * _parameter._impact) / 10000;
+            _parameter._buyValue = price;
         }
         if (_parameter._current_price == CURRENT_PRICE.SELL_CURRENT) {
             _parameter._sellType = SellLegType.LIMIT_PRICE;
-            _parameter._sellValue = price + (price * _parameter._impact) / 10000;
+            _parameter._sellValue = price;
         }
 
         if ((_parameter._floorValue == 0 && _parameter._sellValue == 0 && _parameter._buyValue == 0)) {
@@ -707,7 +707,7 @@ contract StrategyFacet is Modifiers {
         (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
         if (updateStruct.current_price == CURRENT_PRICE.BUY_CURRENT) {
             if (strategy.parameters._buyValue > 0) {
-                strategy.parameters._buyValue = price + (price * strategy.parameters._impact) / 10000;
+                strategy.parameters._buyValue = price;
             } else {
                 revert BuyNotSet();
             }
@@ -715,7 +715,7 @@ contract StrategyFacet is Modifiers {
 
         if (updateStruct.current_price == CURRENT_PRICE.SELL_CURRENT) {
             if (strategy.parameters._sellValue > 0 && strategy.parameters._sellType == SellLegType.LIMIT_PRICE) {
-                strategy.parameters._sellValue = price + (price * strategy.parameters._impact) / 10000;
+                strategy.parameters._sellValue = price;
             } else {
                 revert SellNotSelected();
             }
