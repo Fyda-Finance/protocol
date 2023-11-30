@@ -271,6 +271,19 @@ contract StrategyFacet is Modifiers {
         if (_parameter._investToken == _parameter._stableToken) {
             revert TokensMustDiffer();
         }
+        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
+            _parameter._investToken,
+            _parameter._stableToken
+        );
+
+        if (_parameter._current_price == CURRENT_PRICE.BUY_CURRENT) {
+            _parameter._buyType = BuyLegType.LIMIT_PRICE;
+            _parameter._buyValue = price;
+        }
+        if (_parameter._current_price == CURRENT_PRICE.SELL_CURRENT) {
+            _parameter._sellType = SellLegType.LIMIT_PRICE;
+            _parameter._sellValue = price;
+        }
 
         if ((_parameter._floorValue == 0 && _parameter._sellValue == 0 && _parameter._buyValue == 0)) {
             revert AtLeastOneOptionRequired();
@@ -335,20 +348,6 @@ contract StrategyFacet is Modifiers {
 
         if (_parameter._buyDCAUnit != DCA_UNIT.NO_UNIT && _parameter._buyDCAValue == 0) {
             revert BuyDCAUnitWithoutBuyDCAValue();
-        }
-
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            _parameter._investToken,
-            _parameter._stableToken
-        );
-
-        if (_parameter._current_price == CURRENT_PRICE.BUY_CURRENT) {
-            _parameter._buyType = BuyLegType.LIMIT_PRICE;
-            _parameter._buyValue = price;
-        }
-        if (_parameter._current_price == CURRENT_PRICE.SELL_CURRENT) {
-            _parameter._sellType = SellLegType.LIMIT_PRICE;
-            _parameter._sellValue = price;
         }
 
         if (_parameter._buyValue > 0 && _parameter._buyType == BuyLegType.NO_TYPE) {
