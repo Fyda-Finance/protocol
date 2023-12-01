@@ -119,7 +119,7 @@ contract SellFacet is Modifiers {
      * @param strategyId The unique ID of the strategy to execute the sell action for.
      * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
      */
-    function executeSell(uint256 strategyId, Swap calldata swap) external {
+    function executeSell(uint256 strategyId, Swap calldata swap) external nonReentrant {
         // Retrieve the strategy details.
         Strategy storage strategy = s.strategies[strategyId];
 
@@ -190,7 +190,7 @@ contract SellFacet is Modifiers {
    * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
 
    */
-    function executeSellTwap(uint256 strategyId, Swap calldata swap) external {
+    function executeSellTwap(uint256 strategyId, Swap calldata swap) external nonReentrant {
         // Retrieve the strategy details.
         Strategy storage strategy = s.strategies[strategyId];
 
@@ -274,7 +274,7 @@ contract SellFacet is Modifiers {
         uint80 toInvestRoundId,
         uint80 toStableRoundId,
         Swap calldata swap
-    ) public {
+    ) public nonReentrant {
         // Retrieve the strategy details.
         Strategy storage strategy = s.strategies[strategyId];
 

@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+enum ReentrancyStatus {
+    NOT_ENTERED,
+    ENTERED
+}
+
 /**
  * @notice The `Status` enum represents the possible statuses of a trading strategy.
  * @dev This enum defines three status options that describe the state of a strategy:
@@ -242,6 +247,8 @@ struct AppStorage {
     mapping(address => address) feeds;
     // account => nonce
     mapping(address => uint256) nonces;
+    // reentrancy status
+    ReentrancyStatus reentrancyStatus;
 }
 
 /**

@@ -117,7 +117,7 @@ contract BuyFacet is Modifiers {
      * @param strategyId The unique ID of the strategy for which the buy action is executed.
      * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
      */
-    function executeBuy(uint256 strategyId, Swap calldata swap) external {
+    function executeBuy(uint256 strategyId, Swap calldata swap) external nonReentrant {
         Strategy storage strategy = s.strategies[strategyId];
 
         if (strategy.status != Status.ACTIVE) {
@@ -157,7 +157,7 @@ contract BuyFacet is Modifiers {
      * @param strategyId The unique ID of the strategy to execute the Buy on TWAP action.
      * @param swap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
      */
-    function executeBuyTwap(uint256 strategyId, Swap calldata swap) external {
+    function executeBuyTwap(uint256 strategyId, Swap calldata swap) external nonReentrant {
         Strategy storage strategy = s.strategies[strategyId];
 
         if (strategy.status != Status.ACTIVE) {
@@ -224,7 +224,7 @@ contract BuyFacet is Modifiers {
         uint80 toInvestRoundId,
         uint80 toStableRoundId,
         Swap calldata swap
-    ) external {
+    ) external nonReentrant {
         Strategy storage strategy = s.strategies[strategyId];
         if (strategy.status != Status.ACTIVE) {
             revert StrategyIsNotActive();

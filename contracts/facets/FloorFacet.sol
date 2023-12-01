@@ -48,7 +48,7 @@ contract FloorFacet is Modifiers {
      * @param strategyId The unique ID of the strategy to execute the floor check for.
      * @param dexSwap The Swap struct containing address of the decentralized exchange (DEX) and calldata containing data for interacting with the DEX during the execution.
      */
-    function executeFloor(uint256 strategyId, Swap calldata dexSwap) external {
+    function executeFloor(uint256 strategyId, Swap calldata dexSwap) external nonReentrant {
         // Retrieve the strategy details.
         Strategy storage strategy = s.strategies[strategyId];
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
