@@ -280,4 +280,6 @@ struct UpdateStruct {
 struct TokensTransaction {
     uint256 tokenSubstracted;
     uint256 tokenAdded;
+    uint256 stableAmount;
+    uint256 investAmount;
 }
