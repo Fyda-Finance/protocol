@@ -434,7 +434,9 @@ contract SellFacet is Modifiers {
                 impact,
                 TokensTransaction({
                     tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount)
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
                 }),
                 strategy.profit,
                 stablePrice
@@ -445,7 +447,9 @@ contract SellFacet is Modifiers {
                 impact,
                 TokensTransaction({
                     tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount)
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
                 }),
                 strategy.profit,
                 strategy.investRoundId,
@@ -457,7 +461,9 @@ contract SellFacet is Modifiers {
                 impact,
                 TokensTransaction({
                     tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount)
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
                 }),
                 strategy.profit,
                 stablePrice

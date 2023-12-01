@@ -131,7 +131,12 @@ contract FloorFacet is Modifiers {
             emit FloorExecuted(
                 strategyId,
                 impact,
-                TokensTransaction({ tokenSubstracted: value, tokenAdded: toTokenAmount }),
+                TokensTransaction({
+                    tokenSubstracted: value,
+                    tokenAdded: toTokenAmount,
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
+                }),
                 stablePrice
             );
         }

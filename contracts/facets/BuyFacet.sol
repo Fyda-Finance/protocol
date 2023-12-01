@@ -361,7 +361,12 @@ contract BuyFacet is Modifiers {
             emit BuyExecuted(
                 strategyId,
                 impact,
-                TokensTransaction({ tokenSubstracted: transferObject.value, tokenAdded: toTokenAmount }),
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: toTokenAmount,
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
+                }),
                 strategy.investPrice,
                 stablePrice
             );
@@ -369,7 +374,12 @@ contract BuyFacet is Modifiers {
             emit BTDExecuted(
                 strategyId,
                 impact,
-                TokensTransaction({ tokenSubstracted: transferObject.value, tokenAdded: toTokenAmount }),
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: toTokenAmount,
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
+                }),
                 strategy.investPrice,
                 strategy.investRoundId,
                 strategy.stableRoundId
@@ -378,7 +388,12 @@ contract BuyFacet is Modifiers {
             emit BuyTwapExecuted(
                 strategyId,
                 impact,
-                TokensTransaction({ tokenSubstracted: transferObject.value, tokenAdded: toTokenAmount }),
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: toTokenAmount,
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
+                }),
                 strategy.investPrice,
                 stablePrice
             );
