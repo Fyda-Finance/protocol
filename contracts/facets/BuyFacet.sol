@@ -278,10 +278,8 @@ contract BuyFacet is Modifiers {
                 ? strategy.parameters._buyDCAValue
                 : strategy.parameters._stableAmount;
         } else if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
-            uint256 buyPercentageAmount = (strategy.parameters._buyDCAValue * strategy.parameters._stableAmount) /
-                LibTrade.MAX_PERCENTAGE;
-            amount = (strategy.parameters._stableAmount > buyPercentageAmount)
-                ? buyPercentageAmount
+            amount = (strategy.parameters._stableAmount > strategy.percentageForBuy)
+                ? strategy.percentageForBuy
                 : strategy.parameters._stableAmount;
         }
 
@@ -347,6 +345,13 @@ contract BuyFacet is Modifiers {
 
         uint256 impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, true);
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
+
+        if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
+            strategy.percentageForSell =
+                (strategy.parameters._sellDCAValue * strategy.parameters._investAmount) /
+                LibTrade.MAX_PERCENTAGE;
+            strategy.sellPercentageTotalAmount = strategy.parameters._investAmount;
+        }
 
         if (
             strategy.parameters._buyValue > 0 &&

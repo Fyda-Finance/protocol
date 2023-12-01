@@ -183,6 +183,10 @@ struct Strategy {
     // @param parameters The parameters that configure the behavior of the strategy
     // as passed by the user and defined above
     StrategyParameters parameters;
+    uint256 percentageForSell;
+    uint256 percentageForBuy;
+    uint256 sellPercentageTotalAmount;
+    uint256 buyPercentageTotalAmount;
     //  @param sellTwapExecutedAt The timestamp of the last executed TWAP (Time-Weighted Average Price) sell.
     //  if sell twap is set for the sell. Otherwise it remains 0
     uint256 sellTwapExecutedAt;

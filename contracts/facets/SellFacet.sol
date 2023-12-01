@@ -346,11 +346,8 @@ contract SellFacet is Modifiers {
                 ? strategy.parameters._sellDCAValue
                 : strategy.parameters._investAmount;
         } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
-            uint256 sellPercentageAmount = (strategy.parameters._sellDCAValue * strategy.parameters._investAmount) /
-                LibTrade.MAX_PERCENTAGE;
-
-            amount = (strategy.parameters._investAmount > sellPercentageAmount)
-                ? sellPercentageAmount
+            amount = (strategy.parameters._investAmount > strategy.percentageForSell)
+                ? strategy.percentageForSell
                 : strategy.parameters._investAmount;
         }
         return amount;
@@ -402,6 +399,7 @@ contract SellFacet is Modifiers {
         uint256 decimals = 10 ** IERC20Metadata(strategy.parameters._investToken).decimals();
 
         strategy.parameters._investAmount = strategy.parameters._investAmount - transferObject.value;
+        uint256 previousStableAmount = strategy.parameters._stableAmount;
         strategy.parameters._stableAmount = strategy.parameters._stableAmount + toTokenAmount;
 
         uint256 totalInvestAmount = (strategy.parameters._investAmount * transferObject.price) / decimals;
@@ -410,6 +408,13 @@ contract SellFacet is Modifiers {
         if (strategy.budget < sum) {
             strategy.parameters._stableAmount = strategy.budget - totalInvestAmount;
             strategy.profit = sum - strategy.budget + strategy.profit;
+        }
+
+        if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
+            strategy.percentageForBuy =
+                (strategy.parameters._buyDCAValue * strategy.parameters._stableAmount) /
+                LibTrade.MAX_PERCENTAGE;
+            strategy.buyPercentageTotalAmount = strategy.parameters._stableAmount;
         }
 
         // Update the strategy's timestamp, buy percentage amount, and round ID if necessary.
@@ -427,7 +432,10 @@ contract SellFacet is Modifiers {
             emit SellExecuted(
                 strategyId,
                 impact,
-                TokensTransaction({ tokenSubstracted: transferObject.value, tokenAdded: toTokenAmount }),
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount)
+                }),
                 strategy.profit,
                 stablePrice
             );
@@ -435,7 +443,10 @@ contract SellFacet is Modifiers {
             emit STRExecuted(
                 strategyId,
                 impact,
-                TokensTransaction({ tokenSubstracted: transferObject.value, tokenAdded: toTokenAmount }),
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount)
+                }),
                 strategy.profit,
                 strategy.investRoundId,
                 strategy.stableRoundId
@@ -444,7 +455,10 @@ contract SellFacet is Modifiers {
             emit SellTwapExecuted(
                 strategyId,
                 impact,
-                TokensTransaction({ tokenSubstracted: transferObject.value, tokenAdded: toTokenAmount }),
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount)
+                }),
                 strategy.profit,
                 stablePrice
             );

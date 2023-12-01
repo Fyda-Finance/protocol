@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { Modifiers } from "../utils/Modifiers.sol";
-import { AppStorage, Strategy, Status, Swap, FloorLegType, TokensTransaction } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status, Swap, FloorLegType, TokensTransaction, DCA_UNIT } from "../AppStorage.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
@@ -118,6 +118,13 @@ contract FloorFacet is Modifiers {
             strategy.investRoundId = investRoundId;
             strategy.stableRoundId = stableRoundId;
             strategy.investPrice = 0;
+
+            if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
+                strategy.percentageForBuy =
+                    (strategy.parameters._buyDCAValue * strategy.parameters._stableAmount) /
+                    LibTrade.MAX_PERCENTAGE;
+                strategy.buyPercentageTotalAmount = strategy.parameters._stableAmount;
+            }
 
             // Check if the strategy should be canceled on reaching the floor price.
 
