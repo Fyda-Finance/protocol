@@ -452,7 +452,7 @@ contract StrategyFacet is Modifiers {
             }
         }
 
-        if (_parameter._impact > LibTrade.MAX_PERCENTAGE) {
+        if (_parameter._impact > LibTrade.MAX_PERCENTAGE || _parameter._impact == 0) {
             revert InvalidImpact();
         }
 
