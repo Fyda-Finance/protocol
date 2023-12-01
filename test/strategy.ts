@@ -262,6 +262,7 @@ describe("Strategy", function () {
       toggleCompleteOnSell: false,
       toggleLiquidateOnFloor: false,
       toggleCancelOnFloor: false,
+      impact: "0",
       current_price: 0,
     };
     await expect(setup.strategyFacet.connect(setup.owner).updateStrategy(0, param)).to.be.reverted;
