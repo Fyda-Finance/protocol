@@ -264,9 +264,11 @@ struct UpdateStruct {
     bool toggleCompleteOnSell;
     bool toggleLiquidateOnFloor;
     bool toggleCancelOnFloor;
+    uint256 impact;
     CURRENT_PRICE current_price;
 }
 
+// struct for information regarding which token is added in the strategy and which deleted
 struct TokensTransaction {
     uint256 tokenSubstracted;
     uint256 tokenAdded;

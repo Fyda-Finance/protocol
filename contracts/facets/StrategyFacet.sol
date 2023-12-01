@@ -606,6 +606,7 @@ contract StrategyFacet is Modifiers {
             updateStruct.toggleCompleteOnSell == false &&
             updateStruct.toggleLiquidateOnFloor == false &&
             updateStruct.toggleCancelOnFloor == false &&
+            updateStruct.impact == 0 &&
             updateStruct.current_price == CURRENT_PRICE.NOT_SELECTED
         ) {
             revert NothingToUpdate();
@@ -702,6 +703,13 @@ contract StrategyFacet is Modifiers {
             strategy.parameters._sellTwapTime == 0
         ) {
             revert SellTwapNotSelected();
+        }
+        if (updateStruct.impact > LibTrade.MAX_PERCENTAGE) {
+            revert InvalidImpact();
+        }
+
+        if (updateStruct.impact > 0) {
+            strategy.parameters._impact = updateStruct.impact;
         }
 
         (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
