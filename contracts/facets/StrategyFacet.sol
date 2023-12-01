@@ -507,6 +507,14 @@ contract StrategyFacet is Modifiers {
         if (_parameter._investAmount > 0) {
             investPrice = price;
         }
+        uint256 percentageAmountForSell = 0;
+        if (_parameter._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
+            percentageAmountForSell = (_parameter._sellDCAValue * _parameter._investAmount) / LibTrade.MAX_PERCENTAGE;
+        }
+        uint256 percentageAmountForBuy = 0;
+        if (_parameter._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
+            percentageAmountForBuy = (_parameter._buyDCAValue * _parameter._stableAmount) / LibTrade.MAX_PERCENTAGE;
+        }
         s.strategies[s.nextStrategyId] = Strategy({
             user: user,
             sellTwapExecutedAt: 0,
@@ -516,6 +524,10 @@ contract StrategyFacet is Modifiers {
             parameters: _parameter,
             investPrice: investPrice,
             profit: 0,
+            percentageForSell: percentageAmountForSell,
+            sellPercentageTotalAmount: percentageAmountForSell > 0 ? _parameter._investAmount : 0,
+            percentageForBuy: percentageAmountForBuy,
+            buyPercentageTotalAmount: percentageAmountForBuy > 0 ? _parameter._stableAmount : 0,
             budget: budget,
             status: Status.ACTIVE
         });
@@ -952,6 +964,18 @@ contract StrategyFacet is Modifiers {
             } else {
                 strategy.parameters._highSellValue = updateStruct.highSellValue;
             }
+        }
+
+        if (updateStruct.buyDCAValue > 0) {
+            strategy.percentageForBuy =
+                (strategy.parameters._buyDCAValue * strategy.buyPercentageTotalAmount) /
+                LibTrade.MAX_PERCENTAGE;
+        }
+
+        if (updateStruct.sellDCAValue > 0) {
+            strategy.percentageForSell =
+                (strategy.parameters._sellDCAValue * strategy.sellPercentageTotalAmount) /
+                LibTrade.MAX_PERCENTAGE;
         }
         emit StrategyUpdated(strategyId, strategy.parameters);
     }
