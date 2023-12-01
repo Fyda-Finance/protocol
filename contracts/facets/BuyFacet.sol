@@ -278,8 +278,8 @@ contract BuyFacet is Modifiers {
                 ? strategy.parameters._buyDCAValue
                 : strategy.parameters._stableAmount;
         } else if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
-            amount = (strategy.parameters._stableAmount > strategy.percentageForBuy)
-                ? strategy.percentageForBuy
+            amount = (strategy.parameters._stableAmount > strategy.buyPercentageAmount)
+                ? strategy.buyPercentageAmount
                 : strategy.parameters._stableAmount;
         }
 
@@ -347,7 +347,7 @@ contract BuyFacet is Modifiers {
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
 
         if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
-            strategy.percentageForSell =
+            strategy.sellPercentageAmount =
                 (strategy.parameters._sellDCAValue * strategy.parameters._investAmount) /
                 LibTrade.MAX_PERCENTAGE;
             strategy.sellPercentageTotalAmount = strategy.parameters._investAmount;

@@ -346,8 +346,8 @@ contract SellFacet is Modifiers {
                 ? strategy.parameters._sellDCAValue
                 : strategy.parameters._investAmount;
         } else if (strategy.parameters._sellDCAUnit == DCA_UNIT.PERCENTAGE) {
-            amount = (strategy.parameters._investAmount > strategy.percentageForSell)
-                ? strategy.percentageForSell
+            amount = (strategy.parameters._investAmount > strategy.sellPercentageAmount)
+                ? strategy.sellPercentageAmount
                 : strategy.parameters._investAmount;
         }
         return amount;
@@ -411,7 +411,7 @@ contract SellFacet is Modifiers {
         }
 
         if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
-            strategy.percentageForBuy =
+            strategy.buyPercentageAmount =
                 (strategy.parameters._buyDCAValue * strategy.parameters._stableAmount) /
                 LibTrade.MAX_PERCENTAGE;
             strategy.buyPercentageTotalAmount = strategy.parameters._stableAmount;

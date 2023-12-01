@@ -189,12 +189,12 @@ struct Strategy {
     // as passed by the user and defined above
     StrategyParameters parameters;
     // to store invest amount to be sold when dca is chosen for percentage.
-    uint256 percentageForSell;
+    uint256 sellPercentageAmount;
     // to store stable amount to be given when dca is chosen for percentage.
-    uint256 percentageForBuy;
-    // the invest amount based on which percentageForSell is calculated
+    uint256 buyPercentageAmount;
+    // the invest amount based on which sellPercentageAmount is calculated
     uint256 sellPercentageTotalAmount;
-    // the stable amount based on which percentageForBuy is calculated
+    // the stable amount based on which buyPercentageAmount is calculated
     uint256 buyPercentageTotalAmount;
     //  @param sellTwapExecutedAt The timestamp of the last executed TWAP (Time-Weighted Average Price) sell.
     //  if sell twap is set for the sell. Otherwise it remains 0

@@ -120,7 +120,7 @@ contract FloorFacet is Modifiers {
             strategy.investPrice = 0;
 
             if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
-                strategy.percentageForBuy =
+                strategy.buyPercentageAmount =
                     (strategy.parameters._buyDCAValue * strategy.parameters._stableAmount) /
                     LibTrade.MAX_PERCENTAGE;
                 strategy.buyPercentageTotalAmount = strategy.parameters._stableAmount;

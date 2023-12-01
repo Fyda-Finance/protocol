@@ -529,9 +529,9 @@ contract StrategyFacet is Modifiers {
             parameters: _parameter,
             investPrice: investPrice,
             profit: 0,
-            percentageForSell: percentageAmountForSell,
+            sellPercentageAmount: percentageAmountForSell,
             sellPercentageTotalAmount: percentageAmountForSell > 0 ? _parameter._investAmount : 0,
-            percentageForBuy: percentageAmountForBuy,
+            buyPercentageAmount: percentageAmountForBuy,
             buyPercentageTotalAmount: percentageAmountForBuy > 0 ? _parameter._stableAmount : 0,
             budget: budget,
             status: Status.ACTIVE
@@ -972,13 +972,13 @@ contract StrategyFacet is Modifiers {
         }
 
         if (updateStruct.buyDCAValue > 0) {
-            strategy.percentageForBuy =
+            strategy.buyPercentageAmount =
                 (strategy.parameters._buyDCAValue * strategy.buyPercentageTotalAmount) /
                 LibTrade.MAX_PERCENTAGE;
         }
 
         if (updateStruct.sellDCAValue > 0) {
-            strategy.percentageForSell =
+            strategy.sellPercentageAmount =
                 (strategy.parameters._sellDCAValue * strategy.sellPercentageTotalAmount) /
                 LibTrade.MAX_PERCENTAGE;
         }
