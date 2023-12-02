@@ -385,14 +385,7 @@ contract SellFacet is Modifiers {
             revert InvalidExchangeRate(transferObject.sellValue, rate);
         }
 
-        // Validate impact if the strategy is not an STR (Spike Trigger).
-        uint256 impact = 0;
-        if (
-            strategy.parameters._strValue == 0 ||
-            (strategy.parameters._highSellValue != 0 && transferObject.price > strategy.parameters._highSellValue)
-        ) {
-            impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, false);
-        }
+        uint256 impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, false);
 
         // Calculate the total investment amount and check if it exceeds the budget.
 
