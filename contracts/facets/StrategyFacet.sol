@@ -100,7 +100,7 @@ contract StrategyFacet is Modifiers {
      *      When cancelled, the strategy's status is updated to "CANCELLED."
      * @param id The unique ID of the strategy to cancel.
      */
-    function cancelStrategy(uint256 id) external {
+    function cancelStrategy(uint256 id) external nonReentrant {
         _cancelStrategy(msg.sender, id);
     }
 
@@ -110,7 +110,12 @@ contract StrategyFacet is Modifiers {
      *      When cancelled, the strategy's status is updated to "CANCELLED."
      * @param id The unique ID of the strategy to cancel.
      */
-    function cancelStrategyOnBehalf(uint256 id, uint256 nonce, bytes memory signature, address account) external {
+    function cancelStrategyOnBehalf(
+        uint256 id,
+        uint256 nonce,
+        bytes memory signature,
+        address account
+    ) external nonReentrant {
         bytes32 messageHash = getMessageHashToCancel(id, nonce, account);
         bytes32 ethSignedMessageHash = LibSignature.getEthSignedMessageHash(messageHash);
         address signer = LibSignature.recoverSigner(ethSignedMessageHash, signature);
@@ -162,7 +167,7 @@ contract StrategyFacet is Modifiers {
      *      If the parameters do not meet the criteria, an error is thrown.
      * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
      */
-    function createStrategy(StrategyParameters memory _parameter) public {
+    function createStrategy(StrategyParameters memory _parameter) public nonReentrant {
         _createStrategy(_parameter, msg.sender);
     }
 
@@ -183,7 +188,7 @@ contract StrategyFacet is Modifiers {
         address account,
         uint256 nonce,
         bytes memory signature
-    ) public {
+    ) public nonReentrant {
         for (uint256 i = 0; i < permits.length; i++) {
             IERC20Permit(permits[i].token).permit(
                 permits[i].owner,
@@ -524,9 +529,9 @@ contract StrategyFacet is Modifiers {
             parameters: _parameter,
             investPrice: investPrice,
             profit: 0,
-            percentageForSell: percentageAmountForSell,
+            sellPercentageAmount: percentageAmountForSell,
             sellPercentageTotalAmount: percentageAmountForSell > 0 ? _parameter._investAmount : 0,
-            percentageForBuy: percentageAmountForBuy,
+            buyPercentageAmount: percentageAmountForBuy,
             buyPercentageTotalAmount: percentageAmountForBuy > 0 ? _parameter._stableAmount : 0,
             budget: budget,
             status: Status.ACTIVE
@@ -542,7 +547,7 @@ contract StrategyFacet is Modifiers {
      * @param strategyId The unique identifier of the strategy to update.
      * @param updateStruct A struct containing the updated parameters for the strategy.
      */
-    function updateStrategy(uint256 strategyId, UpdateStruct calldata updateStruct) external {
+    function updateStrategy(uint256 strategyId, UpdateStruct calldata updateStruct) external nonReentrant {
         _updateStrategy(msg.sender, strategyId, updateStruct);
     }
 
@@ -578,7 +583,7 @@ contract StrategyFacet is Modifiers {
         address account,
         uint256 nonce,
         bytes memory signature
-    ) external {
+    ) external nonReentrant {
         if (s.nonces[account] != nonce) {
             revert InvalidNonce();
         }
@@ -967,13 +972,13 @@ contract StrategyFacet is Modifiers {
         }
 
         if (updateStruct.buyDCAValue > 0) {
-            strategy.percentageForBuy =
+            strategy.buyPercentageAmount =
                 (strategy.parameters._buyDCAValue * strategy.buyPercentageTotalAmount) /
                 LibTrade.MAX_PERCENTAGE;
         }
 
         if (updateStruct.sellDCAValue > 0) {
-            strategy.percentageForSell =
+            strategy.sellPercentageAmount =
                 (strategy.parameters._sellDCAValue * strategy.sellPercentageTotalAmount) /
                 LibTrade.MAX_PERCENTAGE;
         }

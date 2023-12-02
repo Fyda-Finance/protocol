@@ -62,3 +62,4 @@ error PercentageNotInRange();
 error BuyTwapNotSelected();
 error SellTwapNotSelected();
 error FloorNotSet();
+error ReentrancyGuardReentrantCall();
