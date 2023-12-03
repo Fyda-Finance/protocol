@@ -46,6 +46,12 @@ library LibTrade {
 
         if (isBuy && impact < MAX_PERCENTAGE && MAX_PERCENTAGE - impact > maxImpact) revert HighImpact();
         if (!isBuy && impact > MAX_PERCENTAGE && impact - MAX_PERCENTAGE > maxImpact) revert HighImpact();
-        return impact;
+        uint256 impactValue;
+        if (isBuy && impact < MAX_PERCENTAGE) {
+            impactValue = MAX_PERCENTAGE - impact;
+        } else if (!isBuy && impact > MAX_PERCENTAGE) {
+            impactValue = impact - MAX_PERCENTAGE;
+        }
+        return impactValue;
     }
 }
