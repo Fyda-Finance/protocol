@@ -488,9 +488,9 @@ contract SellFacet is Modifiers {
 
         if (
             strategy.investRoundId > fromInvestRoundId ||
-            strategy.investRoundId >= toInvestRoundId ||
+            strategy.investRoundId > toInvestRoundId ||
             strategy.stableRoundId > fromStableRoundId ||
-            strategy.stableRoundId >= toStableRoundId
+            strategy.stableRoundId > toStableRoundId
         ) {
             revert WrongPreviousIDs();
         }
