@@ -225,10 +225,11 @@ contract BuyFacet is Modifiers {
             strategy.parameters._investToken,
             strategy.parameters._stableToken
         );
-        strategy.investRoundIdForBTD = investRoundId;
-        strategy.stableRoundIdForBTD = stableRoundId;
 
         checkRoundPrices(strategyId, fromInvestRoundId, fromStableRoundId, toInvestRoundId, toStableRoundId);
+
+        strategy.investRoundIdForBTD = investRoundId;
+        strategy.stableRoundIdForBTD = stableRoundId;
 
         uint256 value = executionBuyAmount(false, strategyId);
 

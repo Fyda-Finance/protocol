@@ -287,8 +287,6 @@ contract SellFacet is Modifiers {
             strategy.parameters._investToken,
             strategy.parameters._stableToken
         );
-        strategy.investRoundIdForSTR = investRoundId;
-        strategy.stableRoundIdForSTR = stableRoundId;
 
         uint256 sellAt = strategy.parameters._sellValue;
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
@@ -303,6 +301,9 @@ contract SellFacet is Modifiers {
         }
 
         checkRoundPrices(strategyId, fromInvestRoundId, fromStableRoundId, toInvestRoundId, toStableRoundId);
+
+        strategy.investRoundIdForSTR = investRoundId;
+        strategy.stableRoundIdForSTR = stableRoundId;
 
         uint256 value = executionSellAmount(false, strategyId);
 
