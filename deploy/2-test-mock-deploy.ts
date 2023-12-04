@@ -27,42 +27,6 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
    * 3. Configure Price for ERC20 in DEX and Diamond
    */
 
-  const usdc = await hre.ethers.getContract("USDC");
-  const wbtc = await hre.ethers.getContract("WBTC");
-  const weth = await hre.ethers.getContract("WETH");
-  const link = await hre.ethers.getContract("LINK");
-
-  const dex: ScenarioDEX = await hre.ethers.getContract("MockDEX");
-
-  // const priceOracleFacet: PriceOracleFacet = await ethers.getContractAt(
-  //   "PriceOracleFacet",
-  //   addresses[network.name].diamond
-  // );
-  // Mint USDC
-  const recipientAddress = "0x7295F623794dcEE49d0B3490fF98B40B83a184Ad"; // Replace with the recipient's address
-  const amountToMint = ethers.utils.parseUnits("1000", 6); // Replace with the desired amount
-
-  // try {
-  //   // Mint USDC
-  //   const usdcMintTx = await usdc
-  //     .connect(accounts[0])
-  //     .mint(recipientAddress, amountToMint);
-  //   await usdcMintTx.wait();
-  //   console.log(
-  //     `Minted ${ethers.utils.formatUnits(
-  //       amountToMint,
-  //       6
-  //     )} USDC to ${recipientAddress}`
-  //   );
-  // } catch (error) {
-  //   console.error("Error minting USDC:", error);
-  // }
-
-  const budget = "1000000000";
-  // const budgetApproval = await usdc
-  //   .connect(accounts[1])
-  //   .approve(addresses[network.name].diamond, budget);
-  // await budgetApproval.wait();
   console.log("Fetching strategy Facets");
   const strategyFacet: StrategyFacet = await ethers.getContractAt("StrategyFacet", addresses[network.name].diamond);
   const sellFacet: SellFacet = await ethers.getContractAt("SellFacet", addresses[network.name].diamond);
