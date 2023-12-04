@@ -27,16 +27,12 @@ error PriceIsNotInTheRange();
  * @param value: the quantity or value associated with the transfer.
  * @param dexSwap: A Swap enum indicating the type of decentralized exchange used for the swap operation.
  * @param price: the price of the invest token with respect to the stable token.
- * @param investRoundId:  the round ID associated with the investment asset's price feed.
- * @param stableRoundId:  the round ID associated with the stable asset's price feed.
  * @param sellValue: the value associated with a sell operation within the strategy object.
  */
 struct TransferObject {
     uint256 value;
     Swap dexSwap;
     uint256 price;
-    uint80 investRoundId;
-    uint80 stableRoundId;
     uint256 sellValue;
 }
 
@@ -138,10 +134,7 @@ contract SellFacet is Modifiers {
         }
 
         // Retrieve the latest price and round ID from Chainlink.
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            strategy.parameters._investToken,
-            strategy.parameters._stableToken
-        );
+        (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
 
         uint256 sellAt = strategy.parameters._sellValue;
 
@@ -167,7 +160,7 @@ contract SellFacet is Modifiers {
         uint256 value = executionSellAmount(true, strategyId);
 
         // Perform the sell action, including transferring assets to the DEX.
-        transferSell(strategyId, TransferObject(value, swap, price, investRoundId, stableRoundId, sellAt));
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt));
 
         // If there are no further buy actions in the strategy, mark it as completed.
         if (
@@ -209,10 +202,7 @@ contract SellFacet is Modifiers {
         }
 
         // Retrieve the latest price and round ID from Chainlink.
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            strategy.parameters._investToken,
-            strategy.parameters._stableToken
-        );
+        (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
 
         uint256 sellAt = strategy.parameters._sellValue;
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
@@ -242,7 +232,7 @@ contract SellFacet is Modifiers {
 
         // Update the TWAP execution timestamp and perform the TWAP sell action.
         strategy.sellTwapExecutedAt = block.timestamp;
-        transferSell(strategyId, TransferObject(value, swap, price, investRoundId, stableRoundId, sellAt));
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt));
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
         if (
@@ -297,6 +287,8 @@ contract SellFacet is Modifiers {
             strategy.parameters._investToken,
             strategy.parameters._stableToken
         );
+        strategy.investRoundIdForSTR = investRoundId;
+        strategy.stableRoundIdForSTR = stableRoundId;
 
         uint256 sellAt = strategy.parameters._sellValue;
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
@@ -314,7 +306,7 @@ contract SellFacet is Modifiers {
 
         uint256 value = executionSellAmount(false, strategyId);
 
-        transferSell(strategyId, TransferObject(value, swap, price, investRoundId, stableRoundId, sellAt));
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt));
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
 
@@ -410,10 +402,6 @@ contract SellFacet is Modifiers {
             strategy.buyPercentageTotalAmount = strategy.parameters._stableAmount;
         }
 
-        // Update the strategy's timestamp, buy percentage amount, and round ID if necessary.
-
-        strategy.investRoundId = transferObject.investRoundId;
-        strategy.stableRoundId = transferObject.stableRoundId;
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
 
         if (
@@ -445,8 +433,8 @@ contract SellFacet is Modifiers {
                     investAmount: strategy.parameters._investAmount
                 }),
                 strategy.profit,
-                strategy.investRoundId,
-                strategy.stableRoundId
+                strategy.investRoundIdForSTR,
+                strategy.stableRoundIdForSTR
             );
         } else if (strategy.parameters._sellTwapTime > 0) {
             emit SellTwapExecuted(
@@ -487,10 +475,10 @@ contract SellFacet is Modifiers {
         }
 
         if (
-            strategy.investRoundId > fromInvestRoundId ||
-            strategy.investRoundId > toInvestRoundId ||
-            strategy.stableRoundId > fromStableRoundId ||
-            strategy.stableRoundId > toStableRoundId
+            strategy.investRoundIdForSTR > fromInvestRoundId ||
+            strategy.investRoundIdForSTR > toInvestRoundId ||
+            strategy.stableRoundIdForSTR > fromStableRoundId ||
+            strategy.stableRoundIdForSTR > toStableRoundId
         ) {
             revert WrongPreviousIDs();
         }

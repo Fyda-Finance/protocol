@@ -25,8 +25,6 @@ error PriceDippedBelowFloorValue();
  * @param value: the quantity or value associated with the transfer.
  * @param dexSwap: A Swap enum indicating the type of decentralized exchange used for the swap operation.
  * @param price: the price of the invest token with respect to the stable token.
- * @param investRoundId:  the round ID associated with the investment asset's price feed.
- * @param stableRoundId:  the round ID associated with the stable asset's price feed.
  * @param buyValue: the value associated with a buy operation within the strategy object.
  */
 
@@ -34,8 +32,6 @@ struct TransferObject {
     uint256 value;
     Swap dexSwap;
     uint256 price;
-    uint80 investRoundId;
-    uint80 stableRoundId;
     uint256 buyValue;
 }
 
@@ -133,17 +129,11 @@ contract BuyFacet is Modifiers {
         if (strategy.parameters._stableAmount == 0) {
             revert NoSwapFromZeroBalance();
         }
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            strategy.parameters._investToken,
-            strategy.parameters._stableToken
-        );
+        (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
 
         uint256 value = executionBuyAmount(true, strategyId);
 
-        transferBuy(
-            strategyId,
-            TransferObject(value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue)
-        );
+        transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue));
 
         if (strategy.parameters._sellValue == 0 && strategy.parameters._floorValue == 0) {
             uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
@@ -171,10 +161,7 @@ contract BuyFacet is Modifiers {
             revert NoSwapFromZeroBalance();
         }
 
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            strategy.parameters._investToken,
-            strategy.parameters._stableToken
-        );
+        (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
 
         uint256 timeToExecute = LibTime.convertToSeconds(
             strategy.parameters._buyTwapTime,
@@ -189,10 +176,7 @@ contract BuyFacet is Modifiers {
 
         uint256 value = executionBuyAmount(false, strategyId);
 
-        transferBuy(
-            strategyId,
-            TransferObject(value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue)
-        );
+        transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue));
         strategy.buyTwapExecutedAt = block.timestamp;
         if (
             strategy.parameters._sellValue == 0 &&
@@ -241,15 +225,14 @@ contract BuyFacet is Modifiers {
             strategy.parameters._investToken,
             strategy.parameters._stableToken
         );
+        strategy.investRoundIdForBTD = investRoundId;
+        strategy.stableRoundIdForBTD = stableRoundId;
 
         checkRoundPrices(strategyId, fromInvestRoundId, fromStableRoundId, toInvestRoundId, toStableRoundId);
 
         uint256 value = executionBuyAmount(false, strategyId);
 
-        transferBuy(
-            strategyId,
-            TransferObject(value, swap, price, investRoundId, stableRoundId, strategy.parameters._buyValue)
-        );
+        transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue));
         if (
             strategy.parameters._sellValue == 0 &&
             strategy.parameters._floorValue == 0 &&
@@ -340,9 +323,6 @@ contract BuyFacet is Modifiers {
             (previousValue + (toTokenAmount * transferObject.price)) /
             strategy.parameters._investAmount;
 
-        strategy.investRoundId = transferObject.investRoundId;
-        strategy.stableRoundId = transferObject.stableRoundId;
-
         uint256 impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, true);
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
 
@@ -381,8 +361,8 @@ contract BuyFacet is Modifiers {
                     investAmount: strategy.parameters._investAmount
                 }),
                 strategy.investPrice,
-                strategy.investRoundId,
-                strategy.stableRoundId
+                strategy.investRoundIdForBTD,
+                strategy.stableRoundIdForBTD
             );
         } else if (strategy.parameters._buyTwapTime > 0) {
             emit BuyTwapExecuted(
@@ -422,10 +402,10 @@ contract BuyFacet is Modifiers {
             revert WrongPreviousIDs();
         }
         if (
-            strategy.investRoundId > fromInvestRoundId ||
-            strategy.investRoundId > toInvestRoundId ||
-            strategy.stableRoundId > fromStableRoundId ||
-            strategy.stableRoundId > toStableRoundId
+            strategy.investRoundIdForBTD > fromInvestRoundId ||
+            strategy.investRoundIdForBTD > toInvestRoundId ||
+            strategy.stableRoundIdForBTD > fromStableRoundId ||
+            strategy.stableRoundIdForBTD > toStableRoundId
         ) {
             revert WrongPreviousIDs();
         }

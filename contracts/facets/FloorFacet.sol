@@ -66,10 +66,7 @@ contract FloorFacet is Modifiers {
             revert NoSwapFromZeroBalance();
         }
 
-        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
-            strategy.parameters._investToken,
-            strategy.parameters._stableToken
-        );
+        (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
 
         uint256 floorAt;
         if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE) {
@@ -115,8 +112,6 @@ contract FloorFacet is Modifiers {
             uint256 value = strategy.parameters._investAmount;
             strategy.parameters._investAmount = 0;
             strategy.parameters._stableAmount += toTokenAmount;
-            strategy.investRoundId = investRoundId;
-            strategy.stableRoundId = stableRoundId;
             strategy.investPrice = 0;
 
             if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {

@@ -77,8 +77,8 @@ describe("Sell", function () {
     ).to.be.reverted;
     await setup.wethScenarioFeedAggregator.setRoundPrice(10, "160000000000");
     await setup.wethScenarioFeedAggregator.setRoundPrice(12, "175000000000");
-    await setup.wethScenarioFeedAggregator.setPrice("160000000000", 25);
-    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
+    await setup.wethScenarioFeedAggregator.setPrice("160000000000", 5);
+    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
     await setup.sellFacet.connect(setup.user).executeSTR(0, 10, 10, 12, 12, {
       dex: setup.scenarioDEX.address,
       callData: dexCalldata,
@@ -90,8 +90,8 @@ describe("Sell", function () {
     await setup.wethScenarioFeedAggregator.setRoundPrice(12, "165000000000");
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
-    await setup.wethScenarioFeedAggregator.setPrice("160000000000", 25);
-    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
+    await setup.wethScenarioFeedAggregator.setPrice("160000000000", 5);
+    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
     value = await setup.sellFacet.executionSellAmount(false, 1);
     dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
       setup.scenarioERC20WETH.address,
@@ -114,8 +114,7 @@ describe("Sell", function () {
     await setup.wethScenarioFeedAggregator.setPrice("160000000000", 5);
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
-    await setup.wethScenarioFeedAggregator.setPrice("160000000000", 25);
-    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
+
     value = await setup.sellFacet.executionSellAmount(false, 2);
     dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
       setup.scenarioERC20WETH.address,
@@ -126,12 +125,12 @@ describe("Sell", function () {
       dex: setup.scenarioDEX.address,
       callData: dexCalldata,
     });
+    console.log("here");
     parameters._sellValue = "11000000000";
     await setup.wethScenarioFeedAggregator.setPrice("160000000000", 5);
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
-    await setup.wethScenarioFeedAggregator.setPrice("160000000000", 25);
-    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
+
     value = await setup.sellFacet.executionSellAmount(false, 3);
     dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
       setup.scenarioERC20WETH.address,
@@ -148,8 +147,7 @@ describe("Sell", function () {
     await setup.wethScenarioFeedAggregator.setPrice("160000000000", 5);
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
-    await setup.wethScenarioFeedAggregator.setPrice("160000000000", 25);
-    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
+
     value = await setup.sellFacet.executionSellAmount(false, 4);
     dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
       setup.scenarioERC20WETH.address,
@@ -166,8 +164,8 @@ describe("Sell", function () {
     parameters._highSellValue = "200000000000";
     parameters._sellValue = "1650000000";
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
-    await setup.wethScenarioFeedAggregator.setPrice("170000000000", 25);
-    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
+    await setup.wethScenarioFeedAggregator.setPrice("170000000000", 5);
+    await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
     await expect(
       setup.sellFacet.connect(setup.user).executeSTR(5, 10, 10, 12, 12, {
         dex: setup.scenarioDEX.address,

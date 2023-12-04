@@ -203,9 +203,13 @@ struct Strategy {
     //  if buy Twap is set for btd. Otherwise it remains 0.
     uint256 buyTwapExecutedAt;
     // @param invest roundId The Chainlink VRF (Verifiable Random Function) round ID.
-    uint80 investRoundId;
+    uint80 investRoundIdForBTD;
     // @param stable roundId The Chainlink VRF (Verifiable Random Function) round ID.
-    uint80 stableRoundId;
+    uint80 stableRoundIdForBTD;
+    // @param invest roundId The Chainlink VRF (Verifiable Random Function) round ID.
+    uint80 investRoundIdForSTR;
+    // @param stable roundId The Chainlink VRF (Verifiable Random Function) round ID.
+    uint80 stableRoundIdForSTR;
     // @param investPrice The price at which investment is made.
     //While creating strategy it is set to the current price
     uint256 investPrice;
