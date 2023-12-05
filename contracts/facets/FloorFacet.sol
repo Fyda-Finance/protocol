@@ -9,6 +9,7 @@ import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance, StrategyIsNotActive, FloorNotSet } from "../utils/GenericErrors.sol";
 error PriceIsGreaterThanFloorValue();
+error MinimumLossRequired();
 
 /**
  * @title FloorFacet
@@ -103,6 +104,18 @@ contract FloorFacet is Modifiers {
             // Check if the calculated exchange rate is within the acceptable range.
             if (rate > floorAt) {
                 revert InvalidExchangeRate(floorAt, rate);
+            }
+
+            if (strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
+                // Check for mimimum loss
+                uint256 invested = (strategy.parameters._investAmount * strategy.investPrice) /
+                    10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
+                uint256 sold = toTokenAmount;
+                uint256 loss = invested - sold;
+
+                if (loss < strategy.parameters._minimumLoss) {
+                    revert MinimumLossRequired();
+                }
             }
 
             // Validate the impact based on the calculated rate and the latest price.

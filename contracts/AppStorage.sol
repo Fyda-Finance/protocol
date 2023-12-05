@@ -135,6 +135,8 @@ struct StrategyParameters {
     bool _liquidateOnFloor;
     // @param _cancelOnFloor A flag to cancel the strategy when the floor price is reached (if floor is set).
     bool _cancelOnFloor;
+    // @param _minimumLoss The minimum loss required for floor percentage to satisfy.
+    uint256 _minimumLoss;
     // @param _buyType The type of buy action (if buy is set).
     BuyLegType _buyType;
     // @param _buyValue The value of the buy action (if buy is set).
@@ -157,6 +159,8 @@ struct StrategyParameters {
     uint256 _sellValue;
     // @param if sell DCA is selected, _highSellValue is used to trigger complete sell when the high sell value is reached (if sell is set).
     uint256 _highSellValue;
+    // @param _minimumProfit The minimum profit to be generated during sell if sell profit percentage is set
+    uint256 _minimumProfit;
     // @param _strValue The value of the str if it is set to true (if sell is set).
     uint256 _strValue;
     // @param _strType The type of str.
@@ -285,6 +289,8 @@ struct UpdateStruct {
     bool toggleCancelOnFloor;
     uint256 impact;
     CURRENT_PRICE current_price;
+    uint256 minimumLoss;
+    uint256 minimumProfit;
 }
 
 // struct for information regarding which token is added in the strategy and which deleted
