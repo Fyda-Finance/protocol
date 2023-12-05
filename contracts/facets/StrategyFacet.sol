@@ -498,11 +498,11 @@ contract StrategyFacet is Modifiers {
             }
         }
 
-        if (_parameter.minimumProfit > 0 && _parameter._sellType != SellLegType.INCREASE_BY) {
+        if (_parameter._minimumProfit > 0 && _parameter._sellType != SellLegType.INCREASE_BY) {
             revert SellPercentageNotSet();
         }
 
-        if (_parameter.minimumLoss > 0 && _parameter._floorType != FloorLegType.DECREASE_BY) {
+        if (_parameter._minimumLoss > 0 && _parameter._floorType != FloorLegType.DECREASE_BY) {
             revert FloorPercentageNotSet();
         }
 

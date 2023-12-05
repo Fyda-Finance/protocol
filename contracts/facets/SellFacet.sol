@@ -17,6 +17,7 @@ error TWAPTimeDifferenceIsLess();
 error STRNotSelected();
 error PriceLessThanSellValue();
 error PriceIsNotInTheRange();
+error MinimumProfitRequired();
 
 /**
  * @title TransferObject
@@ -376,6 +377,18 @@ contract SellFacet is Modifiers {
         // Check if the exchange rate meets the specified sell value.
         if (rate < transferObject.sellValue) {
             revert InvalidExchangeRate(transferObject.sellValue, rate);
+        }
+
+        if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
+            // Check for mimimum profit
+            uint256 invested = (transferObject.value * strategy.investPrice) /
+                10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
+            uint256 sold = toTokenAmount;
+            uint256 profit = sold - invested;
+
+            if (profit < strategy.parameters._minimumProfit) {
+                revert MinimumProfitRequired();
+            }
         }
 
         uint256 impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, false);
