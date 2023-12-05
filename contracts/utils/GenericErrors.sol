@@ -63,3 +63,4 @@ error BuyTwapNotSelected();
 error SellTwapNotSelected();
 error FloorNotSet();
 error ReentrancyGuardReentrantCall();
+error PriceNotInRange();

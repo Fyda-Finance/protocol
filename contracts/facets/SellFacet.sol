@@ -5,7 +5,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap, TokensTransaction } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, SellNotSelected, SellTwapNotSelected } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, SellNotSelected, SellTwapNotSelected, PriceNotInRange } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
@@ -300,7 +300,7 @@ contract SellFacet is Modifiers {
             revert PriceIsNotInTheRange();
         }
 
-        checkRoundPrices(strategyId, fromInvestRoundId, fromStableRoundId, toInvestRoundId, toStableRoundId);
+        checkRoundPrices(strategyId, price, fromInvestRoundId, fromStableRoundId, toInvestRoundId, toStableRoundId);
 
         strategy.investRoundIdForSTR = investRoundId;
         strategy.stableRoundIdForSTR = stableRoundId;
@@ -457,6 +457,7 @@ contract SellFacet is Modifiers {
      * @notice Internal function to check if there is a data mismatch between price rounds for a strategy.
      * @dev This function ensures that the price fluctuations between specified rounds adhere to strategy parameters.
      * @param strategyId The unique ID of the strategy to execute the STR actions for.
+     * @param price the latest price of the invest token in stable token.
      * @param fromInvestRoundId The round ID for the investment token's price data to start checking from.
      * @param fromStableRoundId The round ID for the stable token's price data to start checking from.
      * @param toInvestRoundId The round ID for the investment token's price data to check up to.
@@ -464,6 +465,7 @@ contract SellFacet is Modifiers {
      */
     function checkRoundPrices(
         uint256 strategyId,
+        uint256 price,
         uint80 fromInvestRoundId,
         uint80 fromStableRoundId,
         uint80 toInvestRoundId,
@@ -500,6 +502,23 @@ contract SellFacet is Modifiers {
         uint256 strValue = strategy.parameters._strValue;
         uint256 fromToPriceDifference;
         uint256 toFromPriceDifference;
+
+        if (
+            (strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE ||
+                strategy.parameters._strType == DIP_SPIKE.INCREASE_BY)
+        ) {
+            if (price < toPrice) {
+                revert PriceNotInRange();
+            }
+        }
+        if (
+            (strategy.parameters._strType == DIP_SPIKE.FIXED_DECREASE ||
+                strategy.parameters._strType == DIP_SPIKE.DECREASE_BY)
+        ) {
+            if (price > toPrice) {
+                revert PriceNotInRange();
+            }
+        }
 
         if (
             (strategy.parameters._strType == DIP_SPIKE.FIXED_INCREASE ||

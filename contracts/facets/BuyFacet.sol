@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE, Swap, TokensTransaction } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
-import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, BuyNotSet, BuyTwapNotSelected } from "../utils/GenericErrors.sol";
+import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, BuyNotSet, BuyTwapNotSelected, PriceNotInRange } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTime } from "../libraries/LibTime.sol";
@@ -226,7 +226,7 @@ contract BuyFacet is Modifiers {
             strategy.parameters._stableToken
         );
 
-        checkRoundPrices(strategyId, fromInvestRoundId, fromStableRoundId, toInvestRoundId, toStableRoundId);
+        checkRoundPrices(strategyId, price, fromInvestRoundId, fromStableRoundId, toInvestRoundId, toStableRoundId);
 
         strategy.investRoundIdForBTD = investRoundId;
         strategy.stableRoundIdForBTD = stableRoundId;
@@ -392,6 +392,7 @@ contract BuyFacet is Modifiers {
      */
     function checkRoundPrices(
         uint256 strategyId,
+        uint256 price,
         uint80 fromInvestRoundId,
         uint80 fromStableRoundId,
         uint80 toInvestRoundId,
@@ -423,6 +424,23 @@ contract BuyFacet is Modifiers {
             strategy.parameters._investToken,
             strategy.parameters._stableToken
         );
+
+        if (
+            (strategy.parameters._btdType == DIP_SPIKE.FIXED_INCREASE ||
+                strategy.parameters._btdType == DIP_SPIKE.INCREASE_BY)
+        ) {
+            if (price < toPrice) {
+                revert PriceNotInRange();
+            }
+        }
+        if (
+            (strategy.parameters._btdType == DIP_SPIKE.FIXED_DECREASE ||
+                strategy.parameters._btdType == DIP_SPIKE.DECREASE_BY)
+        ) {
+            if (price > toPrice) {
+                revert PriceNotInRange();
+            }
+        }
 
         uint256 btdValue = strategy.parameters._btdValue;
         uint256 fromToPriceDifference;

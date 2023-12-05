@@ -11,7 +11,7 @@ const addresses: any = {
     wbtc: "0xA39434A63A52E749F02807ae27335515BA4b07F7",
     eth: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
     link: "0x48731cF7e84dc94C5f84577882c14Be11a5B7456",
-    diamond: "0x3CC9A6ebA5531fD8B8B59aA1679700C9dAA7d2bB",
+    diamond: "0x34d9f39f8C46Aa40930f6Ce70F82Fb702BA6f38A",
   },
 };
 
@@ -29,7 +29,7 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
 
   console.log("Fetching strategy Facets");
   const strategyFacet: StrategyFacet = await ethers.getContractAt("StrategyFacet", addresses[network.name].diamond);
-  const sellFacet: SellFacet = await ethers.getContractAt("SellFacet", addresses[network.name].diamond);
+  // const sellFacet: SellFacet = await ethers.getContractAt("SellFacet", addresses[network.name].diamond);
 
   // const parameters = {
   //   _investToken: weth.address,
@@ -64,8 +64,7 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   // const createStrategy = await strategyFacet.connect(accounts[1]).createStrategy(parameters);
   // await createStrategy.wait();
   const strategy = await strategyFacet.getStrategy(1);
-  console.log("Invest Round ID for STR: ", strategy.investRoundIdForSTR.toString());
-  console.log("Stable Round ID for STR: ", strategy.stableRoundIdForSTR.toString());
+  console.log("Strategy: ", strategy);
   // let value = await buyFacet.executionBuyAmount(true, 1);
   // console.log("Value: ", value);
   // let dexCalldata = dex.interface.encodeFunctionData("swap", [
@@ -76,21 +75,21 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   // console.log("Dex call Data ", dexCalldata);
   // console.log("Dex address: ", dex.address);
   //18446744073709568035 18446744073709552205 18446744073709568037 18446744073709552205
-  const executeSell = await sellFacet
-    .connect(accounts[0])
-    .callStatic.executeSTR(
-      1,
-      "18446744073709568035",
-      "18446744073709552205",
-      "18446744073709568037",
-      "18446744073709552205",
-      {
-        dex: "0x101E628cbC91c6b0c6348bde885a125C29A9229E",
-        callData:
-          "0xdf791e50000000000000000000000000a6fde5c7fc7ec36ebc7e389329354ccf6dfab94f0000000000000000000000003e6ffe1dd604c3315ce48eb9cf1121a3062768d500000000000000000000000000000000000000000000000000b1a2bc2ec50000",
-      },
-    );
-  // await executeSell.wait();
+  // const executeSell = await sellFacet
+  //   .connect(accounts[0])
+  //   .callStatic.executeSTR(
+  //     1,
+  //     "18446744073709568035",
+  //     "18446744073709552205",
+  //     "18446744073709568037",
+  //     "18446744073709552205",
+  //     {
+  //       dex: "0x101E628cbC91c6b0c6348bde885a125C29A9229E",
+  //       callData:
+  //         "0xdf791e50000000000000000000000000a6fde5c7fc7ec36ebc7e389329354ccf6dfab94f0000000000000000000000003e6ffe1dd604c3315ce48eb9cf1121a3062768d500000000000000000000000000000000000000000000000000b1a2bc2ec50000",
+  //     },
+  //   );
+  // // await executeSell.wait();
 
   // console.log("Succefully connected with contracts");
 };
