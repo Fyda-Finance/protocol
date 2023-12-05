@@ -352,7 +352,10 @@ contract StrategyFacet is Modifiers {
         }
 
         if (_parameter._highSellValue != 0) {
-            if (!(_parameter._strValue > 0 || _parameter._sellTwapTime > 0) && !(_parameter._sellType == SellLegType.INCREASE_BY)) {
+            if (
+                !(_parameter._strValue > 0 || _parameter._sellTwapTime > 0) &&
+                !(_parameter._sellType == SellLegType.INCREASE_BY)
+            ) {
                 revert HighSellValueCannotBeSet();
             }
         }
@@ -364,7 +367,11 @@ contract StrategyFacet is Modifiers {
             if (_parameter._sellValue == 0) {
                 revert InvalidSellValue();
             }
-            if (_parameter._highSellValue != 0 && _parameter._sellType == SellLegType.LIMIT_PRICE && _parameter._sellValue > _parameter._highSellValue) {
+            if (
+                _parameter._highSellValue != 0 &&
+                _parameter._sellType == SellLegType.LIMIT_PRICE &&
+                _parameter._sellValue > _parameter._highSellValue
+            ) {
                 revert InvalidHighSellValue();
             }
         }
@@ -648,7 +655,10 @@ contract StrategyFacet is Modifiers {
             revert SellDCANotSet();
         }
 
-        if (!(updateStruct.highSellValue > 0 && (strategy.parameters._sellDCAValue != 0 || strategy.parameters._sellType == SellLegType.INCREASE_BY))) {
+        if (
+            !(updateStruct.highSellValue > 0 &&
+                (strategy.parameters._sellDCAValue != 0 || strategy.parameters._sellType == SellLegType.INCREASE_BY))
+        ) {
             revert HighSellValueNotAllowed();
         }
 
@@ -965,11 +975,17 @@ contract StrategyFacet is Modifiers {
         }
 
         if (updateStruct.highSellValue != 0) {
-            if (strategy.parameters._sellType == SellLegType.INCREASE_BY && updateStruct.highSellValue <= strategy.parameters._buyValue) {
+            if (
+                strategy.parameters._sellType == SellLegType.INCREASE_BY &&
+                updateStruct.highSellValue <= strategy.parameters._buyValue
+            ) {
                 revert InvalidHighSellValue();
             }
         } else if (strategy.parameters._highSellValue != 0) {
-            if (strategy.parameters._sellType == SellLegType.INCREASE_BY && strategy.parameters._buyValue >= strategy.parameters._highSellValue) {
+            if (
+                strategy.parameters._sellType == SellLegType.INCREASE_BY &&
+                strategy.parameters._buyValue >= strategy.parameters._highSellValue
+            ) {
                 revert InvalidHighSellValue();
             }
         }

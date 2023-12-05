@@ -265,6 +265,7 @@ describe("Strategy", function () {
       impact: "0",
       current_price: 0,
     };
+
     await expect(setup.strategyFacet.connect(setup.owner).updateStrategy(0, param)).to.be.reverted;
     await expect(setup.strategyFacet.connect(setup.user).updateStrategy(0, param)).to.be.reverted;
     param.sellValue = "10000";
