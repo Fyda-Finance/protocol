@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE, UpdateStruct } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
-import { InvalidImpact, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, SellPercentageWithDCA, FloorPercentageWithDCA, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrType, BTDWithoutBTDType, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce, StrategyIsNotActive, BuyNotSet, SellNotSelected, PercentageNotInRange, BuyTwapNotSelected, SellTwapNotSelected, FloorNotSet } from "../utils/GenericErrors.sol";
+import { InvalidImpact, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrType, BTDWithoutBTDType, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce, StrategyIsNotActive, BuyNotSet, SellNotSelected, PercentageNotInRange, BuyTwapNotSelected, SellTwapNotSelected, FloorNotSet } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
 import { LibTrade } from "../libraries/LibTrade.sol";
 import { LibSignature } from "../libraries/LibSignature.sol";
@@ -292,20 +292,6 @@ contract StrategyFacet is Modifiers {
 
         if ((_parameter._floorValue == 0 && _parameter._sellValue == 0 && _parameter._buyValue == 0)) {
             revert AtLeastOneOptionRequired();
-        }
-
-        if (
-            _parameter._sellType == SellLegType.INCREASE_BY &&
-            (_parameter._strValue > 0 || _parameter._sellTwapTime > 0)
-        ) {
-            revert SellPercentageWithDCA();
-        }
-
-        if (
-            _parameter._floorType == FloorLegType.DECREASE_BY &&
-            (_parameter._buyTwapTime > 0 || _parameter._btdValue > 0)
-        ) {
-            revert FloorPercentageWithDCA();
         }
 
         if (_parameter._buyValue > 0 && _parameter._buyTwapTime > 0 && _parameter._btdValue > 0) {
