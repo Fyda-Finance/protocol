@@ -14,7 +14,7 @@ import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IER
 error BothStableAndInvestAmountProvided();
 error OnlyOwnerCanCancelStrategies();
 error NoAmountProvided();
-error HighSellValueIsChosenWithoutSeLLDCA();
+error HighSellValueCannotBeSet();
 error OnlyOwnerCanUpdateStrategies();
 error NothingToUpdate();
 error SellDCANotSet();
@@ -351,8 +351,12 @@ contract StrategyFacet is Modifiers {
         }
 
         if (_parameter._highSellValue != 0) {
-            if (!(_parameter._strValue > 0 || _parameter._sellTwapTime > 0)) {
-                revert HighSellValueIsChosenWithoutSeLLDCA();
+            if (
+                !(_parameter._strValue > 0 ||
+                    _parameter._sellTwapTime > 0 ||
+                    _paramater._sellType == SellLegType.INCREASE_BY)
+            ) {
+                revert HighSellValueCannotBeSet();
             }
         }
 
@@ -635,8 +639,26 @@ contract StrategyFacet is Modifiers {
         }
 
         if (
-            (updateStruct.highSellValue > 0 || updateStruct.sellDCAValue > 0) &&
-            (strategy.parameters._strValue == 0 || strategy.parameters._sellTwapTime == 0)
+            (updateStruct.highSellValue > 0) &&
+            !(strategy.parameters._strValue != 0 ||
+                strategy.parameters._sellTwapTime != 0 ||
+                strategy.parameters._sellType == SellLegType.INCREASE_BY)
+        ) {
+            revert HighSellValueCannotBeSet();
+        }
+
+        if (
+            (updateStruct.highSellValue > 0) &&
+            (strategy.parameters._strValue != 0 ||
+                strategy.parameters._sellTwapTime != 0 ||
+                strategy.parameters._sellType == SellLegType.INCREASE_BY)
+        ) {
+            strategy.parameters._highSellValue = updateStruct.highSellValue;
+        }
+
+        if (
+            (updateStruct.sellDCAValue > 0) &&
+            !(strategy.parameters._strValue != 0 || strategy.parameters._sellTwapTime != 0)
         ) {
             revert SellDCANotSet();
         }
@@ -933,13 +955,11 @@ contract StrategyFacet is Modifiers {
             strategy.parameters._cancelOnFloor = !strategy.parameters._cancelOnFloor;
         }
 
-        if (updateStruct.highSellValue != 0) {
-            if ((strategy.parameters._strValue == 0 && strategy.parameters._sellTwapTime == 0)) {
-                revert HighSellValueIsChosenWithoutSeLLDCA();
-            }
-        }
-
-        if (strategy.parameters._strValue > 0 || strategy.parameters._sellTwapTime > 0) {
+        if (
+            strategy.parameters._strValue > 0 ||
+            strategy.parameters._sellTwapTime > 0 ||
+            strategy.parameters._sellType == SellLegType.INCREASE_BY
+        ) {
             if (updateStruct.highSellValue != 0 && strategy.parameters._sellValue > updateStruct.highSellValue) {
                 revert InvalidHighSellValue();
             } else {
