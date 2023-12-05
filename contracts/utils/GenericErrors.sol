@@ -26,8 +26,6 @@ error InvalidFloorType();
 error InvalidSellTypeDCA();
 error FloorValueGreaterThanBuyValue();
 error FloorValueGreaterThanSellValue();
-error SellPercentageWithDCA();
-error FloorPercentageWithDCA();
 error BothBuyTwapAndBTD();
 error BuyDCAWithoutBuy();
 error BuyTwapTimeInvalid();
