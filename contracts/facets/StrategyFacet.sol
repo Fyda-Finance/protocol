@@ -294,20 +294,6 @@ contract StrategyFacet is Modifiers {
             revert AtLeastOneOptionRequired();
         }
 
-        if (
-            _parameter._sellType == SellLegType.INCREASE_BY &&
-            (_parameter._strValue > 0 || _parameter._sellTwapTime > 0)
-        ) {
-            revert SellPercentageWithDCA();
-        }
-
-        if (
-            _parameter._floorType == FloorLegType.DECREASE_BY &&
-            (_parameter._buyTwapTime > 0 || _parameter._btdValue > 0)
-        ) {
-            revert FloorPercentageWithDCA();
-        }
-
         if (_parameter._buyValue > 0 && _parameter._buyTwapTime > 0 && _parameter._btdValue > 0) {
             revert BothBuyTwapAndBTD();
         }
@@ -665,12 +651,6 @@ contract StrategyFacet is Modifiers {
                 strategy.parameters._strType == DIP_SPIKE.DECREASE_BY)
         ) {
             revert PercentageNotInRange();
-        } else if (
-            updateStruct.strValue > 0 &&
-            (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY ||
-                strategy.parameters._strType == DIP_SPIKE.DECREASE_BY)
-        ) {
-            strategy.parameters._strValue = updateStruct.strValue;
         }
         if (
             updateStruct.strValue > 0 &&
@@ -690,12 +670,6 @@ contract StrategyFacet is Modifiers {
                 strategy.parameters._btdType == DIP_SPIKE.DECREASE_BY)
         ) {
             revert PercentageNotInRange();
-        } else if (
-            updateStruct.btdValue > 0 &&
-            (strategy.parameters._btdType == DIP_SPIKE.INCREASE_BY ||
-                strategy.parameters._btdType == DIP_SPIKE.DECREASE_BY)
-        ) {
-            strategy.parameters._btdValue = updateStruct.btdValue;
         }
         if (
             updateStruct.btdValue > 0 &&

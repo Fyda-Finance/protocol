@@ -17,6 +17,7 @@ error TWAPTimeDifferenceIsLess();
 error STRNotSelected();
 error PriceLessThanSellValue();
 error PriceIsNotInTheRange();
+error PriceGreaterThanHighSellValue();
 
 /**
  * @title TransferObject
@@ -204,6 +205,10 @@ contract SellFacet is Modifiers {
         // Retrieve the latest price and round ID from Chainlink.
         (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
 
+        if (strategy.parameters._highSellValue > 0 && strategy.parameters._highSellValue <= price) {
+            revert PriceGreaterThanHighSellValue();
+        }
+
         uint256 sellAt = strategy.parameters._sellValue;
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
             uint256 sellPercentage = LibTrade.MAX_PERCENTAGE + strategy.parameters._sellValue;
@@ -287,6 +292,10 @@ contract SellFacet is Modifiers {
             strategy.parameters._investToken,
             strategy.parameters._stableToken
         );
+
+        if (strategy.parameters._highSellValue > 0 && strategy.parameters._highSellValue <= price) {
+            revert PriceGreaterThanHighSellValue();
+        }
 
         uint256 sellAt = strategy.parameters._sellValue;
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
