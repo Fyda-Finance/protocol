@@ -106,7 +106,7 @@ contract FloorFacet is Modifiers {
                 revert InvalidExchangeRate(floorAt, rate);
             }
 
-            if (strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
+            if (strategy.parameters._floorType == FloorLegType.DECREASE_BY && strategy.parameters._minimumLoss > 0) {
                 // Check for mimimum loss
                 uint256 invested = (strategy.parameters._investAmount * strategy.investPrice) /
                     10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();

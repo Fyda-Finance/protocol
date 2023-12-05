@@ -61,7 +61,7 @@ describe("Strategy", function () {
   }
 
   let setup: SetupDiamondFixture;
-  let parameters: Parameters;
+  let parameters: any;
 
   beforeEach(async function () {
     setup = await loadFixture(setupDiamondFixture);
@@ -94,6 +94,8 @@ describe("Strategy", function () {
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
       _current_price: 0,
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
   });
 
@@ -131,6 +133,9 @@ describe("Strategy", function () {
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
       _current_price: 0,
+
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 25);
@@ -204,6 +209,8 @@ describe("Strategy", function () {
       _buyDCAUnit: 2,
       _buyDCAValue: "1000",
       _current_price: 0,
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 25);
@@ -264,6 +271,8 @@ describe("Strategy", function () {
       toggleCancelOnFloor: false,
       impact: "0",
       current_price: 0,
+      minimumLoss: 0,
+      minimumProfit: 0,
     };
     await expect(setup.strategyFacet.connect(setup.owner).updateStrategy(0, param)).to.be.reverted;
     await expect(setup.strategyFacet.connect(setup.user).updateStrategy(0, param)).to.be.reverted;

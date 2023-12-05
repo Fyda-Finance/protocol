@@ -7,7 +7,7 @@ const { expect } = require("chai");
 describe("Floor", function () {
   let setup: SetupDiamondFixture; // Adjust the type as needed
   const budget = "1000000000000000000000"; // $1k
-  let parameters: Parameters;
+  let parameters: any;
 
   beforeEach(async function () {
     setup = await setupDiamondFixture();
@@ -41,6 +41,8 @@ describe("Floor", function () {
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
       _current_price: 0,
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
   });
 

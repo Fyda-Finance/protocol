@@ -149,7 +149,7 @@ contract SellFacet is Modifiers {
         }
 
         if (strategy.parameters._highSellValue != 0) {
-            // If a high sell value is specified and "strategy" or "sell TWAP" is selected, use the high sell value.
+            // If a high sell value is specified and "STR" or "sell TWAP" is selected, use the high sell value.
             sellAt = strategy.parameters._highSellValue;
             if (price < sellAt) {
                 revert PriceLessThanHighSellValue();
@@ -158,6 +158,7 @@ contract SellFacet is Modifiers {
             // If neither high sell value nor "sell the rally" nor "sell TWAP" is selected, throw an error.
             revert SellDCASelected();
         }
+
         uint256 value = executionSellAmount(true, strategyId);
 
         // Perform the sell action, including transferring assets to the DEX.
@@ -379,7 +380,7 @@ contract SellFacet is Modifiers {
             revert InvalidExchangeRate(transferObject.sellValue, rate);
         }
 
-        if (strategy.parameters._sellType == SellLegType.INCREASE_BY) {
+        if (strategy.parameters._sellType == SellLegType.INCREASE_BY && strategy.parameters._minimumProfit > 0) {
             // Check for mimimum profit
             uint256 invested = (transferObject.value * strategy.investPrice) /
                 10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();

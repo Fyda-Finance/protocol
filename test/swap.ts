@@ -109,6 +109,9 @@ describe("Swap and Impact", function () {
       _buyDCAUnit: 0,
       _buyDCAValue: 0,
       _current_price: 0,
+
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
 
     // 1 WETH = 1200 USD
@@ -173,6 +176,9 @@ describe("Swap and Impact", function () {
       _buyDCAUnit: 0,
       _buyDCAValue: 0,
       _current_price: 0,
+
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
     // 1 WETH = 1900 USD
     await setup.scenarioDEX.updateExchangeRate(setup.scenarioERC20WETH.address, "190000000000");

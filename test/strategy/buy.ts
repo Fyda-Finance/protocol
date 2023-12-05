@@ -4,7 +4,7 @@ const { expect } = require("chai");
 
 describe("Buy", function () {
   let setup: SetupDiamondFixture; // Adjust the type as needed
-  let parameters: Parameters;
+  let parameters: any;
   const budget = "1000000000"; // $1k
 
   beforeEach(async function () {
@@ -39,6 +39,8 @@ describe("Buy", function () {
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
       _current_price: 0,
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
   });
 
@@ -241,6 +243,8 @@ describe("Buy", function () {
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
       _current_price: 0,
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 5);

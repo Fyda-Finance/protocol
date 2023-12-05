@@ -45,6 +45,8 @@ describe("Gasless", function () {
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
       _current_price: 0,
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 5);
@@ -147,6 +149,8 @@ describe("Gasless", function () {
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
       _current_price: 0,
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 5);
@@ -252,6 +256,8 @@ describe("Gasless", function () {
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
       _current_price: 0,
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
 
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 25);
@@ -289,7 +295,7 @@ describe("Gasless", function () {
 
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
 
-    const parameters: Parameters = {
+    const parameters = {
       _investToken: setup.scenarioERC20WETH.address,
       _stableToken: setup.scenarioERC20USDC.address,
       _stableAmount: "0",
@@ -318,6 +324,8 @@ describe("Gasless", function () {
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
       _current_price: 0,
+      _minimumLoss: 0,
+      _minimumProfit: 0,
     };
     parameters._buyType = 1;
     parameters._buyValue = "1500000000";
@@ -341,6 +349,8 @@ describe("Gasless", function () {
       toggleCancelOnFloor: false,
       impact: "0",
       current_price: 0,
+      minimumLoss: 0,
+      minimumProfit: 0,
     };
 
     const hash = await setup.strategyFacet.getMessageHashToUpdate(
