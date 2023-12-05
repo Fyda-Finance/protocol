@@ -24,6 +24,8 @@ error BTDIsNotSet();
 error InvestAmountMustBeProvided();
 error SellPercentageWithDCA();
 error FloorPercentageWithDCA();
+error FloorPercentageNotSet();
+error SellPercentageNotSet();
 
 /**
  * @title StrategyFacet
@@ -496,6 +498,14 @@ contract StrategyFacet is Modifiers {
             }
         }
 
+        if (_parameter.minimumProfit > 0 && _parameter._sellType != SellLegType.INCREASE_BY) {
+            revert SellPercentageNotSet();
+        }
+
+        if (_parameter.minimumLoss > 0 && _parameter._floorType != FloorLegType.DECREASE_BY) {
+            revert FloorPercentageNotSet();
+        }
+
         uint256 decimals = 10 ** IERC20Metadata(_parameter._investToken).decimals();
 
         if (_parameter._investAmount > 0 && _parameter._stableAmount > 0) {
@@ -914,6 +924,22 @@ contract StrategyFacet is Modifiers {
             (updateStruct.sellDCAValue > strategy.parameters._investAmount)
         ) {
             revert DCAValueShouldBeLessThanIntitialAmount();
+        }
+
+        if (updateStruct.minimumLoss > 0 && strategy.parameters._floorType != FloorLegType.DECREASE_BY) {
+            revert FloorPercentageNotSet();
+        }
+
+        if (updateStruct.minimumProfit > 0 && strategy.parameters._sellType != SellLegType.INCREASE_BY) {
+            revert SellPercentageNotSet();
+        }
+
+        if (updateStruct.minimumLoss > 0) {
+            strategy.parameters._minimumLoss = updateStruct.minimumLoss;
+        }
+
+        if (updateStruct.minimumProfit > 0) {
+            strategy.parameters._minimumProfit = updateStruct.minimumProfit;
         }
 
         if (
