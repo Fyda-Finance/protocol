@@ -22,6 +22,8 @@ error BuyDCANotSet();
 error STRIsNotSet();
 error BTDIsNotSet();
 error InvestAmountMustBeProvided();
+error SellPercentageWithDCA();
+error FloorPercentageWithDCA();
 
 /**
  * @title StrategyFacet
