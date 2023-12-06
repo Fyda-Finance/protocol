@@ -29,7 +29,7 @@ enum Status {
 enum FloorLegType {
     NO_TYPE, // No specific floor price leg is defined.
     LIMIT_PRICE, // The floor price is set as a specific limit price.
-    MINIMUM_LOSS // The floor is reached when the minimum loss is reached.
+    MAXIMUM_LOSS // The floor is reached when the minimum loss is reached.
 }
 
 /**

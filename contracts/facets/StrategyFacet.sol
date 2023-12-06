@@ -759,7 +759,7 @@ contract StrategyFacet is Modifiers {
 
         if (
             updateStruct.floorValue > 0 &&
-            strategy.parameters._floorType == FloorLegType.MINIMUM_LOSS &&
+            strategy.parameters._floorType == FloorLegType.MAXIMUM_LOSS &&
             strategy.parameters._floorValue > 0
         ) {
             strategy.parameters._floorValue = updateStruct.floorValue;

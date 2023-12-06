@@ -91,7 +91,7 @@ contract FloorFacet is Modifiers {
 
             if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE && rate > strategy.parameters._floorValue) {
                 revert PriceIsGreaterThanFloorValue();
-            } else if (strategy.parameters._floorType == FloorLegType.MINIMUM_LOSS) {
+            } else if (strategy.parameters._floorType == FloorLegType.MAXIMUM_LOSS) {
                 uint256 invested = (strategy.parameters._investAmount * strategy.investPrice) /
                     10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
 

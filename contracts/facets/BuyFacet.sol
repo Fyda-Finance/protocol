@@ -307,7 +307,7 @@ contract BuyFacet is Modifiers {
         if (strategy.parameters._floorValue > 0) {
             if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE && strategy.parameters._floorValue > rate) {
                 revert FloorGreaterThanPrice();
-            } else if (strategy.parameters._floorType == FloorLegType.MINIMUM_LOSS) {
+            } else if (strategy.parameters._floorType == FloorLegType.MAXIMUM_LOSS) {
                 uint256 currentInvestmentValue = strategy.parameters._investAmount * transferObject.price;
                 uint256 totalInvested = strategy.parameters._investAmount * strategy.investPrice;
 
