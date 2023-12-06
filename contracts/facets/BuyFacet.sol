@@ -305,7 +305,6 @@ contract BuyFacet is Modifiers {
         }
 
         if (strategy.parameters._floorValue > 0) {
-            uint256 floorAt;
             if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE && strategy.parameters._floorValue > rate) {
                 revert FloorGreaterThanPrice();
             } else if (strategy.parameters._floorType == FloorLegType.MINIMUM_LOSS) {

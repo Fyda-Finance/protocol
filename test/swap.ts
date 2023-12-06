@@ -110,7 +110,6 @@ describe("Swap and Impact", function () {
       _buyDCAValue: 0,
       _current_price: 0,
 
-      _minimumLoss: 0,
       _minimumProfit: 0,
     };
 
@@ -177,7 +176,6 @@ describe("Swap and Impact", function () {
       _buyDCAValue: 0,
       _current_price: 0,
 
-      _minimumLoss: 0,
       _minimumProfit: 0,
     };
     // 1 WETH = 1900 USD

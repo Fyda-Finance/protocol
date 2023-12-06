@@ -45,7 +45,6 @@ describe("Gasless", function () {
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
       _current_price: 0,
-      _minimumLoss: 0,
       _minimumProfit: 0,
     };
 
@@ -149,7 +148,6 @@ describe("Gasless", function () {
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
       _current_price: 0,
-      _minimumLoss: 0,
       _minimumProfit: 0,
     };
 
@@ -256,7 +254,7 @@ describe("Gasless", function () {
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
       _current_price: 0,
-      _minimumLoss: 0,
+
       _minimumProfit: 0,
     };
 
@@ -324,7 +322,7 @@ describe("Gasless", function () {
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
       _current_price: 0,
-      _minimumLoss: 0,
+
       _minimumProfit: 0,
     };
     parameters._buyType = 1;

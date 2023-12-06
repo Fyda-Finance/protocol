@@ -94,7 +94,7 @@ describe("Strategy", function () {
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
       _current_price: 0,
-      _minimumLoss: 0,
+
       _minimumProfit: 0,
     };
   });
@@ -134,7 +134,6 @@ describe("Strategy", function () {
       _buyDCAValue: "0",
       _current_price: 0,
 
-      _minimumLoss: 0,
       _minimumProfit: 0,
     };
 
@@ -209,7 +208,7 @@ describe("Strategy", function () {
       _buyDCAUnit: 2,
       _buyDCAValue: "1000",
       _current_price: 0,
-      _minimumLoss: 0,
+
       _minimumProfit: 0,
     };
 

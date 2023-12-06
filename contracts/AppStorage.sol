@@ -136,8 +136,6 @@ struct StrategyParameters {
     bool _liquidateOnFloor;
     // @param _cancelOnFloor A flag to cancel the strategy when the floor price is reached (if floor is set).
     bool _cancelOnFloor;
-    // @param _minimumLoss The minimum loss required for floor percentage to satisfy.
-    uint256 _minimumLoss;
     // @param _buyType The type of buy action (if buy is set).
     BuyLegType _buyType;
     // @param _buyValue The value of the buy action (if buy is set).
