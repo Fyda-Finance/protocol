@@ -638,6 +638,8 @@ contract StrategyFacet is Modifiers {
             updateStruct.toggleLiquidateOnFloor == false &&
             updateStruct.toggleCancelOnFloor == false &&
             updateStruct.impact == 0 &&
+            updateStruct.minimumProfit == 0 &&
+            updateStruct.minimumLoss == 0 &&
             updateStruct.current_price == CURRENT_PRICE.NOT_SELECTED
         ) {
             revert NothingToUpdate();
