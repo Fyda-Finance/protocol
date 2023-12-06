@@ -29,8 +29,9 @@ enum Status {
 enum FloorLegType {
     NO_TYPE, // No specific floor price leg is defined.
     LIMIT_PRICE, // The floor price is set as a specific limit price.
-    DECREASE_BY // The floor price is determined by decreasing the current price by a certain amount.
+    MINIMUM_LOSS // The floor is reached when the minimum loss is reached.
 }
+
 /**
  * @notice The `BuyLegType` enum defines the types of buy legs for trading strategies.
  * @dev This enum enumerates two possible types of buy legs that can be associated with a strategy:
@@ -289,7 +290,6 @@ struct UpdateStruct {
     bool toggleCancelOnFloor;
     uint256 impact;
     CURRENT_PRICE current_price;
-    uint256 minimumLoss;
     uint256 minimumProfit;
 }
 

@@ -22,9 +22,6 @@ error BuyDCANotSet();
 error STRIsNotSet();
 error BTDIsNotSet();
 error InvestAmountMustBeProvided();
-error SellPercentageWithDCA();
-error FloorPercentageWithDCA();
-error FloorPercentageNotSet();
 error SellPercentageNotSet();
 
 /**
@@ -298,20 +295,6 @@ contract StrategyFacet is Modifiers {
             revert AtLeastOneOptionRequired();
         }
 
-        if (
-            _parameter._sellType == SellLegType.INCREASE_BY &&
-            (_parameter._strValue > 0 || _parameter._sellTwapTime > 0)
-        ) {
-            revert SellPercentageWithDCA();
-        }
-
-        if (
-            _parameter._floorType == FloorLegType.DECREASE_BY &&
-            (_parameter._buyTwapTime > 0 || _parameter._btdValue > 0)
-        ) {
-            revert FloorPercentageWithDCA();
-        }
-
         if (_parameter._buyValue > 0 && _parameter._buyTwapTime > 0 && _parameter._btdValue > 0) {
             revert BothBuyTwapAndBTD();
         }
@@ -440,12 +423,6 @@ contract StrategyFacet is Modifiers {
             }
         }
 
-        if (_parameter._floorValue > 0 && _parameter._floorType == FloorLegType.DECREASE_BY) {
-            if (_parameter._floorValue > LibTrade.MAX_PERCENTAGE) {
-                revert PercentageNotInRange();
-            }
-        }
-
         if (_parameter._sellValue > 0 && _parameter._sellType == SellLegType.INCREASE_BY) {
             if (_parameter._sellValue > LibTrade.MAX_PERCENTAGE) {
                 revert PercentageNotInRange();
@@ -500,10 +477,6 @@ contract StrategyFacet is Modifiers {
 
         if (_parameter._minimumProfit > 0 && _parameter._sellType != SellLegType.INCREASE_BY) {
             revert SellPercentageNotSet();
-        }
-
-        if (_parameter._minimumLoss > 0 && _parameter._floorType != FloorLegType.DECREASE_BY) {
-            revert FloorPercentageNotSet();
         }
 
         uint256 decimals = 10 ** IERC20Metadata(_parameter._investToken).decimals();
@@ -639,7 +612,6 @@ contract StrategyFacet is Modifiers {
             updateStruct.toggleCancelOnFloor == false &&
             updateStruct.impact == 0 &&
             updateStruct.minimumProfit == 0 &&
-            updateStruct.minimumLoss == 0 &&
             updateStruct.current_price == CURRENT_PRICE.NOT_SELECTED
         ) {
             revert NothingToUpdate();
@@ -785,12 +757,12 @@ contract StrategyFacet is Modifiers {
             revert FloorValueGreaterThanBuyValue();
         }
 
-        if (updateStruct.floorValue > 0 && strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
-            if (updateStruct.floorValue > LibTrade.MAX_PERCENTAGE) {
-                revert PercentageNotInRange();
-            } else {
-                strategy.parameters._floorValue = updateStruct.floorValue;
-            }
+        if (
+            updateStruct.floorValue > 0 &&
+            strategy.parameters._floorType == FloorLegType.MINIMUM_LOSS &&
+            strategy.parameters._floorValue > 0
+        ) {
+            strategy.parameters._floorValue = updateStruct.floorValue;
         }
 
         if (updateStruct.sellValue > 0 && strategy.parameters._sellType == SellLegType.INCREASE_BY) {
@@ -928,16 +900,8 @@ contract StrategyFacet is Modifiers {
             revert DCAValueShouldBeLessThanIntitialAmount();
         }
 
-        if (updateStruct.minimumLoss > 0 && strategy.parameters._floorType != FloorLegType.DECREASE_BY) {
-            revert FloorPercentageNotSet();
-        }
-
         if (updateStruct.minimumProfit > 0 && strategy.parameters._sellType != SellLegType.INCREASE_BY) {
             revert SellPercentageNotSet();
-        }
-
-        if (updateStruct.minimumLoss > 0) {
-            strategy.parameters._minimumLoss = updateStruct.minimumLoss;
         }
 
         if (updateStruct.minimumProfit > 0) {

@@ -69,18 +69,6 @@ contract FloorFacet is Modifiers {
 
         (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
 
-        uint256 floorAt;
-        if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE) {
-            floorAt = strategy.parameters._floorValue;
-        } else if (strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
-            uint256 floorPercentage = LibTrade.MAX_PERCENTAGE - strategy.parameters._floorValue;
-            floorAt = (strategy.investPrice * floorPercentage) / LibTrade.MAX_PERCENTAGE;
-        }
-
-        if (price > floorAt) {
-            revert PriceIsGreaterThanFloorValue();
-        }
-
         // If liquidation is enabled, initiate a swap of assets.
         if (strategy.parameters._liquidateOnFloor) {
             // Prepare swap data for the DEX.
@@ -101,19 +89,16 @@ contract FloorFacet is Modifiers {
                 toTokenAmount
             );
 
-            // Check if the calculated exchange rate is within the acceptable range.
-            if (rate > floorAt) {
-                revert InvalidExchangeRate(floorAt, rate);
-            }
-
-            if (strategy.parameters._floorType == FloorLegType.DECREASE_BY && strategy.parameters._minimumLoss > 0) {
-                // Check for mimimum loss
+            if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE && rate > strategy.parameters._floorValue) {
+                revert PriceIsGreaterThanFloorValue();
+            } else if (strategy.parameters._floorType == FloorLegType.MINIMUM_LOSS) {
                 uint256 invested = (strategy.parameters._investAmount * strategy.investPrice) /
                     10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
+
                 uint256 sold = toTokenAmount;
                 uint256 loss = invested - sold;
 
-                if (loss < strategy.parameters._minimumLoss) {
+                if (loss < strategy.parameters._floorValue) {
                     revert MinimumLossRequired();
                 }
             }
