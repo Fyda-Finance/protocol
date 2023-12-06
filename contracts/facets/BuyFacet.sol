@@ -137,6 +137,7 @@ contract BuyFacet is Modifiers {
         transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue));
 
         if (strategy.parameters._sellValue == 0 && strategy.parameters._floorValue == 0) {
+            strategy.status = Status.COMPLETED;
             uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
             uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
             emit StrategyCompleted(strategyId, investPrice, stablePrice);
