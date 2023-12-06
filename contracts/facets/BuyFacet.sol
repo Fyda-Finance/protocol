@@ -293,23 +293,25 @@ contract BuyFacet is Modifiers {
             }
 
             if (floorAt > transferObject.price) {
-                revert FloorGreaterThanPrice();
-            }
+                // if minimum loss is set, then if there is minimum loss then stop the buy.
+                // this is hypothetical as we don't have a way to find the exchange rate for selling investAmount
+                if (
+                    strategy.parameters._floorType == FloorLegType.DECREASE_BY && strategy.parameters._minimumLoss > 0
+                ) {
+                    uint256 invested = (strategy.parameters._investAmount * strategy.investPrice) /
+                        10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
+                    uint256 sold = (strategy.parameters._investAmount * transferObject.price) /
+                        10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
 
-            // if minimum loss is set, then if there is minimum loss then stop the buy.
-            // this is hypothetical as we don't have a way to find the exchange rate for selling investAmount
-            if (strategy.parameters._floorType == FloorLegType.DECREASE_BY && strategy.parameters._minimumLoss > 0) {
-                uint256 invested = (strategy.parameters._investAmount * strategy.investPrice) /
-                    10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
-                uint256 sold = (strategy.parameters._investAmount * transferObject.price) /
-                    10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
+                    if (invested > sold) {
+                        uint256 loss = invested - sold;
 
-                if (invested > sold) {
-                    uint256 loss = invested - sold;
-
-                    if (loss >= strategy.parameters._minimumLoss) {
-                        revert MinimumLossDetected();
+                        if (loss >= strategy.parameters._minimumLoss) {
+                            revert MinimumLossDetected();
+                        }
                     }
+                } else {
+                    revert FloorGreaterThanPrice();
                 }
             }
         }
