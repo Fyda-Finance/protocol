@@ -664,7 +664,7 @@ contract StrategyFacet is Modifiers {
 
         if (
             (updateStruct.highSellValue > 0 || updateStruct.sellDCAValue > 0) &&
-            (strategy.parameters._strValue == 0 || strategy.parameters._sellTwapTime == 0)
+            (strategy.parameters._strValue == 0 && strategy.parameters._sellTwapTime == 0)
         ) {
             revert SellDCANotSet();
         }
@@ -998,9 +998,11 @@ contract StrategyFacet is Modifiers {
         if (strategy.parameters._strValue > 0 || strategy.parameters._sellTwapTime > 0) {
             if (updateStruct.highSellValue != 0 && strategy.parameters._sellValue > updateStruct.highSellValue) {
                 revert InvalidHighSellValue();
-            } else {
-                strategy.parameters._highSellValue = updateStruct.highSellValue;
             }
+        }
+
+        if (updateStruct.highSellValue != 0) {
+            strategy.parameters._highSellValue = updateStruct.highSellValue;
         }
 
         if (updateStruct.buyDCAValue > 0) {
