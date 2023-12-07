@@ -137,9 +137,9 @@ contract BuyFacet is Modifiers {
         transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue));
 
         if (strategy.parameters._sellValue == 0 && strategy.parameters._floorValue == 0) {
+            strategy.status = Status.COMPLETED;
             uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
             uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
-            strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
     }
@@ -284,36 +284,6 @@ contract BuyFacet is Modifiers {
             revert PriceIsGreaterThanBuyValue();
         }
 
-        if (strategy.parameters._floorValue > 0) {
-            uint256 floorAt;
-            if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE) {
-                floorAt = strategy.parameters._floorValue;
-            } else if (strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
-                uint256 floorPercentage = LibTrade.MAX_PERCENTAGE - strategy.parameters._floorValue;
-                floorAt = (strategy.investPrice * floorPercentage) / LibTrade.MAX_PERCENTAGE;
-            }
-
-            if (floorAt > transferObject.price) {
-                revert FloorGreaterThanPrice();
-            }
-
-            // if minimum loss is set, then if there is minimum loss then stop the buy.
-            // this is hypothetical as we don't have a way to find the exchange rate for selling investAmount
-            if (strategy.parameters._floorType == FloorLegType.DECREASE_BY && strategy.parameters._minimumLoss > 0) {
-                uint256 invested = (strategy.parameters._investAmount * strategy.investPrice) /
-                    10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
-                uint256 sold = (strategy.parameters._investAmount * transferObject.price) /
-                    10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
-
-                if (invested > sold) {
-                    uint256 loss = invested - sold;
-
-                    if (loss >= strategy.parameters._minimumLoss) {
-                        revert MinimumLossDetected();
-                    }
-                }
-            }
-        }
         LibSwap.SwapData memory swap = LibSwap.SwapData(
             transferObject.dexSwap.dex,
             strategy.parameters._stableToken,
@@ -333,6 +303,31 @@ contract BuyFacet is Modifiers {
 
         if (rate > transferObject.buyValue) {
             revert InvalidExchangeRate(transferObject.buyValue, rate);
+        }
+
+        if (strategy.parameters._floorValue > 0) {
+            if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE && strategy.parameters._floorValue >= rate) {
+                revert FloorGreaterThanPrice();
+            } else if (strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
+                uint256 currentInvestmentValue = strategy.parameters._investAmount * transferObject.price;
+                uint256 totalInvested = strategy.parameters._investAmount * strategy.investPrice;
+
+                if (totalInvested > currentInvestmentValue) {
+                    //how much loss in %
+                    uint256 lossPercentage = ((totalInvested - currentInvestmentValue) * LibTrade.MAX_PERCENTAGE) /
+                        totalInvested;
+                    if (lossPercentage >= strategy.parameters._floorValue) {
+                        if (
+                            strategy.parameters._minimumLoss > 0 &&
+                            totalInvested - currentInvestmentValue >= strategy.parameters._minimumLoss
+                        ) {
+                            revert MinimumLossDetected();
+                        } else {
+                            revert PriceDippedBelowFloorValue();
+                        }
+                    }
+                }
+            }
         }
 
         strategy.parameters._stableAmount -= transferObject.value;
