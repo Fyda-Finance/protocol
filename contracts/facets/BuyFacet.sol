@@ -144,7 +144,7 @@ contract BuyFacet is Modifiers {
 
         uint256 value = executionBuyAmount(true, strategyId);
 
-        transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue));
+        transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue), strategy);
 
         if (strategy.parameters._sellValue == 0 && strategy.parameters._floorValue == 0) {
             strategy.status = Status.COMPLETED;
@@ -188,7 +188,7 @@ contract BuyFacet is Modifiers {
 
         uint256 value = executionBuyAmount(false, strategyId);
 
-        transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue));
+        transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue), strategy);
         strategy.buyTwapExecutedAt = block.timestamp;
         if (
             strategy.parameters._sellValue == 0 &&
@@ -245,7 +245,7 @@ contract BuyFacet is Modifiers {
 
         uint256 value = executionBuyAmount(false, strategyId);
 
-        transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue));
+        transferBuy(strategyId, TransferObject(value, swap, price, strategy.parameters._buyValue), strategy);
         if (
             strategy.parameters._sellValue == 0 &&
             strategy.parameters._floorValue == 0 &&
@@ -287,9 +287,9 @@ contract BuyFacet is Modifiers {
      * @dev This function transfers assets from stable tokens to investment tokens on a DEX.
      * @param strategyId The unique ID of the trading strategy where the BTD action is executed.
      * @param transferObject The TransferBuy struct containing the parameters for executing the buy action.
+     * @param strategy The Strategy struct containing the parameters for the trading strategy.
      */
-    function transferBuy(uint256 strategyId, TransferObject memory transferObject) internal {
-        Strategy storage strategy = s.strategies[strategyId];
+    function transferBuy(uint256 strategyId, TransferObject memory transferObject, Strategy storage strategy) internal {
         if (transferObject.price > transferObject.buyValue) {
             revert PriceIsGreaterThanBuyValue();
         }

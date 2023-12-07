@@ -177,7 +177,7 @@ contract SellFacet is Modifiers {
         uint256 value = executionSellAmount(true, strategyId);
 
         // Perform the sell action, including transferring assets to the DEX.
-        transferSell(strategyId, TransferObject(value, swap, price, sellAt));
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy);
 
         // If there are no further buy actions in the strategy, mark it as completed.
         if (
@@ -249,7 +249,7 @@ contract SellFacet is Modifiers {
 
         // Update the TWAP execution timestamp and perform the TWAP sell action.
         strategy.sellTwapExecutedAt = block.timestamp;
-        transferSell(strategyId, TransferObject(value, swap, price, sellAt));
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy);
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
         if (
@@ -324,7 +324,7 @@ contract SellFacet is Modifiers {
 
         uint256 value = executionSellAmount(false, strategyId);
 
-        transferSell(strategyId, TransferObject(value, swap, price, sellAt));
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy);
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
 
@@ -368,10 +368,13 @@ contract SellFacet is Modifiers {
      * @dev This function swaps a specified amount of assets on a DEX (Decentralized Exchange) and updates the strategy's state accordingly.
      * @param strategyId The unique ID of the trading strategy where the BTD action is executed.
      * @param transferObject The TransferBuy struct containing the parameters for executing the sell action.
+     * @param strategy The Strategy struct containing the details of the trading strategy.
      */
-    function transferSell(uint256 strategyId, TransferObject memory transferObject) internal {
-        Strategy storage strategy = s.strategies[strategyId];
-
+    function transferSell(
+        uint256 strategyId,
+        TransferObject memory transferObject,
+        Strategy storage strategy
+    ) internal {
         // Create a swap data structure for the DEX trade.
         LibSwap.SwapData memory swap = LibSwap.SwapData(
             transferObject.dexSwap.dex,
@@ -395,7 +398,7 @@ contract SellFacet is Modifiers {
             revert InvalidExchangeRate(transferObject.sellValue, rate);
         }
 
-        _validateMinimumProfit(strategyId, transferObject.value, toTokenAmount);
+        _validateMinimumProfit(strategyId, transferObject.value, toTokenAmount, strategy);
 
         uint256 impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, false);
 
@@ -427,7 +430,7 @@ contract SellFacet is Modifiers {
 
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
 
-        emitSellTradeEvent(strategyId, impact, transferObject, previousStableAmount, stablePrice);
+        emitSellTradeEvent(strategyId, impact, transferObject, previousStableAmount, stablePrice, strategy);
     }
 
     /**
@@ -535,9 +538,12 @@ contract SellFacet is Modifiers {
         }
     }
 
-    function _validateMinimumProfit(uint256 strategyId, uint256 currentPrice, uint256 sold) internal view {
-        Strategy memory strategy = s.strategies[strategyId];
-
+    function _validateMinimumProfit(
+        uint256 strategyId,
+        uint256 currentPrice,
+        uint256 sold,
+        Strategy storage strategy
+    ) internal view {
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY && strategy.parameters._minimumProfit > 0) {
             // Check for mimimum profit
             uint256 invested = (currentPrice * strategy.investPrice) /
@@ -555,10 +561,9 @@ contract SellFacet is Modifiers {
         uint256 impact,
         TransferObject memory transferObject,
         uint256 previousStableAmount,
-        uint256 stablePrice
+        uint256 stablePrice,
+        Strategy storage strategy
     ) internal {
-        Strategy memory strategy = s.strategies[strategyId];
-
         if (
             (strategy.parameters._sellValue > 0 &&
                 strategy.parameters._strValue == 0 &&
