@@ -37,6 +37,18 @@ struct TransferObject {
 }
 
 /**
+ * @title RoundIds
+ * @notice This struct stores round Id for the transaction of invest and stable tokens.
+ * Struct Fields:
+ * @param investRoundId: the round Id of the invest token.
+ * @param stableRoundId: the round Id of the stable token
+ */
+struct RoundIds {
+    uint80 investRoundId;
+    uint80 stableRoundId;
+}
+
+/**
  * @title BuyFacet
  * @notice This facet contains functions responsible for evaluating conditions necessary for executing buy actions.
  * @dev BuyFacet specializes in verifying conditions related to limit price buys and Dollar-Cost Averaging (DCA) buys,
@@ -88,16 +100,14 @@ contract BuyFacet is Modifiers {
      * @param impact The allowable price impact percentage for the buy action.
      * @param tokens tokens substracted and added into the users wallet
      * @param investPrice the average price at which invest tokens were bought.
-     * @param investRoundId The invest round ID associated with the current price data.
-     * @param stableRoundId The stable round ID associated with the current price data.
+     * @param rounds the round Ids of invest and stable tokens.
      */
     event BTDExecuted(
         uint256 indexed strategyId,
         uint256 impact,
         TokensTransaction tokens,
         uint256 investPrice,
-        uint80 investRoundId,
-        uint80 stableRoundId
+        RoundIds rounds
     );
 
     /**
@@ -376,8 +386,7 @@ contract BuyFacet is Modifiers {
                     investAmount: strategy.parameters._investAmount
                 }),
                 strategy.investPrice,
-                strategy.investRoundIdForBTD,
-                strategy.stableRoundIdForBTD
+                RoundIds({ investRoundId: strategy.investRoundIdForBTD, stableRoundId: strategy.stableRoundIdForBTD })
             );
         } else if (strategy.parameters._buyTwapTime > 0) {
             emit BuyTwapExecuted(

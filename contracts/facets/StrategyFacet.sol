@@ -24,6 +24,8 @@ error BTDIsNotSet();
 error InvestAmountMustBeProvided();
 error FloorPercentageNotSet();
 error SellPercentageNotSet();
+error StrValueGreaterThan100();
+error BtdValueGreaterThan100();
 
 /**
  * @title StrategyFacet
@@ -331,8 +333,24 @@ contract StrategyFacet is Modifiers {
             revert StrWithoutStrType();
         }
 
+        if (
+            _parameter._strValue > 0 &&
+            _parameter._strType == DIP_SPIKE.DECREASE_BY &&
+            _parameter._strValue > LibTrade.MAX_PERCENTAGE
+        ) {
+            revert StrValueGreaterThan100();
+        }
+
         if (_parameter._btdValue > 0 && _parameter._btdType == DIP_SPIKE.NO_SPIKE) {
             revert BTDWithoutBTDType();
+        }
+
+        if (
+            _parameter._btdValue > 0 &&
+            _parameter._btdType == DIP_SPIKE.DECREASE_BY &&
+            _parameter._btdValue > LibTrade.MAX_PERCENTAGE
+        ) {
+            revert BtdValueGreaterThan100();
         }
 
         if ((_parameter._btdValue > 0 || _parameter._buyTwapTime > 0) && _parameter._buyDCAUnit == DCA_UNIT.NO_UNIT) {
@@ -652,9 +670,7 @@ contract StrategyFacet is Modifiers {
         }
 
         if (
-            updateStruct.strValue > LibTrade.MAX_PERCENTAGE &&
-            (strategy.parameters._strType == DIP_SPIKE.INCREASE_BY ||
-                strategy.parameters._strType == DIP_SPIKE.DECREASE_BY)
+            updateStruct.strValue > LibTrade.MAX_PERCENTAGE && (strategy.parameters._strType == DIP_SPIKE.DECREASE_BY)
         ) {
             revert PercentageNotInRange();
         } else if (
@@ -677,9 +693,7 @@ contract StrategyFacet is Modifiers {
         }
 
         if (
-            updateStruct.btdValue > LibTrade.MAX_PERCENTAGE &&
-            (strategy.parameters._btdType == DIP_SPIKE.INCREASE_BY ||
-                strategy.parameters._btdType == DIP_SPIKE.DECREASE_BY)
+            updateStruct.btdValue > LibTrade.MAX_PERCENTAGE && (strategy.parameters._btdType == DIP_SPIKE.DECREASE_BY)
         ) {
             revert PercentageNotInRange();
         } else if (
@@ -771,14 +785,6 @@ contract StrategyFacet is Modifiers {
             }
         }
 
-        if (updateStruct.sellValue > 0 && strategy.parameters._sellType == SellLegType.INCREASE_BY) {
-            if (updateStruct.sellValue > LibTrade.MAX_PERCENTAGE) {
-                revert PercentageNotInRange();
-            } else {
-                strategy.parameters._sellValue = updateStruct.sellValue;
-            }
-        }
-
         if (
             updateStruct.floorValue > 0 &&
             updateStruct.sellValue > 0 &&
@@ -848,19 +854,11 @@ contract StrategyFacet is Modifiers {
             strategy.parameters._floorValue = updateStruct.floorValue;
         }
 
-        if (
-            strategy.parameters._buyValue > 0 &&
-            strategy.parameters._buyType == BuyLegType.LIMIT_PRICE &&
-            updateStruct.buyValue > 0
-        ) {
+        if (strategy.parameters._buyValue > 0 && updateStruct.buyValue > 0) {
             strategy.parameters._buyValue = updateStruct.buyValue;
         }
 
-        if (
-            strategy.parameters._sellValue > 0 &&
-            strategy.parameters._sellType == SellLegType.LIMIT_PRICE &&
-            updateStruct.sellValue > 0
-        ) {
+        if (strategy.parameters._sellValue > 0 && updateStruct.sellValue > 0) {
             strategy.parameters._sellValue = updateStruct.sellValue;
         }
 

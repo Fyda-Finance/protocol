@@ -31,8 +31,15 @@ contract FloorFacet is Modifiers {
      * @param impact The allowable price impact percentage for the buy action.
      * @param tokens tokens substracted and added into the users wallet
      *@param stablePriceInUSD price of stable token in USD
+     * @param investPrice the average price at which invest tokens were bought.
      */
-    event FloorExecuted(uint256 indexed strategyId, uint256 impact, TokensTransaction tokens, uint256 stablePriceInUSD);
+    event FloorExecuted(
+        uint256 indexed strategyId,
+        uint256 impact,
+        TokensTransaction tokens,
+        uint256 stablePriceInUSD,
+        uint256 investPrice
+    );
     /**
      * @notice Emitted when a trade execution strategy is cancelled.
      * @param strategyId The unique ID of the cancelled strategy.
@@ -145,7 +152,8 @@ contract FloorFacet is Modifiers {
                     stableAmount: strategy.parameters._stableAmount,
                     investAmount: strategy.parameters._investAmount
                 }),
-                stablePrice
+                stablePrice,
+                strategy.investPrice
             );
         }
 
