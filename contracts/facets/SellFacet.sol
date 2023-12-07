@@ -395,17 +395,7 @@ contract SellFacet is Modifiers {
             revert InvalidExchangeRate(transferObject.sellValue, rate);
         }
 
-        if (strategy.parameters._sellType == SellLegType.INCREASE_BY && strategy.parameters._minimumProfit > 0) {
-            // Check for mimimum profit
-            uint256 invested = (transferObject.value * strategy.investPrice) /
-                10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
-            uint256 sold = toTokenAmount;
-            uint256 profit = sold - invested;
-
-            if (profit < strategy.parameters._minimumProfit) {
-                revert MinimumProfitRequired();
-            }
-        }
+        _validateMinimumProfit(strategyId, transferObject.value, toTokenAmount);
 
         uint256 impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, false);
 
@@ -437,54 +427,7 @@ contract SellFacet is Modifiers {
 
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
 
-        if (
-            (strategy.parameters._sellValue > 0 &&
-                strategy.parameters._strValue == 0 &&
-                strategy.parameters._sellTwapTime == 0) ||
-            (strategy.parameters._sellValue > 0 && strategy.parameters._highSellValue > transferObject.price)
-        ) {
-            emit SellExecuted(
-                strategyId,
-                impact,
-                TokensTransaction({
-                    tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
-                    stableAmount: strategy.parameters._stableAmount,
-                    investAmount: strategy.parameters._investAmount
-                }),
-                strategy.profit,
-                strategy.investPrice,
-                stablePrice
-            );
-        } else if (strategy.parameters._strValue > 0) {
-            emit STRExecuted(
-                strategyId,
-                impact,
-                TokensTransaction({
-                    tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
-                    stableAmount: strategy.parameters._stableAmount,
-                    investAmount: strategy.parameters._investAmount
-                }),
-                strategy.profit,
-                strategy.investPrice,
-                RoundIds({ investRoundId: strategy.investRoundIdForSTR, stableRoundId: strategy.stableRoundIdForSTR })
-            );
-        } else if (strategy.parameters._sellTwapTime > 0) {
-            emit SellTwapExecuted(
-                strategyId,
-                impact,
-                TokensTransaction({
-                    tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
-                    stableAmount: strategy.parameters._stableAmount,
-                    investAmount: strategy.parameters._investAmount
-                }),
-                strategy.profit,
-                strategy.investPrice,
-                stablePrice
-            );
-        }
+        emitSellTradeEvent(strategyId, impact, transferObject, previousStableAmount, stablePrice);
     }
 
     /**
@@ -589,6 +532,80 @@ contract SellFacet is Modifiers {
             (strValue > ((fromToPriceDifference * 10000) / fromPrice))
         ) {
             revert RoundDataDoesNotMatch();
+        }
+    }
+
+    function _validateMinimumProfit(uint256 strategyId, uint256 currentPrice, uint256 sold) internal view {
+        Strategy memory strategy = s.strategies[strategyId];
+
+        if (strategy.parameters._sellType == SellLegType.INCREASE_BY && strategy.parameters._minimumProfit > 0) {
+            // Check for mimimum profit
+            uint256 invested = (currentPrice * strategy.investPrice) /
+                10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
+            uint256 profit = sold - invested;
+
+            if (profit < strategy.parameters._minimumProfit) {
+                revert MinimumProfitRequired();
+            }
+        }
+    }
+
+    function emitSellTradeEvent(
+        uint256 strategyId,
+        uint256 impact,
+        TransferObject memory transferObject,
+        uint256 previousStableAmount,
+        uint256 stablePrice
+    ) internal {
+        Strategy memory strategy = s.strategies[strategyId];
+
+        if (
+            (strategy.parameters._sellValue > 0 &&
+                strategy.parameters._strValue == 0 &&
+                strategy.parameters._sellTwapTime == 0) ||
+            (strategy.parameters._sellValue > 0 && strategy.parameters._highSellValue > transferObject.price)
+        ) {
+            emit SellExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
+                }),
+                strategy.profit,
+                strategy.investPrice,
+                stablePrice
+            );
+        } else if (strategy.parameters._strValue > 0) {
+            emit STRExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
+                }),
+                strategy.profit,
+                strategy.investPrice,
+                RoundIds({ investRoundId: strategy.investRoundIdForSTR, stableRoundId: strategy.stableRoundIdForSTR })
+            );
+        } else if (strategy.parameters._sellTwapTime > 0) {
+            emit SellTwapExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
+                }),
+                strategy.profit,
+                strategy.investPrice,
+                stablePrice
+            );
         }
     }
 }
