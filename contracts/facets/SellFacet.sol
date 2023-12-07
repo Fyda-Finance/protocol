@@ -36,6 +36,17 @@ struct TransferObject {
     uint256 price;
     uint256 sellValue;
 }
+/**
+ * @title RoundIds
+ * @notice This struct stores round Id for the transaction of invest and stable tokens.
+ * Struct Fields:
+ * @param investRoundId: the round Id of the invest token.
+ * @param stableRoundId: the round Id of the stable token
+ */
+struct RoundIds {
+    uint80 investRoundId;
+    uint80 stableRoundId;
+}
 
 /**
  * @title SellFacet
@@ -56,6 +67,7 @@ contract SellFacet is Modifiers {
      * @param strategyId The unique ID of the strategy where the sell action is executed.
      * @param impact The allowable price impact percentage for the buy action.
      * @param profit it is the profit made by the strategy.
+     * @param investPrice the average price at which invest tokens were bought.
      * @param tokens tokens substracted and added into the users wallet
      *@param stablePriceInUSD price of stable token in USD
      */
@@ -64,6 +76,7 @@ contract SellFacet is Modifiers {
         uint256 impact,
         TokensTransaction tokens,
         uint256 profit,
+        uint256 investPrice,
         uint256 stablePriceInUSD
     );
 
@@ -72,6 +85,7 @@ contract SellFacet is Modifiers {
      * @param strategyId The unique ID of the strategy where the TWAP sell action was executed.
      * @param impact The allowable price impact percentage for the buy action.
      * @param profit it is the profit made by the strategy.
+     * @param investPrice the average price at which invest tokens were bought.
      * @param tokens tokens substracted and added into the users wallet
      *@param stablePriceInUSD price of stable token in USD
      */
@@ -80,6 +94,7 @@ contract SellFacet is Modifiers {
         uint256 impact,
         TokensTransaction tokens,
         uint256 profit,
+        uint256 investPrice,
         uint256 stablePriceInUSD
     );
 
@@ -89,16 +104,16 @@ contract SellFacet is Modifiers {
      * @param impact The allowable price impact percentage for the buy action.
      * @param tokens tokens substracted and added into the users wallet
      * @param profit it is the profit made by the strategy.
-     * @param investRoundId The round ID for invest price data.
-     * @param stableRoundId The round ID for stable price data.
+     * @param investPrice the average price at which invest tokens were bought.
+     * @param rounds the round Ids of invest and stable tokens.
      */
     event STRExecuted(
         uint256 indexed strategyId,
         uint256 impact,
         TokensTransaction tokens,
         uint256 profit,
-        uint80 investRoundId,
-        uint80 stableRoundId
+        uint256 investPrice,
+        RoundIds rounds
     );
 
     /**
@@ -162,7 +177,7 @@ contract SellFacet is Modifiers {
         uint256 value = executionSellAmount(true, strategyId);
 
         // Perform the sell action, including transferring assets to the DEX.
-        transferSell(strategyId, TransferObject(value, swap, price, sellAt));
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy);
 
         // If there are no further buy actions in the strategy, mark it as completed.
         if (
@@ -172,7 +187,6 @@ contract SellFacet is Modifiers {
             // Retrieve the latest price and round ID from Chainlink.
             uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
             uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
-            strategy.investPrice = 0;
             strategy.status = Status.COMPLETED;
             emit StrategyCompleted(strategyId, investPrice, stablePrice);
         }
@@ -235,14 +249,13 @@ contract SellFacet is Modifiers {
 
         // Update the TWAP execution timestamp and perform the TWAP sell action.
         strategy.sellTwapExecutedAt = block.timestamp;
-        transferSell(strategyId, TransferObject(value, swap, price, sellAt));
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy);
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
         if (
             (strategy.parameters._buyValue == 0 || strategy.parameters._completeOnSell) &&
             strategy.parameters._investAmount == 0
         ) {
-            strategy.investPrice = 0;
             uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
             uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
             strategy.status = Status.COMPLETED;
@@ -311,7 +324,7 @@ contract SellFacet is Modifiers {
 
         uint256 value = executionSellAmount(false, strategyId);
 
-        transferSell(strategyId, TransferObject(value, swap, price, sellAt));
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy);
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
 
@@ -319,7 +332,6 @@ contract SellFacet is Modifiers {
             (strategy.parameters._buyValue == 0 || strategy.parameters._completeOnSell) &&
             strategy.parameters._investAmount == 0
         ) {
-            strategy.investPrice = 0;
             uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
             uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
             strategy.status = Status.COMPLETED;
@@ -356,10 +368,13 @@ contract SellFacet is Modifiers {
      * @dev This function swaps a specified amount of assets on a DEX (Decentralized Exchange) and updates the strategy's state accordingly.
      * @param strategyId The unique ID of the trading strategy where the BTD action is executed.
      * @param transferObject The TransferBuy struct containing the parameters for executing the sell action.
+     * @param strategy The Strategy struct containing the details of the trading strategy.
      */
-    function transferSell(uint256 strategyId, TransferObject memory transferObject) internal {
-        Strategy storage strategy = s.strategies[strategyId];
-
+    function transferSell(
+        uint256 strategyId,
+        TransferObject memory transferObject,
+        Strategy storage strategy
+    ) internal {
         // Create a swap data structure for the DEX trade.
         LibSwap.SwapData memory swap = LibSwap.SwapData(
             transferObject.dexSwap.dex,
@@ -383,17 +398,7 @@ contract SellFacet is Modifiers {
             revert InvalidExchangeRate(transferObject.sellValue, rate);
         }
 
-        if (strategy.parameters._sellType == SellLegType.INCREASE_BY && strategy.parameters._minimumProfit > 0) {
-            // Check for mimimum profit
-            uint256 invested = (transferObject.value * strategy.investPrice) /
-                10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
-            uint256 sold = toTokenAmount;
-            uint256 profit = sold - invested;
-
-            if (profit < strategy.parameters._minimumProfit) {
-                revert MinimumProfitRequired();
-            }
-        }
+        _validateMinimumProfit(strategyId, transferObject.value, toTokenAmount, strategy);
 
         uint256 impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, false);
 
@@ -402,6 +407,9 @@ contract SellFacet is Modifiers {
         uint256 decimals = 10 ** IERC20Metadata(strategy.parameters._investToken).decimals();
 
         strategy.parameters._investAmount = strategy.parameters._investAmount - transferObject.value;
+        if (strategy.parameters._investAmount == 0) {
+            strategy.investPrice = 0;
+        }
         uint256 previousStableAmount = strategy.parameters._stableAmount;
         strategy.parameters._stableAmount = strategy.parameters._stableAmount + toTokenAmount;
 
@@ -422,52 +430,7 @@ contract SellFacet is Modifiers {
 
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
 
-        if (
-            (strategy.parameters._sellValue > 0 &&
-                strategy.parameters._strValue == 0 &&
-                strategy.parameters._sellTwapTime == 0) ||
-            (strategy.parameters._sellValue > 0 && strategy.parameters._highSellValue > transferObject.price)
-        ) {
-            emit SellExecuted(
-                strategyId,
-                impact,
-                TokensTransaction({
-                    tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
-                    stableAmount: strategy.parameters._stableAmount,
-                    investAmount: strategy.parameters._investAmount
-                }),
-                strategy.profit,
-                stablePrice
-            );
-        } else if (strategy.parameters._strValue > 0) {
-            emit STRExecuted(
-                strategyId,
-                impact,
-                TokensTransaction({
-                    tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
-                    stableAmount: strategy.parameters._stableAmount,
-                    investAmount: strategy.parameters._investAmount
-                }),
-                strategy.profit,
-                strategy.investRoundIdForSTR,
-                strategy.stableRoundIdForSTR
-            );
-        } else if (strategy.parameters._sellTwapTime > 0) {
-            emit SellTwapExecuted(
-                strategyId,
-                impact,
-                TokensTransaction({
-                    tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
-                    stableAmount: strategy.parameters._stableAmount,
-                    investAmount: strategy.parameters._investAmount
-                }),
-                strategy.profit,
-                stablePrice
-            );
-        }
+        emitSellTradeEvent(strategyId, impact, transferObject, previousStableAmount, stablePrice, strategy);
     }
 
     /**
@@ -572,6 +535,82 @@ contract SellFacet is Modifiers {
             (strValue > ((fromToPriceDifference * 10000) / fromPrice))
         ) {
             revert RoundDataDoesNotMatch();
+        }
+    }
+
+    function _validateMinimumProfit(
+        uint256 strategyId,
+        uint256 currentPrice,
+        uint256 sold,
+        Strategy storage strategy
+    ) internal view {
+        if (strategy.parameters._sellType == SellLegType.INCREASE_BY && strategy.parameters._minimumProfit > 0) {
+            // Check for mimimum profit
+            uint256 invested = (currentPrice * strategy.investPrice) /
+                10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
+            uint256 profit = sold - invested;
+
+            if (profit < strategy.parameters._minimumProfit) {
+                revert MinimumProfitRequired();
+            }
+        }
+    }
+
+    function emitSellTradeEvent(
+        uint256 strategyId,
+        uint256 impact,
+        TransferObject memory transferObject,
+        uint256 previousStableAmount,
+        uint256 stablePrice,
+        Strategy storage strategy
+    ) internal {
+        if (
+            (strategy.parameters._sellValue > 0 &&
+                strategy.parameters._strValue == 0 &&
+                strategy.parameters._sellTwapTime == 0) ||
+            (strategy.parameters._sellValue > 0 && strategy.parameters._highSellValue > transferObject.price)
+        ) {
+            emit SellExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
+                }),
+                strategy.profit,
+                strategy.investPrice,
+                stablePrice
+            );
+        } else if (strategy.parameters._strValue > 0) {
+            emit STRExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
+                }),
+                strategy.profit,
+                strategy.investPrice,
+                RoundIds({ investRoundId: strategy.investRoundIdForSTR, stableRoundId: strategy.stableRoundIdForSTR })
+            );
+        } else if (strategy.parameters._sellTwapTime > 0) {
+            emit SellTwapExecuted(
+                strategyId,
+                impact,
+                TokensTransaction({
+                    tokenSubstracted: transferObject.value,
+                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    stableAmount: strategy.parameters._stableAmount,
+                    investAmount: strategy.parameters._investAmount
+                }),
+                strategy.profit,
+                strategy.investPrice,
+                stablePrice
+            );
         }
     }
 }
