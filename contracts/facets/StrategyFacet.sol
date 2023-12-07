@@ -22,8 +22,6 @@ error BuyDCANotSet();
 error STRIsNotSet();
 error BTDIsNotSet();
 error InvestAmountMustBeProvided();
-error SellPercentageWithDCA();
-error FloorPercentageWithDCA();
 error FloorPercentageNotSet();
 error SellPercentageNotSet();
 
@@ -298,20 +296,6 @@ contract StrategyFacet is Modifiers {
             revert AtLeastOneOptionRequired();
         }
 
-        if (
-            _parameter._sellType == SellLegType.INCREASE_BY &&
-            (_parameter._strValue > 0 || _parameter._sellTwapTime > 0)
-        ) {
-            revert SellPercentageWithDCA();
-        }
-
-        if (
-            _parameter._floorType == FloorLegType.DECREASE_BY &&
-            (_parameter._buyTwapTime > 0 || _parameter._btdValue > 0)
-        ) {
-            revert FloorPercentageWithDCA();
-        }
-
         if (_parameter._buyValue > 0 && _parameter._buyTwapTime > 0 && _parameter._btdValue > 0) {
             revert BothBuyTwapAndBTD();
         }
@@ -442,12 +426,6 @@ contract StrategyFacet is Modifiers {
 
         if (_parameter._floorValue > 0 && _parameter._floorType == FloorLegType.DECREASE_BY) {
             if (_parameter._floorValue > LibTrade.MAX_PERCENTAGE) {
-                revert PercentageNotInRange();
-            }
-        }
-
-        if (_parameter._sellValue > 0 && _parameter._sellType == SellLegType.INCREASE_BY) {
-            if (_parameter._sellValue > LibTrade.MAX_PERCENTAGE) {
                 revert PercentageNotInRange();
             }
         }
