@@ -398,7 +398,7 @@ contract SellFacet is Modifiers {
             revert InvalidExchangeRate(transferObject.sellValue, rate);
         }
 
-        _validateMinimumProfit(transferObject.value, toTokenAmount, strategy);
+        _validateMinimumProfit(toTokenAmount, strategy);
 
         uint256 impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, false);
 
@@ -538,10 +538,10 @@ contract SellFacet is Modifiers {
         }
     }
 
-    function _validateMinimumProfit(uint256 currentPrice, uint256 sold, Strategy storage strategy) internal view {
+    function _validateMinimumProfit(uint256 sold, Strategy storage strategy) internal view {
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY && strategy.parameters._minimumProfit > 0) {
             // Check for mimimum profit
-            uint256 invested = (currentPrice * strategy.investPrice) /
+            uint256 invested = (strategy.parameters._investAmount * strategy.investPrice) /
                 10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
             uint256 profit = sold - invested;
 
