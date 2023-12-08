@@ -410,7 +410,6 @@ contract SellFacet is Modifiers {
         if (strategy.parameters._investAmount == 0) {
             strategy.investPrice = 0;
         }
-        uint256 previousStableAmount = strategy.parameters._stableAmount;
         strategy.parameters._stableAmount = strategy.parameters._stableAmount + toTokenAmount;
 
         uint256 totalInvestAmount = (strategy.parameters._investAmount * transferObject.price) / decimals;
@@ -430,7 +429,7 @@ contract SellFacet is Modifiers {
 
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
 
-        emitSellTradeEvent(strategyId, impact, transferObject, previousStableAmount, stablePrice, strategy);
+        emitSellTradeEvent(strategyId, impact, transferObject, stablePrice, strategy, toTokenAmount);
     }
 
     /**
@@ -555,9 +554,9 @@ contract SellFacet is Modifiers {
         uint256 strategyId,
         uint256 impact,
         TransferObject memory transferObject,
-        uint256 previousStableAmount,
         uint256 stablePrice,
-        Strategy storage strategy
+        Strategy storage strategy,
+        uint256 tokensAdded
     ) internal {
         if (
             (strategy.parameters._sellValue > 0 &&
@@ -570,7 +569,7 @@ contract SellFacet is Modifiers {
                 impact,
                 TokensTransaction({
                     tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    tokenAdded: tokensAdded,
                     stableAmount: strategy.parameters._stableAmount,
                     investAmount: strategy.parameters._investAmount
                 }),
@@ -584,7 +583,7 @@ contract SellFacet is Modifiers {
                 impact,
                 TokensTransaction({
                     tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    tokenAdded: tokensAdded,
                     stableAmount: strategy.parameters._stableAmount,
                     investAmount: strategy.parameters._investAmount
                 }),
@@ -598,7 +597,7 @@ contract SellFacet is Modifiers {
                 impact,
                 TokensTransaction({
                     tokenSubstracted: transferObject.value,
-                    tokenAdded: (strategy.parameters._stableAmount - previousStableAmount),
+                    tokenAdded: tokensAdded,
                     stableAmount: strategy.parameters._stableAmount,
                     investAmount: strategy.parameters._investAmount
                 }),

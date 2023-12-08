@@ -17,25 +17,25 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
     log: true,
   });
 
-  await deploy("BuyFacet", {
-    from: deployer,
-    args: [],
-    log: true,
-  });
+  // await deploy("BuyFacet", {
+  //   from: deployer,
+  //   args: [],
+  //   log: true,
+  // });
 
-  await deploy("FloorFacet", {
-    from: deployer,
-    args: [],
-    log: true,
-  });
+  // await deploy("FloorFacet", {
+  //   from: deployer,
+  //   args: [],
+  //   log: true,
+  // });
 
   const sellFacet = await hre.ethers.getContract("SellFacet");
-  const buyFacet = await hre.ethers.getContract("BuyFacet");
-  const floorFacet = await hre.ethers.getContract("FloorFacet");
+  // const buyFacet = await hre.ethers.getContract("BuyFacet");
+  // const floorFacet = await hre.ethers.getContract("FloorFacet");
 
   const sellFacetSelectors: any = getSelectors(sellFacet);
-  const buyFacetSelectors: any = getSelectors(buyFacet);
-  const floorFacetSelectors: any = getSelectors(floorFacet);
+  // const buyFacetSelectors: any = getSelectors(buyFacet);
+  // const floorFacetSelectors: any = getSelectors(floorFacet);
 
   const diamondCutFacet: DiamondCutFacet = await ethers.getContractAt(
     "DiamondCutFacet",
@@ -48,16 +48,16 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
       action: 1, //replace
       functionSelectors: sellFacetSelectors,
     },
-    {
-      facetAddress: buyFacet.address,
-      action: 1, //replace
-      functionSelectors: buyFacetSelectors,
-    },
-    {
-      facetAddress: floorFacet.address,
-      action: 1, //replace
-      functionSelectors: floorFacetSelectors,
-    },
+    // {
+    //   facetAddress: buyFacet.address,
+    //   action: 1, //replace
+    //   functionSelectors: buyFacetSelectors,
+    // },
+    // {
+    //   facetAddress: floorFacet.address,
+    //   action: 1, //replace
+    //   functionSelectors: floorFacetSelectors,
+    // },
   ];
 
   await diamondCutFacet.diamondCut([...cut], ethers.constants.AddressZero, "0x");
