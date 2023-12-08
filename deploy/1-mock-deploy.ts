@@ -1,9 +1,9 @@
 import hre from "hardhat";
 import { ethers } from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { PriceOracleFacet, ScenarioDEX } from "typechain";
 
 import deployDiamond from "../scripts/deploy";
+import { PriceOracleFacet, ScenarioDEX } from "../typechain-types";
 
 const feeds: any = {
   goerli: {
