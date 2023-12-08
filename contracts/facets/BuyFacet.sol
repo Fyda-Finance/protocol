@@ -319,8 +319,10 @@ contract BuyFacet is Modifiers {
             if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE && strategy.parameters._floorValue >= rate) {
                 revert FloorGreaterThanPrice();
             } else if (strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
-                uint256 currentInvestmentValue = strategy.parameters._investAmount * transferObject.price;
-                uint256 totalInvested = strategy.parameters._investAmount * strategy.investPrice;
+                uint256 currentInvestmentValue = (strategy.parameters._investAmount * transferObject.price) /
+                    10 ** IERC20Metadata(strategy.parameters._investToken).decimals();
+                uint256 totalInvested = (strategy.parameters._investAmount * strategy.investPrice) /
+                    10 ** IERC20Metadata(strategy.parameters._investToken).decimals();
 
                 if (totalInvested > currentInvestmentValue) {
                     //how much loss in %

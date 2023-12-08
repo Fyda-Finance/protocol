@@ -116,7 +116,7 @@ contract FloorFacet is Modifiers {
             if (strategy.parameters._floorType == FloorLegType.DECREASE_BY && strategy.parameters._minimumLoss > 0) {
                 // Check for mimimum loss
                 uint256 invested = (strategy.parameters._investAmount * strategy.investPrice) /
-                    10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
+                    10 ** IERC20Metadata(strategy.parameters._investToken).decimals();
                 uint256 sold = toTokenAmount;
                 uint256 loss = invested - sold;
 

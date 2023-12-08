@@ -12,15 +12,30 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   const deployer = accounts[0].address;
 
   await deploy("SellFacet", {
-    contract: "SellFacet",
+    from: deployer,
+    args: [],
+    log: true,
+  });
+
+  await deploy("BuyFacet", {
+    from: deployer,
+    args: [],
+    log: true,
+  });
+
+  await deploy("FloorFacet", {
     from: deployer,
     args: [],
     log: true,
   });
 
   const sellFacet = await hre.ethers.getContract("SellFacet");
+  const buyFacet = await hre.ethers.getContract("BuyFacet");
+  const floorFacet = await hre.ethers.getContract("FloorFacet");
 
   const sellFacetSelectors: any = getSelectors(sellFacet);
+  const buyFacetSelectors: any = getSelectors(buyFacet);
+  const floorFacetSelectors: any = getSelectors(floorFacet);
 
   const diamondCutFacet: DiamondCutFacet = await ethers.getContractAt(
     "DiamondCutFacet",
@@ -32,6 +47,16 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
       facetAddress: sellFacet.address,
       action: 1, //replace
       functionSelectors: sellFacetSelectors,
+    },
+    {
+      facetAddress: buyFacet.address,
+      action: 1, //replace
+      functionSelectors: buyFacetSelectors,
+    },
+    {
+      facetAddress: floorFacet.address,
+      action: 1, //replace
+      functionSelectors: floorFacetSelectors,
     },
   ];
 

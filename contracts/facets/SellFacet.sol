@@ -542,7 +542,7 @@ contract SellFacet is Modifiers {
         if (strategy.parameters._sellType == SellLegType.INCREASE_BY && strategy.parameters._minimumProfit > 0) {
             // Check for mimimum profit
             uint256 invested = (strategy.parameters._investAmount * strategy.investPrice) /
-                10 ** IERC20Metadata(strategy.parameters._stableToken).decimals();
+                10 ** IERC20Metadata(strategy.parameters._investToken).decimals();
             uint256 profit = sold - invested;
 
             if (profit < strategy.parameters._minimumProfit) {
