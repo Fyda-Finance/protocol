@@ -162,5 +162,10 @@ contract FloorFacet is Modifiers {
             strategy.status = Status.CANCELLED;
             emit StrategyCancelled(strategyId, investPrice, stablePrice);
         }
+
+        if (strategy.parameters._cancelOnFloor == false && strategy.parameters._buyValue == 0) {
+            strategy.status = Status.CANCELLED;
+            emit StrategyCancelled(strategyId, 0, stablePrice);
+        }
     }
 }
