@@ -126,7 +126,7 @@ const feeds: any = {
     },
     {
       // RDNT
-      token: "0x0411d28c94d85a36bc72cb0f875dfa8371d8ffff",
+      token: "0x3082CC23568eA640225c2467653dB90e9250AaA0",
       feed: "0x20d0fcab0ecfd078b036b6caf1fac69a6453b352",
     },
     {
