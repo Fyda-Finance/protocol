@@ -151,13 +151,11 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   const diamond = await hre.ethers.getContract("Diamond");
   const priceOracleFacet: PriceOracleFacet = await ethers.getContractAt("PriceOracleFacet", diamond.address);
   const networkFeeds = feeds[network.name];
+  const _tokens = networkFeeds.map((feed: any) => feed.token);
+  const _feeds = networkFeeds.map((feed: any) => feed.feed);
 
-  for (let i = 0; i < networkFeeds.length; i++) {
-    const feed = networkFeeds[i];
-    console.log("Configuring feed for token", feed.token, feed.feed);
-    let tx = await priceOracleFacet.setAssetFeed(feed.token, feed.feed);
-    await tx.wait();
-  }
+  const tx = await priceOracleFacet.setAssetFeeds(_tokens, _feeds);
+  await tx.wait();
 
   console.log("Configuration complete");
 };

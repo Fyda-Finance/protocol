@@ -2,18 +2,7 @@ import hre from "hardhat";
 import { ethers } from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import deployDiamond from "../scripts/deploy";
 import { getSelectors } from "../scripts/libraries/diamond";
-import { PriceOracleFacet, ScenarioDEX } from "../typechain-types";
-
-const feeds: any = {
-  goerli: {
-    usdc: "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
-    wbtc: "0xA39434A63A52E749F02807ae27335515BA4b07F7",
-    eth: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
-    link: "0x48731cF7e84dc94C5f84577882c14Be11a5B7456",
-  },
-};
 
 module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;

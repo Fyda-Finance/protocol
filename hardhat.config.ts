@@ -25,8 +25,14 @@ const config: HardhatUserConfig = {
   networks: {
     goerli: {
       accounts: [process.env.PRIVATE_KEY || ""],
-      url: process.env.RPC_URL || "",
+      url: process.env.GOERLI_RPC_URL || "",
       chainId: 5,
+      gasMultiplier: 1.5,
+    },
+    arbitrum: {
+      accounts: [process.env.PRIVATE_KEY || ""],
+      url: process.env.ARBITRUM_RPC_URL || "",
+      chainId: 42161,
       gasMultiplier: 1.5,
     },
   },
