@@ -24,6 +24,18 @@ contract PriceOracleFacet is Modifiers {
     }
 
     /**
+     * @notice Sets the asset price feed addresses for a list of assets.
+     * @param _assets The addresses of the assets.
+     * @param _feeds The addresses of the price feeds for the assets.
+     */
+    function setAssetFeeds(address[] calldata _assets, address[] calldata _feeds) external onlyOwner {
+        require(_assets.length == _feeds.length, "length mismatch");
+        for (uint256 i = 0; i < _assets.length; i++) {
+            s.feeds[_assets[i]] = _feeds[i];
+        }
+    }
+
+    /**
      * @notice Get the current price and round IDs of an asset relative to a unit.
      * @param asset The address of the asset.
      * @param unit The address of the unit (e.g., USD).
