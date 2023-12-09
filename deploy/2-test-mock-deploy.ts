@@ -7,11 +7,7 @@ import { BuyFacet, PriceOracleFacet, ScenarioDEX, SellFacet, StrategyFacet } fro
 
 const addresses: any = {
   goerli: {
-    usdc: "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
-    wbtc: "0xA39434A63A52E749F02807ae27335515BA4b07F7",
-    eth: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
-    link: "0x48731cF7e84dc94C5f84577882c14Be11a5B7456",
-    diamond: "0x34d9f39f8C46Aa40930f6Ce70F82Fb702BA6f38A",
+    diamond: "0x781C0F94CF2F7C1030CA188B1778831714609799",
   },
 };
 
@@ -20,16 +16,29 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   const accounts = await ethers.getSigners();
   const deployer = accounts[0].address;
 
-  /**
-   * 1. Deploy ERC20 Tokens
-   * 2. Deploy DEX
-   * 3. Deploy Diamond
-   * 3. Configure Price for ERC20 in DEX and Diamond
-   */
-
   console.log("Fetching strategy Facets");
+  // const strategyFacet: StrategyFacet = await ethers.getContractAt("StrategyFacet", addresses[network.name].diamond);
+  const buyFacet: BuyFacet = await ethers.getContractAt("BuyFacet", addresses[network.name].diamond);
   const strategyFacet: StrategyFacet = await ethers.getContractAt("StrategyFacet", addresses[network.name].diamond);
-  // const sellFacet: SellFacet = await ethers.getContractAt("SellFacet", addresses[network.name].diamond);
+
+  const sts = await strategyFacet.getStrategy(5);
+  console.log("investRoundIdForBTD", sts.investRoundIdForBTD.toString());
+
+  console.log("stableRoundIdForBTD", sts.stableRoundIdForBTD.toString());
+  console.log(sts.parameters._stableAmount.toString());
+  console.log(sts.parameters._investAmount.toString());
+
+  // await buyFacet.executeBTD(
+  //   14,
+  //   "18446744073709570552",
+  //   "18446744073709552208",
+  //   "18446744073709570568",
+  //   "18446744073709552209",
+  //   {
+  //     dex: '0x101E628cbC91c6b0c6348bde885a125C29A9229E',
+  //     callData: '0xdf791e500000000000000000000000003e6ffe1dd604c3315ce48eb9cf1121a3062768d50000000000000000000000008fd6903611c717bc8673dd890ec5902551c15d820000000000000000000000000000000000000000000000000000000005f5e100'
+  //   }
+  // )
 
   // const parameters = {
   //   _investToken: weth.address,
@@ -63,8 +72,8 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   // };
   // const createStrategy = await strategyFacet.connect(accounts[1]).createStrategy(parameters);
   // await createStrategy.wait();
-  const strategy = await strategyFacet.getStrategy(1);
-  console.log("Strategy: ", strategy);
+  // const strategy = await strategyFacet.getStrategy(1);
+  // console.log("Strategy: ", strategy);
   // let value = await buyFacet.executionBuyAmount(true, 1);
   // console.log("Value: ", value);
   // let dexCalldata = dex.interface.encodeFunctionData("swap", [

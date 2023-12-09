@@ -108,7 +108,8 @@ describe("Swap and Impact", function () {
       _btdType: 0,
       _buyDCAUnit: 0,
       _buyDCAValue: 0,
-      _current_price: 0,
+      _current_price_buy: 0,
+      _current_price_sell: 0,
 
       _minimumLoss: 0,
       _minimumProfit: 0,
@@ -175,7 +176,8 @@ describe("Swap and Impact", function () {
       _btdType: 0,
       _buyDCAUnit: 0,
       _buyDCAValue: 0,
-      _current_price: 0,
+      _current_price_buy: 0,
+      _current_price_sell: 0,
 
       _minimumLoss: 0,
       _minimumProfit: 0,

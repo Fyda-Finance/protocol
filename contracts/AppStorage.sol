@@ -86,19 +86,6 @@ enum DCA_UNIT {
 }
 
 /**
- * @notice The `CURRENT_PRICE` enum defines the options for selecting the current price source in trading strategies.
- * @dev This enum enumerates four possible options for selecting the current price source:
- *      - NOT_SELECTED: No specific current price source is selected.
- *      - BUY_CURRENT: The current price source is selected for buy actions.
- *      - SELL_CURRENT: The current price source is selected for sell actions.
- */
-enum CURRENT_PRICE {
-    NOT_SELECTED, // No specific current price source is selected.
-    BUY_CURRENT, // The current price source is selected for buy actions.
-    SELL_CURRENT // The current price source is selected for sell actions.
-}
-
-/**
  * @notice The `TimeUnit` enum defines the units of time for time-related settings in trading strategies.
  * @dev This enum enumerates three possible time units that can be used in trading strategies:
  *      - NO_UNIT: No specific time unit is defined.
@@ -175,8 +162,10 @@ struct StrategyParameters {
     TimeUnit _sellTwapTimeUnit;
     // @param _completeOnSell A flag to complete the strategy on selling (if sell is set).
     bool _completeOnSell;
-    // @param _current_price The current price indicator is selected what kind of strategy to execute immediately.
-    CURRENT_PRICE _current_price;
+    // @param _current_price_sell The current price indicator is selected for sell
+    bool _current_price_sell;
+    // @param _current_price The current price indicator is selected for buy
+    bool _current_price_buy;
 }
 
 /**
@@ -288,7 +277,8 @@ struct UpdateStruct {
     bool toggleLiquidateOnFloor;
     bool toggleCancelOnFloor;
     uint256 impact;
-    CURRENT_PRICE current_price;
+    bool current_price_sell;
+    bool current_price_buy;
     uint256 minimumLoss;
     uint256 minimumProfit;
 }

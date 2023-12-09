@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, CURRENT_PRICE, Swap, TokensTransaction } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, BuyLegType, FloorLegType, Swap, TokensTransaction } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance, FloorGreaterThanPrice, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, BuyNotSet, BuyTwapNotSelected, PriceNotInRange } from "../utils/GenericErrors.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
@@ -428,6 +428,7 @@ contract BuyFacet is Modifiers {
         if (toInvestRoundId < fromInvestRoundId || toStableRoundId < fromStableRoundId) {
             revert WrongPreviousIDs();
         }
+
         if (
             strategy.investRoundIdForBTD > fromInvestRoundId ||
             strategy.investRoundIdForBTD > toInvestRoundId ||

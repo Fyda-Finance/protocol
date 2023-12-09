@@ -93,7 +93,8 @@ describe("Strategy", function () {
       _btdType: 0,
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
-      _current_price: 0,
+      _current_price_buy: 0,
+      _current_price_sell: 0,
       _minimumLoss: 0,
       _minimumProfit: 0,
     };
@@ -132,8 +133,8 @@ describe("Strategy", function () {
       _btdType: 0,
       _buyDCAUnit: 0,
       _buyDCAValue: "0",
-      _current_price: 0,
-
+      _current_price_buy: 0,
+      _current_price_sell: 0,
       _minimumLoss: 0,
       _minimumProfit: 0,
     };
@@ -153,7 +154,7 @@ describe("Strategy", function () {
 
     parameters._floorValue = "0";
     parameters._btdType = 1;
-    parameters._btdValue = "15000";
+    parameters._btdValue = "5000";
     parameters._buyDCAUnit = 1;
     parameters._buyDCAValue = "12";
 
@@ -208,7 +209,8 @@ describe("Strategy", function () {
       _btdType: 1,
       _buyDCAUnit: 2,
       _buyDCAValue: "1000",
-      _current_price: 0,
+      _current_price_buy: 0,
+      _current_price_sell: 0,
       _minimumLoss: 0,
       _minimumProfit: 0,
     };

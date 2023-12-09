@@ -38,7 +38,8 @@ describe("Sell", function () {
       _sellTwapTime: 0,
       _sellTwapTimeUnit: 0,
       _completeOnSell: false,
-      _current_price: 0,
+      _current_price_buy: 0,
+      _current_price_sell: 0,
       _minimumLoss: 0,
       _minimumProfit: 0,
     };

@@ -11,17 +11,17 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   const accounts = await ethers.getSigners();
   const deployer = accounts[0].address;
 
-  await deploy("SellFacet", {
-    from: deployer,
-    args: [],
-    log: true,
-  });
-
-  // await deploy("BuyFacet", {
+  // await deploy("SellFacet", {
   //   from: deployer,
   //   args: [],
   //   log: true,
   // });
+
+  await deploy("BuyFacet", {
+    from: deployer,
+    args: [],
+    log: true,
+  });
 
   // await deploy("FloorFacet", {
   //   from: deployer,
@@ -29,12 +29,12 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   //   log: true,
   // });
 
-  const sellFacet = await hre.ethers.getContract("SellFacet");
-  // const buyFacet = await hre.ethers.getContract("BuyFacet");
+  // const sellFacet = await hre.ethers.getContract("SellFacet");
+  const buyFacet = await hre.ethers.getContract("BuyFacet");
   // const floorFacet = await hre.ethers.getContract("FloorFacet");
 
-  const sellFacetSelectors: any = getSelectors(sellFacet);
-  // const buyFacetSelectors: any = getSelectors(buyFacet);
+  // const sellFacetSelectors: any = getSelectors(sellFacet);
+  const buyFacetSelectors: any = getSelectors(buyFacet);
   // const floorFacetSelectors: any = getSelectors(floorFacet);
 
   const diamondCutFacet: DiamondCutFacet = await ethers.getContractAt(
@@ -43,16 +43,16 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   );
 
   const cut = [
-    {
-      facetAddress: sellFacet.address,
-      action: 1, //replace
-      functionSelectors: sellFacetSelectors,
-    },
     // {
-    //   facetAddress: buyFacet.address,
+    //   facetAddress: sellFacet.address,
     //   action: 1, //replace
-    //   functionSelectors: buyFacetSelectors,
+    //   functionSelectors: sellFacetSelectors,
     // },
+    {
+      facetAddress: buyFacet.address,
+      action: 1, //replace
+      functionSelectors: buyFacetSelectors,
+    },
     // {
     //   facetAddress: floorFacet.address,
     //   action: 1, //replace
@@ -60,7 +60,8 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
     // },
   ];
 
-  await diamondCutFacet.diamondCut([...cut], ethers.constants.AddressZero, "0x");
+  const tx = await diamondCutFacet.diamondCut([...cut], ethers.constants.AddressZero, "0x");
+  await tx.wait();
 };
 
 module.exports.tags = ["upgradeMock"];

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, CURRENT_PRICE, Swap, TokensTransaction } from "../AppStorage.sol";
+import { AppStorage, Strategy, Status, DCA_UNIT, DIP_SPIKE, SellLegType, Swap, TokensTransaction } from "../AppStorage.sol";
 import { LibSwap } from "../libraries/LibSwap.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidExchangeRate, NoSwapFromZeroBalance, WrongPreviousIDs, RoundDataDoesNotMatch, StrategyIsNotActive, SellNotSelected, SellTwapNotSelected, PriceNotInRange } from "../utils/GenericErrors.sol";

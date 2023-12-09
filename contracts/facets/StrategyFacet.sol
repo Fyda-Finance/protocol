@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, CURRENT_PRICE, UpdateStruct } from "../AppStorage.sol";
+import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, UpdateStruct } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidImpact, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrType, BTDWithoutBTDType, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce, StrategyIsNotActive, BuyNotSet, SellNotSelected, PercentageNotInRange, BuyTwapNotSelected, SellTwapNotSelected, FloorNotSet } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
@@ -26,6 +26,7 @@ error FloorPercentageNotSet();
 error SellPercentageNotSet();
 error StrValueGreaterThan100();
 error BtdValueGreaterThan100();
+error BuySellCurrentPrice();
 
 /**
  * @title StrategyFacet
@@ -285,13 +286,21 @@ contract StrategyFacet is Modifiers {
             _parameter._stableToken
         );
 
-        if (_parameter._current_price == CURRENT_PRICE.BUY_CURRENT) {
+        if (_parameter._current_price_buy == true) {
             _parameter._buyType = BuyLegType.LIMIT_PRICE;
             _parameter._buyValue = price + (price * _parameter._impact) / LibTrade.MAX_PERCENTAGE;
         }
-        if (_parameter._current_price == CURRENT_PRICE.SELL_CURRENT) {
+        if (_parameter._current_price_sell == true) {
             _parameter._sellType = SellLegType.LIMIT_PRICE;
             _parameter._sellValue = price - ((price * _parameter._impact) / LibTrade.MAX_PERCENTAGE);
+        }
+
+        if (_parameter._current_price_buy == true && _parameter._current_price_sell == true) {
+            if (_parameter._investAmount != 0) {
+                _parameter._buyValue = _parameter._sellValue - 1;
+            } else {
+                _parameter._sellValue = _parameter._buyValue + 1;
+            }
         }
 
         if ((_parameter._floorValue == 0 && _parameter._sellValue == 0 && _parameter._buyValue == 0)) {
@@ -636,7 +645,8 @@ contract StrategyFacet is Modifiers {
             updateStruct.impact == 0 &&
             updateStruct.minimumProfit == 0 &&
             updateStruct.minimumLoss == 0 &&
-            updateStruct.current_price == CURRENT_PRICE.NOT_SELECTED
+            updateStruct.current_price_buy == false &&
+            updateStruct.current_price_sell == false
         ) {
             revert NothingToUpdate();
         }
@@ -738,7 +748,7 @@ contract StrategyFacet is Modifiers {
         }
 
         (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
-        if (updateStruct.current_price == CURRENT_PRICE.BUY_CURRENT) {
+        if (updateStruct.current_price_buy == true) {
             if (strategy.parameters._buyValue > 0) {
                 strategy.parameters._buyValue =
                     price +
@@ -748,7 +758,7 @@ contract StrategyFacet is Modifiers {
             }
         }
 
-        if (updateStruct.current_price == CURRENT_PRICE.SELL_CURRENT) {
+        if (updateStruct.current_price_sell == true) {
             if (strategy.parameters._sellValue > 0 && strategy.parameters._sellType == SellLegType.LIMIT_PRICE) {
                 strategy.parameters._sellValue =
                     price -
@@ -756,6 +766,10 @@ contract StrategyFacet is Modifiers {
             } else {
                 revert SellNotSelected();
             }
+        }
+
+        if (updateStruct.current_price_buy == true && updateStruct.current_price_sell == true) {
+            revert BuySellCurrentPrice();
         }
 
         if (

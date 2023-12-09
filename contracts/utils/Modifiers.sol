@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, FloorLegType, BuyLegType, SellLegType, TimeUnit, DIP_SPIKE, DCA_UNIT, CURRENT_PRICE, ReentrancyStatus } from "../AppStorage.sol";
+import { AppStorage, FloorLegType, BuyLegType, SellLegType, TimeUnit, DIP_SPIKE, DCA_UNIT, ReentrancyStatus } from "../AppStorage.sol";
 import { ReentrancyGuardReentrantCall } from "./GenericErrors.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 
