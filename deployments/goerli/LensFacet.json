@@ -1,0 +1,795 @@
+{
+  "address": "0x28C11be6E112dFF2978EaB69A24A0971a447D444",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "HighImpact",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "fromAsset",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "fromAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "toAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "calculateExchangeRate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getChainId",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "getNonce",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "nonce",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "exchangeRate",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxImpact",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isBuy",
+          "type": "bool"
+        }
+      ],
+      "name": "validateImpact",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xc26b929bc17e77436f80a69acd0ac0bca91585179704a23de297d99f97113d9b",
+  "receipt": {
+    "to": null,
+    "from": "0x3960feD4d09b9a569B66654C6ba6846Db7dE6ba7",
+    "contractAddress": "0x28C11be6E112dFF2978EaB69A24A0971a447D444",
+    "transactionIndex": 47,
+    "gasUsed": "320339",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x10e3cd8597ecbb50e9bca69b5981a7f4eecaf4c770820248b14120450f3c6172",
+    "transactionHash": "0xc26b929bc17e77436f80a69acd0ac0bca91585179704a23de297d99f97113d9b",
+    "logs": [],
+    "blockNumber": 10184793,
+    "cumulativeGasUsed": "9116722",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "8758efc6836d60167b6d86981cbcb7fb",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.20+commit.a1b79de6\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"HighImpact\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"fromAsset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"fromAmount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"toAmount\",\"type\":\"uint256\"}],\"name\":\"calculateExchangeRate\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getChainId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"getNonce\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"exchangeRate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxImpact\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"isBuy\",\"type\":\"bool\"}],\"name\":\"validateImpact\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"This contract provides functions for calculating exchange rates and validating impact in trades.\",\"kind\":\"dev\",\"methods\":{\"calculateExchangeRate(address,uint256,uint256)\":{\"params\":{\"fromAmount\":\"The amount of the source asset.\",\"fromAsset\":\"The address of the source asset.\",\"toAmount\":\"The amount of the target asset.\"},\"returns\":{\"_0\":\"The calculated exchange rate.\"}},\"getChainId()\":{\"returns\":{\"_0\":\"chain ID.\"}},\"getNonce(address)\":{\"params\":{\"account\":\"The address of the account.\"},\"returns\":{\"nonce\":\"current nonce.\"}},\"validateImpact(uint256,uint256,uint256,bool)\":{\"params\":{\"exchangeRate\":\"The calculated exchange rate for the trade.\",\"isBuy\":\"A flag indicating whether it's a buy (true) or sell (false) trade.\",\"maxImpact\":\"The maximum allowable impact percentage.\",\"price\":\"The current market price.\"},\"returns\":{\"_0\":\"The validated impact for the trade.\"}}},\"title\":\"LensFacet\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"calculateExchangeRate(address,uint256,uint256)\":{\"notice\":\"Calculate the exchange rate between two assets for a given trade.\"},\"getChainId()\":{\"notice\":\"Get the current chain ID.\"},\"getNonce(address)\":{\"notice\":\"Get the current nonce for a given account.\"},\"validateImpact(uint256,uint256,uint256,bool)\":{\"notice\":\"Validate impact for a trade based on exchange rate, price, and maximum allowed impact.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/facets/LensFacet.sol\":\"LensFacet\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.9.0) (token/ERC20/IERC20.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Interface of the ERC20 standard as defined in the EIP.\\n */\\ninterface IERC20 {\\n    /**\\n     * @dev Emitted when `value` tokens are moved from one account (`from`) to\\n     * another (`to`).\\n     *\\n     * Note that `value` may be zero.\\n     */\\n    event Transfer(address indexed from, address indexed to, uint256 value);\\n\\n    /**\\n     * @dev Emitted when the allowance of a `spender` for an `owner` is set by\\n     * a call to {approve}. `value` is the new allowance.\\n     */\\n    event Approval(address indexed owner, address indexed spender, uint256 value);\\n\\n    /**\\n     * @dev Returns the amount of tokens in existence.\\n     */\\n    function totalSupply() external view returns (uint256);\\n\\n    /**\\n     * @dev Returns the amount of tokens owned by `account`.\\n     */\\n    function balanceOf(address account) external view returns (uint256);\\n\\n    /**\\n     * @dev Moves `amount` tokens from the caller's account to `to`.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transfer(address to, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Returns the remaining number of tokens that `spender` will be\\n     * allowed to spend on behalf of `owner` through {transferFrom}. This is\\n     * zero by default.\\n     *\\n     * This value changes when {approve} or {transferFrom} are called.\\n     */\\n    function allowance(address owner, address spender) external view returns (uint256);\\n\\n    /**\\n     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * IMPORTANT: Beware that changing an allowance with this method brings the risk\\n     * that someone may use both the old and the new allowance by unfortunate\\n     * transaction ordering. One possible solution to mitigate this race\\n     * condition is to first reduce the spender's allowance to 0 and set the\\n     * desired value afterwards:\\n     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729\\n     *\\n     * Emits an {Approval} event.\\n     */\\n    function approve(address spender, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Moves `amount` tokens from `from` to `to` using the\\n     * allowance mechanism. `amount` is then deducted from the caller's\\n     * allowance.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transferFrom(address from, address to, uint256 amount) external returns (bool);\\n}\\n\",\"keccak256\":\"0x287b55befed2961a7eabd7d7b1b2839cbca8a5b80ef8dcbb25ed3d4c2002c305\",\"license\":\"MIT\"},\"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"../IERC20.sol\\\";\\n\\n/**\\n * @dev Interface for the optional metadata functions from the ERC20 standard.\\n *\\n * _Available since v4.1._\\n */\\ninterface IERC20Metadata is IERC20 {\\n    /**\\n     * @dev Returns the name of the token.\\n     */\\n    function name() external view returns (string memory);\\n\\n    /**\\n     * @dev Returns the symbol of the token.\\n     */\\n    function symbol() external view returns (string memory);\\n\\n    /**\\n     * @dev Returns the decimals places of the token.\\n     */\\n    function decimals() external view returns (uint8);\\n}\\n\",\"keccak256\":\"0x8de418a5503946cabe331f35fe242d3201a73f67f77aaeb7110acb1f30423aca\",\"license\":\"MIT\"},\"contracts/AppStorage.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\nenum ReentrancyStatus {\\n    NOT_ENTERED,\\n    ENTERED\\n}\\n\\n/**\\n * @notice The `Status` enum represents the possible statuses of a trading strategy.\\n * @dev This enum defines three status options that describe the state of a strategy:\\n *      - ACTIVE: The strategy is currently active and operational.\\n *      - CANCELLED: The strategy has been cancelled and is no longer in effect.\\n *      - COMPLETED: The strategy has been successfully completed.\\n */\\nenum Status {\\n    ACTIVE, // The strategy is currently active.\\n    CANCELLED, // The strategy has been cancelled.\\n    COMPLETED // The strategy has been successfully completed.\\n}\\n\\n/**\\n * @notice The `FloorLegType` enum defines the types of floor price legs for trading strategies.\\n * @dev This enum enumerates three possible types of floor price legs that can be associated with a strategy:\\n *      - NO_TYPE: No specific floor price leg is defined.\\n *      - LIMIT_PRICE: The floor price is set as a specific limit price.\\n *      - DECREASE_BY: The floor price is determined by decreasing the current price by a certain amount.\\n */\\nenum FloorLegType {\\n    NO_TYPE, // No specific floor price leg is defined.\\n    LIMIT_PRICE, // The floor price is set as a specific limit price.\\n    DECREASE_BY // The floor price is determined by decreasing the current price by a certain amount.\\n}\\n/**\\n * @notice The `BuyLegType` enum defines the types of buy legs for trading strategies.\\n * @dev This enum enumerates two possible types of buy legs that can be associated with a strategy:\\n *      - NO_TYPE: No specific buy leg is defined.\\n *      - LIMIT_PRICE: The buy leg is set as a specific limit price.\\n */\\nenum BuyLegType {\\n    NO_TYPE, // No specific buy leg is defined.\\n    LIMIT_PRICE // The buy leg is set as a specific limit price.\\n}\\n\\n/**\\n * @notice The `SellLegType` enum defines the types of sell legs for trading strategies.\\n * @dev This enum enumerates three possible types of sell legs that can be associated with a strategy:\\n *      - NO_TYPE: No specific sell leg is defined.\\n *      - LIMIT_PRICE: The sell leg is set as a specific limit price.\\n *      - INCREASE_BY: The sell leg is determined by increasing the current price by a certain amount.\\n */\\nenum SellLegType {\\n    NO_TYPE, // No specific sell leg is defined.\\n    LIMIT_PRICE, // The sell leg is set as a specific limit price.\\n    INCREASE_BY // The sell leg is determined by increasing the current price by a certain amount.\\n}\\n\\n/**\\n * @notice The `DIP_SPIKE` enum defines the types of dip and spike conditions for trading strategies.\\n * @dev This enum enumerates five possible types of dip and spike conditions that can be associated with a strategy:\\n *      - NO_SPIKE: No specific dip or spike condition is defined.\\n *      - DECREASE_BY: The condition is based on a decrease in price by a certain percentage.\\n *      - INCREASE_BY: The condition is based on an increase in price by a certain percentage.\\n *      - FIXED_INCREASE: The condition is based on a fixed increase in price.\\n *      - FIXED_DECREASE: The condition is based on a fixed decrease in price.\\n */\\nenum DIP_SPIKE {\\n    NO_SPIKE, // No specific dip or spike condition is defined.\\n    DECREASE_BY, // The condition is based on a decrease in price by a certain percentage.\\n    INCREASE_BY, // The condition is based on an increase in price by a certain percentage.\\n    FIXED_INCREASE, // The condition is based on a fixed increase in price.\\n    FIXED_DECREASE // The condition is based on a fixed decrease in price.\\n}\\n\\n/**\\n * @notice The `DCA_UNIT` enum defines the units for Dollar-Cost Averaging (DCA) in trading strategies.\\n * @dev This enum enumerates three possible units for DCA that can be associated with a strategy:\\n *      - NO_UNIT: No specific DCA unit is defined.\\n *      - PERCENTAGE: DCA is specified as a percentage of assets.\\n *      - FIXED: DCA is specified as a fixed amount.\\n */\\nenum DCA_UNIT {\\n    NO_UNIT, // No specific DCA unit is defined.\\n    PERCENTAGE, // DCA is specified as a percentage of assets.\\n    FIXED // DCA is specified as a fixed amount.\\n}\\n\\n/**\\n * @notice The `TimeUnit` enum defines the units of time for time-related settings in trading strategies.\\n * @dev This enum enumerates three possible time units that can be used in trading strategies:\\n *      - NO_UNIT: No specific time unit is defined.\\n *      - HOURS: Time is measured in hours.\\n *      - DAYS: Time is measured in days.\\n */\\nenum TimeUnit {\\n    NO_UNIT, // No specific time unit is defined.\\n    HOURS, // Time is measured in hours.\\n    DAYS // Time is measured in days.\\n}\\n\\n/**\\n * @notice The `StrategyParameters` struct defines the parameters that configure a trading strategy.\\n * @dev These parameters dictate the behavior of the strategy, including trading details, conditions, and actions.\\n */\\n\\nstruct StrategyParameters {\\n    // @param _investToken The address of the investment token.\\n    address _investToken;\\n    // @param _investAmount The amount of investment token to be used.\\n    uint256 _investAmount;\\n    // @param _stableToken The address of the stable token.\\n    address _stableToken;\\n    // @param _stableAmount The amount of stable token to be used.\\n    uint256 _stableAmount;\\n    // @param _impact The impact tolerance for the strategy.\\n    uint256 _impact;\\n    // @param _floorType The type of floor price (if floor is set).\\n    FloorLegType _floorType;\\n    // @param _floorValue The value of the floor price (if floor is set).\\n    uint256 _floorValue;\\n    // @param _liquidateOnFloor A flag to trigger liquidation when the floor price is reached (if floor is set)..\\n    bool _liquidateOnFloor;\\n    // @param _cancelOnFloor A flag to cancel the strategy when the floor price is reached (if floor is set).\\n    bool _cancelOnFloor;\\n    // @param _minimumLoss The minimum loss required for floor percentage to satisfy.\\n    uint256 _minimumLoss;\\n    // @param _buyType The type of buy action (if buy is set).\\n    BuyLegType _buyType;\\n    // @param _buyValue The value of the buy action (if buy is set).\\n    uint256 _buyValue;\\n    // @param _buyTwapTime The time interval for TWAP buying (if buy is set).\\n    uint256 _buyTwapTime;\\n    // @param _buyTwapTimeUnit The unit of time for TWAP buying .\\n    TimeUnit _buyTwapTimeUnit;\\n    // @param _btdValue The value for buying the dip (if buy is set).\\n    uint256 _btdValue;\\n    // @param _btdType The type of buy the dip action (if buy is set).\\n    DIP_SPIKE _btdType;\\n    // @param _buyDCAUnit The unit for buy DCA (Dollar-Cost Averaging) for stable amount (if buy is set).\\n    DCA_UNIT _buyDCAUnit;\\n    // @param _buyDCAValue The value for buy DCA.\\n    uint256 _buyDCAValue;\\n    // @param _sellType The type of sell action (if sell is set).\\n    SellLegType _sellType;\\n    // @param _sellValue The value of the sell action (if sell is set).\\n    uint256 _sellValue;\\n    // @param if sell DCA is selected, _highSellValue is used to trigger complete sell when the high sell value is reached (if sell is set).\\n    uint256 _highSellValue;\\n    // @param _minimumProfit The minimum profit to be generated during sell if sell profit percentage is set\\n    uint256 _minimumProfit;\\n    // @param _strValue The value of the str if it is set to true (if sell is set).\\n    uint256 _strValue;\\n    // @param _strType The type of str.\\n    DIP_SPIKE _strType;\\n    // @param _sellDCAUnit The unit for sell DCA (Dollar-Cost Averaging) for the invest amount (if sell is set).\\n    DCA_UNIT _sellDCAUnit;\\n    // @param _sellDCAValue The value for sell DCA.\\n    uint256 _sellDCAValue;\\n    // @param _sellTwapTime The time interval for TWAP selling (if sell is set).\\n    uint256 _sellTwapTime;\\n    //  @param _sellTwapTimeUnit The unit of time for TWAP selling (if sell is set).\\n    TimeUnit _sellTwapTimeUnit;\\n    // @param _completeOnSell A flag to complete the strategy on selling (if sell is set).\\n    bool _completeOnSell;\\n    // @param _current_price_sell The current price indicator is selected for sell\\n    bool _current_price_sell;\\n    // @param _current_price The current price indicator is selected for buy\\n    bool _current_price_buy;\\n}\\n\\n/**\\n * @notice The `Strategy` struct defines the characteristics and status of a trading strategy.\\n * @dev This struct encapsulates important data related to a trading strategy, including user ownership,\\n *      strategy parameters, execution times, financial metrics, and its current status.\\n * it is mostly used for internal computation\\n */\\n\\nstruct Strategy {\\n    //  @param user The address of the strategy owner.\\n    address user;\\n    // @param parameters The parameters that configure the behavior of the strategy\\n    // as passed by the user and defined above\\n    StrategyParameters parameters;\\n    // to store invest amount to be sold when dca is chosen for percentage.\\n    uint256 sellPercentageAmount;\\n    // to store stable amount to be given when dca is chosen for percentage.\\n    uint256 buyPercentageAmount;\\n    // the invest amount based on which sellPercentageAmount is calculated\\n    uint256 sellPercentageTotalAmount;\\n    // the stable amount based on which buyPercentageAmount is calculated\\n    uint256 buyPercentageTotalAmount;\\n    //  @param sellTwapExecutedAt The timestamp of the last executed TWAP (Time-Weighted Average Price) sell.\\n    //  if sell twap is set for the sell. Otherwise it remains 0\\n    uint256 sellTwapExecutedAt;\\n    //  @param buyTwapExecutedAt The timestamp of the last executed TWAP buy.\\n    //  if buy Twap is set for btd. Otherwise it remains 0.\\n    uint256 buyTwapExecutedAt;\\n    // @param invest roundId The Chainlink VRF (Verifiable Random Function) round ID.\\n    uint80 investRoundIdForBTD;\\n    // @param stable roundId The Chainlink VRF (Verifiable Random Function) round ID.\\n    uint80 stableRoundIdForBTD;\\n    // @param invest roundId The Chainlink VRF (Verifiable Random Function) round ID.\\n    uint80 investRoundIdForSTR;\\n    // @param stable roundId The Chainlink VRF (Verifiable Random Function) round ID.\\n    uint80 stableRoundIdForSTR;\\n    // @param investPrice The price at which investment is made.\\n    //While creating strategy it is set to the current price\\n    uint256 investPrice;\\n    //  @param profit The current profit generated by the strategy.\\n    uint256 profit;\\n    //  @param budget The available budget for the strategy.\\n    // it is set at the starting of the strategy\\n    uint256 budget;\\n    // @param status The current status of the strategy.\\n    Status status;\\n}\\n/**\\n * @notice AppStorage is the central storage structure for this contract, holding essential data.\\n * @dev This struct contains critical information used by the contract for operation.\\n * It stores data such as function selectors, supported interfaces, the contract owner, strategy details,\\n * Chainlink feed information, and more.\\n */\\n\\nstruct AppStorage {\\n    // maps function selectors to the facets that execute the functions.\\n    // and maps the selectors to their position in the selectorSlots array.\\n    // func selector => address facet, selector position\\n    mapping(bytes4 => bytes32) facets;\\n    // array of slots of function selectors.\\n    // each slot holds 8 function selectors.\\n    mapping(uint256 => bytes32) selectorSlots;\\n    // The number of function selectors in selectorSlots\\n    uint16 selectorCount;\\n    // Used to query if a contract implements an interface.\\n    // Used to implement ERC-165.\\n    mapping(bytes4 => bool) supportedInterfaces;\\n    // owner of the contract\\n    address owner;\\n    // next id to use for strategies\\n    uint256 nextStrategyId;\\n    // array of strategies\\n    mapping(uint256 => Strategy) strategies;\\n    // chainlink feeds - asset => USD feed\\n    mapping(address => address) feeds;\\n    // account => nonce\\n    mapping(address => uint256) nonces;\\n    // reentrancy status\\n    ReentrancyStatus reentrancyStatus;\\n}\\n\\n/**\\n * @title Swap\\n * @dev A struct representing a swap or trade operation on a decentralized exchange (DEX).\\n *  @param dex: The address of the DEX where the swap is to be executed.\\n *  @param callData: Encoded data containing instructions for the swap on the specified DEX.\\n */\\nstruct Swap {\\n    address dex;\\n    bytes callData;\\n}\\n\\n// Struct representing the parameters to update in a strategy\\nstruct UpdateStruct {\\n    uint256 sellValue;\\n    uint256 buyValue;\\n    uint256 strValue;\\n    uint256 btdValue;\\n    uint256 floorValue;\\n    uint256 highSellValue;\\n    uint256 buyTwapTime;\\n    TimeUnit buyTwapTimeUnit;\\n    uint256 buyDCAValue;\\n    uint256 sellDCAValue;\\n    uint256 sellTwapTime;\\n    TimeUnit sellTwapTimeUnit;\\n    bool toggleCompleteOnSell;\\n    bool toggleLiquidateOnFloor;\\n    bool toggleCancelOnFloor;\\n    uint256 impact;\\n    bool current_price_sell;\\n    bool current_price_buy;\\n    uint256 minimumLoss;\\n    uint256 minimumProfit;\\n}\\n\\n// struct for information regarding which token is added in the strategy and which deleted\\nstruct TokensTransaction {\\n    uint256 tokenSubstracted;\\n    uint256 tokenAdded;\\n    uint256 stableAmount;\\n    uint256 investAmount;\\n}\\n\",\"keccak256\":\"0xf557abb3f6c701b60fa16b8cc47e9108b9db4e10438030933b4f0340282b0ee3\",\"license\":\"MIT\"},\"contracts/facets/LensFacet.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nimport { Modifiers } from \\\"../utils/Modifiers.sol\\\";\\nimport { LibTrade } from \\\"../libraries/LibTrade.sol\\\";\\nimport { LibUtil } from \\\"../libraries/LibUtil.sol\\\";\\nimport { AppStorage } from \\\"../AppStorage.sol\\\";\\n\\n/**\\n * @title LensFacet\\n * @dev This contract provides functions for calculating exchange rates and validating impact in trades.\\n */\\ncontract LensFacet is Modifiers {\\n    /**\\n     * @notice The `AppStorage` state variable serves as the central data repository for this contract. Please\\n     * please look at AppStorage.sol for more detail\\n     */\\n    AppStorage internal s;\\n\\n    /**\\n     * @notice Calculate the exchange rate between two assets for a given trade.\\n     * @param fromAsset The address of the source asset.\\n     * @param fromAmount The amount of the source asset.\\n     * @param toAmount The amount of the target asset.\\n     * @return The calculated exchange rate.\\n     */\\n    function calculateExchangeRate(\\n        address fromAsset,\\n        uint256 fromAmount,\\n        uint256 toAmount\\n    ) external view returns (uint256) {\\n        return LibTrade.calculateExchangeRate(fromAsset, fromAmount, toAmount);\\n    }\\n\\n    /**\\n     * @notice Validate impact for a trade based on exchange rate, price, and maximum allowed impact.\\n     * @param exchangeRate The calculated exchange rate for the trade.\\n     * @param price The current market price.\\n     * @param maxImpact The maximum allowable impact percentage.\\n     * @param isBuy A flag indicating whether it's a buy (true) or sell (false) trade.\\n     * @return The validated impact for the trade.\\n     */\\n    function validateImpact(\\n        uint256 exchangeRate,\\n        uint256 price,\\n        uint256 maxImpact,\\n        bool isBuy\\n    ) external pure returns (uint256) {\\n        return LibTrade.validateImpact(exchangeRate, price, maxImpact, isBuy);\\n    }\\n\\n    /**\\n     * @notice Get the current nonce for a given account.\\n     * @param account The address of the account.\\n     * @return nonce current nonce.\\n     */\\n    function getNonce(address account) external view returns (uint256 nonce) {\\n        return s.nonces[account];\\n    }\\n\\n    /**\\n     * @notice Get the current chain ID.\\n     * @return chain ID.\\n     */\\n    function getChainId() external view returns (uint256) {\\n        return LibUtil.getChainID();\\n    }\\n}\\n\",\"keccak256\":\"0xd4a3625b8c97017b85f2defe2debeb22c7b47bb8fbdb6607f86395a737599069\",\"license\":\"MIT\"},\"contracts/interfaces/IDiamondCut.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\ninterface IDiamondCut {\\n    enum FacetCutAction {\\n        Add,\\n        Replace,\\n        Remove\\n    }\\n    // Add=0, Replace=1, Remove=2\\n\\n    struct FacetCut {\\n        address facetAddress;\\n        FacetCutAction action;\\n        bytes4[] functionSelectors;\\n    }\\n\\n    /// @notice Add/replace/remove any number of functions and optionally execute\\n    ///         a function with delegatecall\\n    /// @param _diamondCut Contains the facet addresses and function selectors\\n    /// @param _init The address of the contract or facet to execute _calldata\\n    /// @param _calldata A function call, including function selector and arguments\\n    ///                  _calldata is executed with delegatecall on _init\\n    function diamondCut(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external;\\n\\n    event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);\\n}\\n\",\"keccak256\":\"0x882028bbad965788430b37558ea12b191a31b4d6e562c08ac2357fa6e0bc9de5\",\"license\":\"MIT\"},\"contracts/libraries/LibBytes.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.20;\\n\\nlibrary LibBytes {\\n    // solhint-disable no-inline-assembly\\n\\n    // LibBytes specific errors\\n    error SliceOverflow();\\n    error SliceOutOfBounds();\\n    error AddressOutOfBounds();\\n\\n    bytes16 private constant _SYMBOLS = \\\"0123456789abcdef\\\";\\n\\n    // -------------------------\\n    /**\\n     * @notice Slice a portion of a bytes array.\\n     * @param _bytes The input bytes array.\\n     * @param _start The starting index of the slice.\\n     * @param _length The length of the slice.\\n     * @return tempBytes A new bytes array containing the sliced data.\\n     */\\n    function slice(bytes memory _bytes, uint256 _start, uint256 _length) internal pure returns (bytes memory) {\\n        if (_length + 31 < _length) revert SliceOverflow();\\n        if (_bytes.length < _start + _length) revert SliceOutOfBounds();\\n\\n        bytes memory tempBytes;\\n\\n        assembly {\\n            switch iszero(_length)\\n            case 0 {\\n                // Get a location of some free memory and store it in tempBytes as\\n                // Solidity does for memory variables.\\n                tempBytes := mload(0x40)\\n\\n                // The first word of the slice result is potentially a partial\\n                // word read from the original array. To read it, we calculate\\n                // the length of that partial word and start copying that many\\n                // bytes into the array. The first word we copy will start with\\n                // data we don't care about, but the last `lengthmod` bytes will\\n                // land at the beginning of the contents of the new array. When\\n                // we're done copying, we overwrite the full first word with\\n                // the actual length of the slice.\\n                let lengthmod := and(_length, 31)\\n\\n                // The multiplication in the next line is necessary\\n                // because when slicing multiples of 32 bytes (lengthmod == 0)\\n                // the following copy loop was copying the origin's length\\n                // and then ending prematurely not copying everything it should.\\n                let mc := add(add(tempBytes, lengthmod), mul(0x20, iszero(lengthmod)))\\n                let end := add(mc, _length)\\n\\n                for {\\n                    // The multiplication in the next line has the same exact purpose\\n                    // as the one above.\\n                    let cc := add(add(add(_bytes, lengthmod), mul(0x20, iszero(lengthmod))), _start)\\n                } lt(mc, end) {\\n                    mc := add(mc, 0x20)\\n                    cc := add(cc, 0x20)\\n                } {\\n                    mstore(mc, mload(cc))\\n                }\\n\\n                mstore(tempBytes, _length)\\n\\n                //update free-memory pointer\\n                //allocating the array padded to 32 bytes like the compiler does now\\n                mstore(0x40, and(add(mc, 31), not(31)))\\n            }\\n            //if we want a zero-length slice let's just return a zero-length array\\n            default {\\n                tempBytes := mload(0x40)\\n                //zero out the 32 bytes slice we are about to return\\n                //we need to do it because Solidity does not garbage collect\\n                mstore(tempBytes, 0)\\n\\n                mstore(0x40, add(tempBytes, 0x20))\\n            }\\n        }\\n\\n        return tempBytes;\\n    }\\n\\n    /**\\n     * @notice Convert a portion of a bytes array to an address.\\n     * @param _bytes The input bytes array.\\n     * @param _start The starting index of the address data.\\n     * @return tempAddress The address extracted from the bytes array.\\n     */\\n    function toAddress(bytes memory _bytes, uint256 _start) internal pure returns (address) {\\n        if (_bytes.length < _start + 20) {\\n            revert AddressOutOfBounds();\\n        }\\n        address tempAddress;\\n\\n        assembly {\\n            tempAddress := div(mload(add(add(_bytes, 0x20), _start)), 0x1000000000000000000000000)\\n        }\\n\\n        return tempAddress;\\n    }\\n\\n    /// Copied from OpenZeppelin's `Strings.sol` utility library.\\n    /// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/8335676b0e99944eef6a742e16dcd9ff6e68e609/contracts/utils/Strings.sol\\n    /**\\n     * @notice Convert a uint256 to its hexadecimal representation as a string.\\n     * @param value The uint256 value to convert.\\n     * @param length The desired length of the hexadecimal string.\\n     * @return A string containing the hexadecimal representation of the uint256 value.\\n     */\\n    function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {\\n        bytes memory buffer = new bytes(2 * length + 2);\\n        buffer[0] = \\\"0\\\";\\n        buffer[1] = \\\"x\\\";\\n        for (uint256 i = 2 * length + 1; i > 1; --i) {\\n            buffer[i] = _SYMBOLS[value & 0xf];\\n            value >>= 4;\\n        }\\n        require(value == 0, \\\"Strings: hex length insufficient\\\");\\n        return string(buffer);\\n    }\\n}\\n\",\"keccak256\":\"0xbd7edc3743a6a3ca135ec7077a7e2f29c45719980c324eed18c084e15293a503\",\"license\":\"MIT\"},\"contracts/libraries/LibDiamond.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\nimport { IDiamondCut } from \\\"../interfaces/IDiamondCut.sol\\\";\\nimport { AppStorage } from \\\"../AppStorage.sol\\\";\\n\\n// Remember to add the loupe functions from DiamondLoupeFacet to the diamond.\\n// The loupe functions are required by the EIP2535 Diamonds standard\\n\\nerror InitializationFunctionReverted(address _initializationContractAddress, bytes _calldata);\\n\\nlibrary LibDiamond {\\n    event DiamondCut(IDiamondCut.FacetCut[] _diamondCut, address _init, bytes _calldata);\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n    bytes32 constant CLEAR_ADDRESS_MASK = bytes32(uint256(0xffffffffffffffffffffffff));\\n    bytes32 constant CLEAR_SELECTOR_MASK = bytes32(uint256(0xffffffff << 224));\\n\\n    function diamondStorage() internal pure returns (AppStorage storage s) {\\n        assembly {\\n            s.slot := 0\\n        }\\n    }\\n\\n    function setContractOwner(address _newOwner) internal {\\n        AppStorage storage s = diamondStorage();\\n        address previousOwner = s.owner;\\n        s.owner = _newOwner;\\n        emit OwnershipTransferred(previousOwner, _newOwner);\\n    }\\n\\n    // Internal function version of diamondCut\\n    // This code is almost the same as the external diamondCut,\\n    // except it is using 'Facet[] memory _diamondCut' instead of\\n    // 'Facet[] calldata _diamondCut'.\\n    // The code is duplicated to prevent copying calldata to memory which\\n    // causes an error for a two dimensional array.\\n    function diamondCut(IDiamondCut.FacetCut[] memory _diamondCut, address _init, bytes memory _calldata) internal {\\n        AppStorage storage s = diamondStorage();\\n        uint256 originalSelectorCount = s.selectorCount;\\n        uint256 selectorCount = originalSelectorCount;\\n        bytes32 selectorSlot;\\n        // Check if last selector slot is not full\\n        // \\\"selectorCount & 7\\\" is a gas efficient modulo by eight \\\"selectorCount % 8\\\"\\n        if (selectorCount & 7 > 0) {\\n            // get last selectorSlot\\n            // \\\"selectorSlot >> 3\\\" is a gas efficient division by 8 \\\"selectorSlot / 8\\\"\\n            selectorSlot = s.selectorSlots[selectorCount >> 3];\\n        }\\n        // loop through diamond cut\\n        for (uint256 facetIndex; facetIndex < _diamondCut.length; ) {\\n            (selectorCount, selectorSlot) = addReplaceRemoveFacetSelectors(\\n                selectorCount,\\n                selectorSlot,\\n                _diamondCut[facetIndex].facetAddress,\\n                _diamondCut[facetIndex].action,\\n                _diamondCut[facetIndex].functionSelectors\\n            );\\n\\n            unchecked {\\n                facetIndex++;\\n            }\\n        }\\n        if (selectorCount != originalSelectorCount) {\\n            s.selectorCount = uint16(selectorCount);\\n        }\\n        // If last selector slot is not full\\n        // \\\"selectorCount & 7\\\" is a gas efficient modulo by eight \\\"selectorCount % 8\\\"\\n        if (selectorCount & 7 > 0) {\\n            // \\\"selectorSlot >> 3\\\" is a gas efficient division by 8 \\\"selectorSlot / 8\\\"\\n            s.selectorSlots[selectorCount >> 3] = selectorSlot;\\n        }\\n        emit DiamondCut(_diamondCut, _init, _calldata);\\n        initializeDiamondCut(_init, _calldata);\\n    }\\n\\n    function addReplaceRemoveFacetSelectors(\\n        uint256 _selectorCount,\\n        bytes32 _selectorSlot,\\n        address _newFacetAddress,\\n        IDiamondCut.FacetCutAction _action,\\n        bytes4[] memory _selectors\\n    ) internal returns (uint256, bytes32) {\\n        AppStorage storage s = diamondStorage();\\n        require(_selectors.length > 0, \\\"LibDiamondCut: No selectors in facet to cut\\\");\\n        if (_action == IDiamondCut.FacetCutAction.Add) {\\n            enforceHasContractCode(_newFacetAddress, \\\"LibDiamondCut: Add facet has no code\\\");\\n            for (uint256 selectorIndex; selectorIndex < _selectors.length; ) {\\n                bytes4 selector = _selectors[selectorIndex];\\n                bytes32 oldFacet = s.facets[selector];\\n                require(\\n                    address(bytes20(oldFacet)) == address(0),\\n                    \\\"LibDiamondCut: Can't add function that already exists\\\"\\n                );\\n                // add facet for selector\\n                s.facets[selector] = bytes20(_newFacetAddress) | bytes32(_selectorCount);\\n                // \\\"_selectorCount & 7\\\" is a gas efficient modulo by eight \\\"_selectorCount % 8\\\"\\n                // \\\" << 5 is the same as multiplying by 32 ( * 32)\\n                uint256 selectorInSlotPosition = (_selectorCount & 7) << 5;\\n                // clear selector position in slot and add selector\\n                _selectorSlot =\\n                    (_selectorSlot & ~(CLEAR_SELECTOR_MASK >> selectorInSlotPosition)) |\\n                    (bytes32(selector) >> selectorInSlotPosition);\\n                // if slot is full then write it to storage\\n                if (selectorInSlotPosition == 224) {\\n                    // \\\"_selectorSlot >> 3\\\" is a gas efficient division by 8 \\\"_selectorSlot / 8\\\"\\n                    s.selectorSlots[_selectorCount >> 3] = _selectorSlot;\\n                    _selectorSlot = 0;\\n                }\\n                _selectorCount++;\\n\\n                unchecked {\\n                    selectorIndex++;\\n                }\\n            }\\n        } else if (_action == IDiamondCut.FacetCutAction.Replace) {\\n            enforceHasContractCode(_newFacetAddress, \\\"LibDiamondCut: Replace facet has no code\\\");\\n            for (uint256 selectorIndex; selectorIndex < _selectors.length; ) {\\n                bytes4 selector = _selectors[selectorIndex];\\n                bytes32 oldFacet = s.facets[selector];\\n                address oldFacetAddress = address(bytes20(oldFacet));\\n                // only useful if immutable functions exist\\n                require(oldFacetAddress != address(this), \\\"LibDiamondCut: Can't replace immutable function\\\");\\n                require(\\n                    oldFacetAddress != _newFacetAddress,\\n                    \\\"LibDiamondCut: Can't replace function with same function\\\"\\n                );\\n                require(oldFacetAddress != address(0), \\\"LibDiamondCut: Can't replace function that doesn't exist\\\");\\n                // replace old facet address\\n                s.facets[selector] = (oldFacet & CLEAR_ADDRESS_MASK) | bytes20(_newFacetAddress);\\n\\n                unchecked {\\n                    selectorIndex++;\\n                }\\n            }\\n        } else if (_action == IDiamondCut.FacetCutAction.Remove) {\\n            require(_newFacetAddress == address(0), \\\"LibDiamondCut: Remove facet address must be address(0)\\\");\\n            // \\\"_selectorCount >> 3\\\" is a gas efficient division by 8 \\\"_selectorCount / 8\\\"\\n            uint256 selectorSlotCount = _selectorCount >> 3;\\n            // \\\"_selectorCount & 7\\\" is a gas efficient modulo by eight \\\"_selectorCount % 8\\\"\\n            uint256 selectorInSlotIndex = _selectorCount & 7;\\n            for (uint256 selectorIndex; selectorIndex < _selectors.length; ) {\\n                if (_selectorSlot == 0) {\\n                    // get last selectorSlot\\n                    selectorSlotCount--;\\n                    _selectorSlot = s.selectorSlots[selectorSlotCount];\\n                    selectorInSlotIndex = 7;\\n                } else {\\n                    selectorInSlotIndex--;\\n                }\\n                bytes4 lastSelector;\\n                uint256 oldSelectorsSlotCount;\\n                uint256 oldSelectorInSlotPosition;\\n                // adding a block here prevents stack too deep error\\n                {\\n                    bytes4 selector = _selectors[selectorIndex];\\n                    bytes32 oldFacet = s.facets[selector];\\n                    require(\\n                        address(bytes20(oldFacet)) != address(0),\\n                        \\\"LibDiamondCut: Can't remove function that doesn't exist\\\"\\n                    );\\n                    // only useful if immutable functions exist\\n                    require(\\n                        address(bytes20(oldFacet)) != address(this),\\n                        \\\"LibDiamondCut: Can't remove immutable function\\\"\\n                    );\\n                    // replace selector with last selector in s.facets\\n                    // gets the last selector\\n                    // \\\" << 5 is the same as multiplying by 32 ( * 32)\\n                    lastSelector = bytes4(_selectorSlot << (selectorInSlotIndex << 5));\\n                    if (lastSelector != selector) {\\n                        // update last selector slot position info\\n                        s.facets[lastSelector] = (oldFacet & CLEAR_ADDRESS_MASK) | bytes20(s.facets[lastSelector]);\\n                    }\\n                    delete s.facets[selector];\\n                    uint256 oldSelectorCount = uint16(uint256(oldFacet));\\n                    // \\\"oldSelectorCount >> 3\\\" is a gas efficient division by 8 \\\"oldSelectorCount / 8\\\"\\n                    oldSelectorsSlotCount = oldSelectorCount >> 3;\\n                    // \\\"oldSelectorCount & 7\\\" is a gas efficient modulo by eight \\\"oldSelectorCount % 8\\\"\\n                    // \\\" << 5 is the same as multiplying by 32 ( * 32)\\n                    oldSelectorInSlotPosition = (oldSelectorCount & 7) << 5;\\n                }\\n                if (oldSelectorsSlotCount != selectorSlotCount) {\\n                    bytes32 oldSelectorSlot = s.selectorSlots[oldSelectorsSlotCount];\\n                    // clears the selector we are deleting and puts the last selector in its place.\\n                    oldSelectorSlot =\\n                        (oldSelectorSlot & ~(CLEAR_SELECTOR_MASK >> oldSelectorInSlotPosition)) |\\n                        (bytes32(lastSelector) >> oldSelectorInSlotPosition);\\n                    // update storage with the modified slot\\n                    s.selectorSlots[oldSelectorsSlotCount] = oldSelectorSlot;\\n                } else {\\n                    // clears the selector we are deleting and puts the last selector in its place.\\n                    _selectorSlot =\\n                        (_selectorSlot & ~(CLEAR_SELECTOR_MASK >> oldSelectorInSlotPosition)) |\\n                        (bytes32(lastSelector) >> oldSelectorInSlotPosition);\\n                }\\n                if (selectorInSlotIndex == 0) {\\n                    delete s.selectorSlots[selectorSlotCount];\\n                    _selectorSlot = 0;\\n                }\\n\\n                unchecked {\\n                    selectorIndex++;\\n                }\\n            }\\n            _selectorCount = selectorSlotCount * 8 + selectorInSlotIndex;\\n        } else {\\n            revert(\\\"LibDiamondCut: Incorrect FacetCutAction\\\");\\n        }\\n        return (_selectorCount, _selectorSlot);\\n    }\\n\\n    function initializeDiamondCut(address _init, bytes memory _calldata) internal {\\n        if (_init == address(0)) {\\n            return;\\n        }\\n        enforceHasContractCode(_init, \\\"LibDiamondCut: _init address has no code\\\");\\n        (bool success, bytes memory error) = _init.delegatecall(_calldata);\\n        if (!success) {\\n            if (error.length > 0) {\\n                // bubble up error\\n                /// @solidity memory-safe-assembly\\n                assembly {\\n                    let returndata_size := mload(error)\\n                    revert(add(32, error), returndata_size)\\n                }\\n            } else {\\n                revert InitializationFunctionReverted(_init, _calldata);\\n            }\\n        }\\n    }\\n\\n    function enforceHasContractCode(address _contract, string memory _errorMessage) internal view {\\n        uint256 contractSize;\\n        assembly {\\n            contractSize := extcodesize(_contract)\\n        }\\n        require(contractSize > 0, _errorMessage);\\n    }\\n}\\n\",\"keccak256\":\"0xcaa7ed67af8cf7fe50033f6d06c56cab2bd3392aceceb782660e07153c2c06db\",\"license\":\"MIT\"},\"contracts/libraries/LibTrade.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\nimport { IERC20Metadata } from \\\"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol\\\";\\nimport { HighImpact } from \\\"../utils/GenericErrors.sol\\\";\\n\\n/**\\n * @title LibTrade\\n * @dev This library provides functions for calculating exchange rates and validating slippage.\\n */\\nlibrary LibTrade {\\n    uint256 public constant MAX_PERCENTAGE = 10000;\\n\\n    /**\\n    @dev Calculate exchange rate given input and output amounts\\n    @param fromAsset Address of the asset that was used to swap\\n    @param fromAmount Amount of the asset that was used to swap\\n    @param toAmount Amount of the asset that was received from swap\\n    @return uint256 Returns the exchange rate in toAsset unit\\n     */\\n    function calculateExchangeRate(\\n        address fromAsset,\\n        uint256 fromAmount,\\n        uint256 toAmount\\n    ) internal view returns (uint256) {\\n        IERC20Metadata _fromToken = IERC20Metadata(fromAsset);\\n        uint256 fromDecimals = _fromToken.decimals();\\n        return ((toAmount * (10 ** fromDecimals)) / fromAmount);\\n    }\\n\\n    /**\\n     * @notice Validate the Impact of a swap.\\n     * @param exchangeRate The calculated exchange rate for the swap.\\n     * @param price The reference price for the swap.\\n     * @param maxImpact The maximum allowed Impact percentage.\\n     * @param isBuy A flag indicating if it's a buy operation (true) or not (false).\\n     * @return uint256 Returns the calculated Impact percentage.\\n     */\\n    function validateImpact(\\n        uint256 exchangeRate,\\n        uint256 price,\\n        uint256 maxImpact,\\n        bool isBuy\\n    ) internal pure returns (uint256) {\\n        uint256 impact = (price * MAX_PERCENTAGE) / exchangeRate;\\n\\n        if (isBuy && impact < MAX_PERCENTAGE && MAX_PERCENTAGE - impact > maxImpact) revert HighImpact();\\n        if (!isBuy && impact > MAX_PERCENTAGE && impact - MAX_PERCENTAGE > maxImpact) revert HighImpact();\\n        uint256 impactValue;\\n        if (isBuy && impact < MAX_PERCENTAGE) {\\n            impactValue = MAX_PERCENTAGE - impact;\\n        } else if (!isBuy && impact > MAX_PERCENTAGE) {\\n            impactValue = impact - MAX_PERCENTAGE;\\n        }\\n        return impactValue;\\n    }\\n}\\n\",\"keccak256\":\"0x96c2b97099929cfb81b5e161e3c0718952c6aea1a09573617c0dca820485b6a0\",\"license\":\"MIT\"},\"contracts/libraries/LibUtil.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.20;\\n\\nimport \\\"./LibBytes.sol\\\";\\n\\n/**\\n * @title LibUtil\\n * @dev This library provides utility functions for working with revert messages.\\n */\\nlibrary LibUtil {\\n    using LibBytes for bytes;\\n\\n    /**\\n     * @notice Get a revert message from transaction result data.\\n     * @param _res The transaction result data to extract the revert message from.\\n     * @return string The revert message or a \\\"Transaction reverted silently\\\" message if none is found.\\n     */\\n    function getRevertMsg(bytes memory _res) internal pure returns (string memory) {\\n        // If the _res length is less than 68, then the transaction failed silently (without a revert message)\\n        if (_res.length < 68) return \\\"Transaction reverted silently\\\";\\n        bytes memory revertData = _res.slice(4, _res.length - 4); // Remove the selector which is the first 4 bytes\\n        return abi.decode(revertData, (string)); // All that remains is the revert string\\n    }\\n\\n    /**\\n     * @notice Used the get the ID of the current chain.\\n     * @return id The chain ID\\n     */\\n    function getChainID() internal view returns (uint256) {\\n        uint256 id;\\n        assembly {\\n            id := chainid()\\n        }\\n        return id;\\n    }\\n}\\n\",\"keccak256\":\"0x2ad03d87c101071a5a415a5dce0efaa23a1d9b1ea0d56fc2746094d89598e061\",\"license\":\"MIT\"},\"contracts/utils/GenericErrors.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.20;\\n\\nerror NoSwapFromZeroBalance();\\nerror InsufficientBalance(uint256 required, uint256 balance);\\nerror SwapFailed();\\nerror TransferFailed();\\nerror InvalidExchangeRate(uint256 required, uint256 actual);\\nerror InvalidPrice();\\nerror InvalidImpact();\\nerror HighImpact();\\nerror InvalidInvestToken();\\nerror InvalidStableToken();\\nerror TokensMustDiffer();\\nerror AtLeastOneOptionRequired();\\nerror InvalidInvestAmount();\\nerror FloorValueZero();\\nerror InvalidSellType();\\nerror InvalidSellValue();\\nerror BuyAndSellAtMisorder();\\nerror InvalidStableAmount();\\nerror InvalidBuyType();\\nerror InvalidBuyValue();\\nerror InvalidFloorValue();\\nerror InvalidFloorType();\\nerror InvalidSellTypeDCA();\\nerror FloorValueGreaterThanBuyValue();\\nerror FloorValueGreaterThanSellValue();\\nerror BothBuyTwapAndBTD();\\nerror BuyDCAWithoutBuy();\\nerror BuyTwapTimeInvalid();\\nerror BuyTwapTimeUnitNotSelected();\\nerror BothSellTwapAndSTR();\\nerror SellDCAWithoutSell();\\nerror SellTwapTimeUnitNotSelected();\\nerror SellTwapTimeInvalid();\\nerror SellTwapOrStrWithoutSellDCAUnit();\\nerror SellDCAUnitWithoutSellDCAValue();\\nerror StrWithoutStrType();\\nerror BTDWithoutBTDType();\\nerror BuyDCAWithoutBuyDCAUnit();\\nerror BuyDCAUnitWithoutBuyDCAValue();\\nerror InvalidHighSellValue();\\nerror SellDCAValueRangeIsNotValid();\\nerror DCAValueShouldBeLessThanIntitialAmount();\\nerror BuyDCAValueRangeIsNotValid();\\nerror OrphandStrategy();\\nerror BuyNeverExecute();\\nerror FloorGreaterThanPrice();\\nerror FeedNotFound();\\nerror WrongPreviousIDs();\\nerror RoundDataDoesNotMatch();\\nerror StrategyIsNotActive();\\nerror InvalidNonce();\\nerror InvalidSigner();\\nerror AlreadyCancelled();\\nerror BuyNotSet();\\nerror SellNotSelected();\\nerror PercentageNotInRange();\\nerror BuyTwapNotSelected();\\nerror SellTwapNotSelected();\\nerror FloorNotSet();\\nerror ReentrancyGuardReentrantCall();\\nerror PriceNotInRange();\\n\",\"keccak256\":\"0x5e7f9fa92bca7030dbb9bbba701fbf12850c0e8ac401b0490f408d0358da57b3\",\"license\":\"MIT\"},\"contracts/utils/Modifiers.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.20;\\n\\nimport { AppStorage, FloorLegType, BuyLegType, SellLegType, TimeUnit, DIP_SPIKE, DCA_UNIT, ReentrancyStatus } from \\\"../AppStorage.sol\\\";\\nimport { ReentrancyGuardReentrantCall } from \\\"./GenericErrors.sol\\\";\\nimport { LibDiamond } from \\\"../libraries/LibDiamond.sol\\\";\\n\\nabstract contract Modifiers {\\n    /// @notice 100% = 100000 -> 2 decimals\\n\\n    modifier onlyOwner() {\\n        AppStorage storage s = LibDiamond.diamondStorage();\\n        require(msg.sender == s.owner, \\\"Modifiers: Must be contract owner\\\");\\n        _;\\n    }\\n\\n    /**\\n     * @dev Prevents a contract from calling itself, directly or indirectly.\\n     * Calling a `nonReentrant` function from another `nonReentrant`\\n     * function is not supported. It is possible to prevent this from happening\\n     * by making the `nonReentrant` function external, and making it call a\\n     * `private` function that does the actual work.\\n     */\\n    modifier nonReentrant() {\\n        _nonReentrantBefore();\\n        _;\\n        _nonReentrantAfter();\\n    }\\n\\n    function _nonReentrantBefore() private {\\n        AppStorage storage s = LibDiamond.diamondStorage();\\n        // On the first call to nonReentrant, s.reentrancyStatus will be ReentrancyStatus.NOT_ENTERED\\n        if (s.reentrancyStatus == ReentrancyStatus.ENTERED) {\\n            revert ReentrancyGuardReentrantCall();\\n        }\\n\\n        // Any calls to nonReentrant after this point will fail\\n        s.reentrancyStatus = ReentrancyStatus.ENTERED;\\n    }\\n\\n    function _nonReentrantAfter() private {\\n        AppStorage storage s = LibDiamond.diamondStorage();\\n        // By storing the original value once again, a refund is triggered (see\\n        // https://eips.ethereum.org/EIPS/eip-2200)\\n        s.reentrancyStatus = ReentrancyStatus.NOT_ENTERED;\\n    }\\n\\n    /**\\n     * @dev Returns true if the reentrancy guard is currently set to \\\"entered\\\", which indicates there is a\\n     * `nonReentrant` function in the call stack.\\n     */\\n    function _reentrancyGuardEntered() internal view returns (bool) {\\n        AppStorage storage s = LibDiamond.diamondStorage();\\n        return s.reentrancyStatus == ReentrancyStatus.ENTERED;\\n    }\\n}\\n\",\"keccak256\":\"0x6bd19234ff15be724c86ba376048f6e577d7908cda343f5efdb37d22ad6f3216\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506104d5806100206000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c80632167860b146100515780632d0335ab146100765780633408e4701461009f5780633633af41146100a5575b600080fd5b61006461005f36600461028d565b6100b8565b60405190815260200160405180910390f35b6100646100843660046102c0565b6001600160a01b031660009081526008602052604090205490565b46610064565b6100646100b33660046102e2565b6100cd565b60006100c58484846100e4565b949350505050565b60006100db8585858561017d565b95945050505050565b6000808490506000816001600160a01b031663313ce5676040518163ffffffff1660e01b8152600401602060405180830381865afa15801561012a573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061014e9190610328565b60ff1690508461015f82600a610447565b6101699086610453565b610173919061046a565b9695505050505050565b6000808561018d61271087610453565b610197919061046a565b90508280156101a7575061271081105b80156101bd5750836101bb8261271061048c565b115b156101db57604051630b9750cb60e41b815260040160405180910390fd5b821580156101ea575061271081115b80156102005750836101fe6127108361048c565b115b1561021e57604051630b9750cb60e41b815260040160405180910390fd5b600083801561022e575061271082105b156102465761023f8261271061048c565b9050610173565b83158015610255575061271082115b15610173576102666127108361048c565b979650505050505050565b80356001600160a01b038116811461028857600080fd5b919050565b6000806000606084860312156102a257600080fd5b6102ab84610271565b95602085013595506040909401359392505050565b6000602082840312156102d257600080fd5b6102db82610271565b9392505050565b600080600080608085870312156102f857600080fd5b8435935060208501359250604085013591506060850135801515811461031d57600080fd5b939692955090935050565b60006020828403121561033a57600080fd5b815160ff811681146102db57600080fd5b634e487b7160e01b600052601160045260246000fd5b600181815b8085111561039c5781600019048211156103825761038261034b565b8085161561038f57918102915b93841c9390800290610366565b509250929050565b6000826103b357506001610441565b816103c057506000610441565b81600181146103d657600281146103e0576103fc565b6001915050610441565b60ff8411156103f1576103f161034b565b50506001821b610441565b5060208310610133831016604e8410600b841016171561041f575081810a610441565b6104298383610361565b806000190482111561043d5761043d61034b565b0290505b92915050565b60006102db83836103a4565b80820281158282048414176104415761044161034b565b60008261048757634e487b7160e01b600052601260045260246000fd5b500490565b818103818111156104415761044161034b56fea26469706673582212208ef702c9278bfcc2f0e3ea5ee69c983ce5b524a55401e57e0f13d5cf5cf8316464736f6c63430008140033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c80632167860b146100515780632d0335ab146100765780633408e4701461009f5780633633af41146100a5575b600080fd5b61006461005f36600461028d565b6100b8565b60405190815260200160405180910390f35b6100646100843660046102c0565b6001600160a01b031660009081526008602052604090205490565b46610064565b6100646100b33660046102e2565b6100cd565b60006100c58484846100e4565b949350505050565b60006100db8585858561017d565b95945050505050565b6000808490506000816001600160a01b031663313ce5676040518163ffffffff1660e01b8152600401602060405180830381865afa15801561012a573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061014e9190610328565b60ff1690508461015f82600a610447565b6101699086610453565b610173919061046a565b9695505050505050565b6000808561018d61271087610453565b610197919061046a565b90508280156101a7575061271081105b80156101bd5750836101bb8261271061048c565b115b156101db57604051630b9750cb60e41b815260040160405180910390fd5b821580156101ea575061271081115b80156102005750836101fe6127108361048c565b115b1561021e57604051630b9750cb60e41b815260040160405180910390fd5b600083801561022e575061271082105b156102465761023f8261271061048c565b9050610173565b83158015610255575061271082115b15610173576102666127108361048c565b979650505050505050565b80356001600160a01b038116811461028857600080fd5b919050565b6000806000606084860312156102a257600080fd5b6102ab84610271565b95602085013595506040909401359392505050565b6000602082840312156102d257600080fd5b6102db82610271565b9392505050565b600080600080608085870312156102f857600080fd5b8435935060208501359250604085013591506060850135801515811461031d57600080fd5b939692955090935050565b60006020828403121561033a57600080fd5b815160ff811681146102db57600080fd5b634e487b7160e01b600052601160045260246000fd5b600181815b8085111561039c5781600019048211156103825761038261034b565b8085161561038f57918102915b93841c9390800290610366565b509250929050565b6000826103b357506001610441565b816103c057506000610441565b81600181146103d657600281146103e0576103fc565b6001915050610441565b60ff8411156103f1576103f161034b565b50506001821b610441565b5060208310610133831016604e8410600b841016171561041f575081810a610441565b6104298383610361565b806000190482111561043d5761043d61034b565b0290505b92915050565b60006102db83836103a4565b80820281158282048414176104415761044161034b565b60008261048757634e487b7160e01b600052601260045260246000fd5b500490565b818103818111156104415761044161034b56fea26469706673582212208ef702c9278bfcc2f0e3ea5ee69c983ce5b524a55401e57e0f13d5cf5cf8316464736f6c63430008140033",
+  "devdoc": {
+    "details": "This contract provides functions for calculating exchange rates and validating impact in trades.",
+    "kind": "dev",
+    "methods": {
+      "calculateExchangeRate(address,uint256,uint256)": {
+        "params": {
+          "fromAmount": "The amount of the source asset.",
+          "fromAsset": "The address of the source asset.",
+          "toAmount": "The amount of the target asset."
+        },
+        "returns": {
+          "_0": "The calculated exchange rate."
+        }
+      },
+      "getChainId()": {
+        "returns": {
+          "_0": "chain ID."
+        }
+      },
+      "getNonce(address)": {
+        "params": {
+          "account": "The address of the account."
+        },
+        "returns": {
+          "nonce": "current nonce."
+        }
+      },
+      "validateImpact(uint256,uint256,uint256,bool)": {
+        "params": {
+          "exchangeRate": "The calculated exchange rate for the trade.",
+          "isBuy": "A flag indicating whether it's a buy (true) or sell (false) trade.",
+          "maxImpact": "The maximum allowable impact percentage.",
+          "price": "The current market price."
+        },
+        "returns": {
+          "_0": "The validated impact for the trade."
+        }
+      }
+    },
+    "title": "LensFacet",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "calculateExchangeRate(address,uint256,uint256)": {
+        "notice": "Calculate the exchange rate between two assets for a given trade."
+      },
+      "getChainId()": {
+        "notice": "Get the current chain ID."
+      },
+      "getNonce(address)": {
+        "notice": "Get the current nonce for a given account."
+      },
+      "validateImpact(uint256,uint256,uint256,bool)": {
+        "notice": "Validate impact for a trade based on exchange rate, price, and maximum allowed impact."
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 3917,
+        "contract": "contracts/facets/LensFacet.sol:LensFacet",
+        "label": "s",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_struct(AppStorage)1250_storage"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_bytes4": {
+        "encoding": "inplace",
+        "label": "bytes4",
+        "numberOfBytes": "4"
+      },
+      "t_enum(BuyLegType)1083": {
+        "encoding": "inplace",
+        "label": "enum BuyLegType",
+        "numberOfBytes": "1"
+      },
+      "t_enum(DCA_UNIT)1100": {
+        "encoding": "inplace",
+        "label": "enum DCA_UNIT",
+        "numberOfBytes": "1"
+      },
+      "t_enum(DIP_SPIKE)1095": {
+        "encoding": "inplace",
+        "label": "enum DIP_SPIKE",
+        "numberOfBytes": "1"
+      },
+      "t_enum(FloorLegType)1079": {
+        "encoding": "inplace",
+        "label": "enum FloorLegType",
+        "numberOfBytes": "1"
+      },
+      "t_enum(ReentrancyStatus)1069": {
+        "encoding": "inplace",
+        "label": "enum ReentrancyStatus",
+        "numberOfBytes": "1"
+      },
+      "t_enum(SellLegType)1088": {
+        "encoding": "inplace",
+        "label": "enum SellLegType",
+        "numberOfBytes": "1"
+      },
+      "t_enum(Status)1074": {
+        "encoding": "inplace",
+        "label": "enum Status",
+        "numberOfBytes": "1"
+      },
+      "t_enum(TimeUnit)1105": {
+        "encoding": "inplace",
+        "label": "enum TimeUnit",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_address,t_address)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => address)",
+        "numberOfBytes": "32",
+        "value": "t_address"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_mapping(t_bytes4,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes4",
+        "label": "mapping(bytes4 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes4,t_bytes32)": {
+        "encoding": "mapping",
+        "key": "t_bytes4",
+        "label": "mapping(bytes4 => bytes32)",
+        "numberOfBytes": "32",
+        "value": "t_bytes32"
+      },
+      "t_mapping(t_uint256,t_bytes32)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => bytes32)",
+        "numberOfBytes": "32",
+        "value": "t_bytes32"
+      },
+      "t_mapping(t_uint256,t_struct(Strategy)1214_storage)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => struct Strategy)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Strategy)1214_storage"
+      },
+      "t_struct(AppStorage)1250_storage": {
+        "encoding": "inplace",
+        "label": "struct AppStorage",
+        "members": [
+          {
+            "astId": 1219,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "facets",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_bytes4,t_bytes32)"
+          },
+          {
+            "astId": 1223,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "selectorSlots",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_uint256,t_bytes32)"
+          },
+          {
+            "astId": 1225,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "selectorCount",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint16"
+          },
+          {
+            "astId": 1229,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "supportedInterfaces",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_bytes4,t_bool)"
+          },
+          {
+            "astId": 1231,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "owner",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address"
+          },
+          {
+            "astId": 1233,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "nextStrategyId",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1238,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "strategies",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_uint256,t_struct(Strategy)1214_storage)"
+          },
+          {
+            "astId": 1242,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "feeds",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_address)"
+          },
+          {
+            "astId": 1246,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "nonces",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_uint256)"
+          },
+          {
+            "astId": 1249,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "reentrancyStatus",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_enum(ReentrancyStatus)1069"
+          }
+        ],
+        "numberOfBytes": "320"
+      },
+      "t_struct(Strategy)1214_storage": {
+        "encoding": "inplace",
+        "label": "struct Strategy",
+        "members": [
+          {
+            "astId": 1181,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "user",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "astId": 1184,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "parameters",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_struct(StrategyParameters)1178_storage"
+          },
+          {
+            "astId": 1186,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "sellPercentageAmount",
+            "offset": 0,
+            "slot": "26",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1188,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "buyPercentageAmount",
+            "offset": 0,
+            "slot": "27",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1190,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "sellPercentageTotalAmount",
+            "offset": 0,
+            "slot": "28",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1192,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "buyPercentageTotalAmount",
+            "offset": 0,
+            "slot": "29",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1194,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "sellTwapExecutedAt",
+            "offset": 0,
+            "slot": "30",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1196,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "buyTwapExecutedAt",
+            "offset": 0,
+            "slot": "31",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1198,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "investRoundIdForBTD",
+            "offset": 0,
+            "slot": "32",
+            "type": "t_uint80"
+          },
+          {
+            "astId": 1200,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "stableRoundIdForBTD",
+            "offset": 10,
+            "slot": "32",
+            "type": "t_uint80"
+          },
+          {
+            "astId": 1202,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "investRoundIdForSTR",
+            "offset": 20,
+            "slot": "32",
+            "type": "t_uint80"
+          },
+          {
+            "astId": 1204,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "stableRoundIdForSTR",
+            "offset": 0,
+            "slot": "33",
+            "type": "t_uint80"
+          },
+          {
+            "astId": 1206,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "investPrice",
+            "offset": 0,
+            "slot": "34",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1208,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "profit",
+            "offset": 0,
+            "slot": "35",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1210,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "budget",
+            "offset": 0,
+            "slot": "36",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1213,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "status",
+            "offset": 0,
+            "slot": "37",
+            "type": "t_enum(Status)1074"
+          }
+        ],
+        "numberOfBytes": "1216"
+      },
+      "t_struct(StrategyParameters)1178_storage": {
+        "encoding": "inplace",
+        "label": "struct StrategyParameters",
+        "members": [
+          {
+            "astId": 1108,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_investToken",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "astId": 1110,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_investAmount",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1112,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_stableToken",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "astId": 1114,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_stableAmount",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1116,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_impact",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1119,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_floorType",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_enum(FloorLegType)1079"
+          },
+          {
+            "astId": 1121,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_floorValue",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1123,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_liquidateOnFloor",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bool"
+          },
+          {
+            "astId": 1125,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_cancelOnFloor",
+            "offset": 1,
+            "slot": "7",
+            "type": "t_bool"
+          },
+          {
+            "astId": 1127,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_minimumLoss",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1130,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_buyType",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_enum(BuyLegType)1083"
+          },
+          {
+            "astId": 1132,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_buyValue",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1134,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_buyTwapTime",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1137,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_buyTwapTimeUnit",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_enum(TimeUnit)1105"
+          },
+          {
+            "astId": 1139,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_btdValue",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1142,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_btdType",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_enum(DIP_SPIKE)1095"
+          },
+          {
+            "astId": 1145,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_buyDCAUnit",
+            "offset": 1,
+            "slot": "14",
+            "type": "t_enum(DCA_UNIT)1100"
+          },
+          {
+            "astId": 1147,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_buyDCAValue",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1150,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_sellType",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_enum(SellLegType)1088"
+          },
+          {
+            "astId": 1152,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_sellValue",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1154,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_highSellValue",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1156,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_minimumProfit",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1158,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_strValue",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1161,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_strType",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_enum(DIP_SPIKE)1095"
+          },
+          {
+            "astId": 1164,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_sellDCAUnit",
+            "offset": 1,
+            "slot": "21",
+            "type": "t_enum(DCA_UNIT)1100"
+          },
+          {
+            "astId": 1166,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_sellDCAValue",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1168,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_sellTwapTime",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1171,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_sellTwapTimeUnit",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_enum(TimeUnit)1105"
+          },
+          {
+            "astId": 1173,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_completeOnSell",
+            "offset": 1,
+            "slot": "24",
+            "type": "t_bool"
+          },
+          {
+            "astId": 1175,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_current_price_sell",
+            "offset": 2,
+            "slot": "24",
+            "type": "t_bool"
+          },
+          {
+            "astId": 1177,
+            "contract": "contracts/facets/LensFacet.sol:LensFacet",
+            "label": "_current_price_buy",
+            "offset": 3,
+            "slot": "24",
+            "type": "t_bool"
+          }
+        ],
+        "numberOfBytes": "800"
+      },
+      "t_uint16": {
+        "encoding": "inplace",
+        "label": "uint16",
+        "numberOfBytes": "2"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint80": {
+        "encoding": "inplace",
+        "label": "uint80",
+        "numberOfBytes": "10"
+      }
+    }
+  }
+}

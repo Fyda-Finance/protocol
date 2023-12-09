@@ -64,4 +64,4 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   await tx.wait();
 };
 
-module.exports.tags = ["upgradeMock"];
+module.exports.tags = ["upgradeDiamond"];

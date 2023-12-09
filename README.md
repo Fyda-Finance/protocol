@@ -90,28 +90,10 @@ yarn lint
 yarn prettier
 ```
 
-## Testnet Deployment
+## Deployment Commands
 
 ```
 npx hardhat deploy --tags deployMock --network goerli
-```
-
-## Diamond Address
-
-_Ethereum Goerli Testnet_
-
-```
-DiamondCutFacet deployed: 0xadAaCb4C57Ec47646f66A75AfbeeeF3c2Ce848D4
-Diamond deployed: 0x4BF163f29AC2A9E48598097844394c064483D6D9
-DiamondInit deployed: 0x4290Dbac98e7ACb8f456B93883cE254EAdbCAe9C
-
-Deploying facets
-DiamondLoupeFacet deployed: 0x3058Dd73aBc46821e6c2337472B4edd4FC58f94A
-OwnershipFacet deployed: 0xf3Ad8DCf7Bd0bFeC71d577C9046A95d405a6e4Db
-StrategyFacet deployed: 0x436D5dAa9f460d29f27D0E2F04E34C20F4E4a9B4
-BuyFacet deployed: 0x768Ff738FCb16E875B534818E8CB915C7709D1A5
-SellFacet deployed: 0x5d3Bc49B1243B5A8466a1Cb35AdeDe4DC958ABAA
-FloorFacet deployed: 0x472C70f17dB148D23D9b18c0e2793cE76a2fD964
-PriceOracleFacet deployed: 0xEC28a16e48E85e17c73E05147647e2720A17f569
-LensFacet deployed: 0x1A303d8f34F8084A62c8B4B09E8D6026a28aAb43
+npx hardhat deploy --tags deployDiamond --network goerli
+npx hardhat deploy --tags configureFeeds --network goerli
 ```
