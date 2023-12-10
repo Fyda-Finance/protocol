@@ -32,20 +32,33 @@ const config: HardhatUserConfig = {
       accounts: [process.env.PRIVATE_KEY || ""],
       url: process.env.ARBITRUM_RPC_URL || "",
       chainId: 42161,
-      gasMultiplier: 0.5,
+    },
+    polygon: {
+      accounts: [process.env.PRIVATE_KEY || ""],
+      url: process.env.POLYGON_RPC_URL || "",
+      chainId: 137,
     },
   },
   etherscan: {
     apiKey: {
-      goerli: process.env.ETHERSCAN_API_KEY || "ETHERSCAN_API_KEY",
+      sepolia: process.env.ETHERSCAN_API_KEY || "ETHERSCAN_API_KEY",
+      polygon: process.env.POLYGONSCAN_API_KEY || "POLYGONSCAN_API_KEY",
     },
     customChains: [
       {
-        network: "goerli",
+        network: "sepolia",
         chainId: 5,
         urls: {
-          apiURL: "https://api-goerli.etherscan.io/",
-          browserURL: "https://goerli.etherscan.io/",
+          apiURL: "https://api-sepolia.etherscan.io/",
+          browserURL: "https://sepolia.etherscan.io/",
+        },
+      },
+      {
+        network: "polygon",
+        chainId: 137,
+        urls: {
+          apiURL: "https://api.polygonscan.com/",
+          browserURL: "https://polygonscan.com/",
         },
       },
     ],
