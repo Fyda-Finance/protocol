@@ -147,7 +147,7 @@ const feeds: any = {
   ],
 };
 
-const stalePeriod = 60 * 60 * 36; // 36 hours
+const stalePeriod = 60 * 60 * 25; // 25 hours
 const sequencerUptimeFeed: any = {
   arbirum: "0xFdB631F5EE196F0ed6FAa767959853A9F217697D",
 };
