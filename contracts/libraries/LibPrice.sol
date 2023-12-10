@@ -9,12 +9,17 @@ import { LibDiamond } from "./LibDiamond.sol";
 import { InvalidPrice, FeedNotFound } from "../utils/GenericErrors.sol";
 import { AppStorage } from "../AppStorage.sol";
 
+error SequencerDown();
+error GracePeriodNotOver();
+error PriceExpired();
+
 /**
  * @title LibPrice
  * @dev This library provides functions for fetching and manipulating asset prices.
  */
 library LibPrice {
     address constant USD_QUOTE = 0x0000000000000000000000000000000000000348;
+    uint256 private constant GRACE_PERIOD_TIME = 3600;
 
     /**
      * @notice Get the current price and round IDs of an asset relative to a unit.
@@ -27,15 +32,49 @@ library LibPrice {
     function getPrice(address asset, address unit) internal view returns (uint256 price, uint80, uint80) {
         AppStorage storage s = LibDiamond.diamondStorage();
 
+        AggregatorV2V3Interface sequencerUptimeFeed = AggregatorV2V3Interface(s.sequencerUptimeFeed);
+
+        if (address(sequencerUptimeFeed) != address(0)) {
+            (
+                ,
+                /*uint80 roundID*/ int256 answer,
+                uint256 startedAt /*uint256 updatedAt*/ /*uint80 answeredInRound*/,
+                ,
+
+            ) = sequencerUptimeFeed.latestRoundData();
+
+            // Answer == 0: Sequencer is up
+            // Answer == 1: Sequencer is down
+            bool isSequencerUp = answer == 0;
+            if (!isSequencerUp) {
+                revert SequencerDown();
+            }
+
+            // Make sure the grace period has passed after the
+            // sequencer is back up.
+            uint256 timeSinceUp = block.timestamp - startedAt;
+            if (timeSinceUp <= GRACE_PERIOD_TIME) {
+                revert GracePeriodNotOver();
+            }
+        }
+
         if (s.feeds[asset] == address(0) || s.feeds[unit] == address(0)) {
             revert FeedNotFound();
         }
 
-        (uint80 investRoundId, int256 assetPrice, , , ) = AggregatorV2V3Interface(s.feeds[asset]).latestRoundData();
-        (uint80 stableRoundId, int256 unitPrice, , , ) = AggregatorV2V3Interface(s.feeds[unit]).latestRoundData();
+        (uint80 investRoundId, int256 assetPrice, , uint256 investUpdatedAt, ) = AggregatorV2V3Interface(s.feeds[asset])
+            .latestRoundData();
+        (uint80 stableRoundId, int256 unitPrice, , uint256 stableUpdatedAt, ) = AggregatorV2V3Interface(s.feeds[unit])
+            .latestRoundData();
 
         if (assetPrice == 0 || unitPrice == 0) {
             revert InvalidPrice();
+        }
+
+        if (
+            block.timestamp - investUpdatedAt > s.maxStalePeriod || block.timestamp - stableUpdatedAt > s.maxStalePeriod
+        ) {
+            revert PriceExpired();
         }
 
         uint256 unitDecimals = IERC20Metadata(unit).decimals();

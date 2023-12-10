@@ -39,6 +39,7 @@ describe("Strategy", function () {
     const buyFacet: BuyFacet = await ethers.getContractAt("BuyFacet", diamondAddress);
 
     const priceOracleFacet = await ethers.getContractAt("PriceOracleFacet", diamondAddress);
+    await priceOracleFacet.setMaxStalePricePeriod("10000000000000");
 
     const ScenarioFeedAggregator = await ethers.getContractFactory("ScenarioFeedAggregator");
     const usdcScenarioFeedAggregator = (await ScenarioFeedAggregator.deploy()) as ScenarioFeedAggregator;

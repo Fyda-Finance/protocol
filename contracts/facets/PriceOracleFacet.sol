@@ -36,6 +36,22 @@ contract PriceOracleFacet is Modifiers {
     }
 
     /**
+     * @notice Sets the address of the sequencer uptime feed.
+     * @param _sequencerUptimeFeed The address of the sequencer uptime feed.
+     */
+    function setSequencerUptimeFeed(address _sequencerUptimeFeed) external onlyOwner {
+        s.sequencerUptimeFeed = _sequencerUptimeFeed;
+    }
+
+    /**
+     * @notice Sets the max stale period for price feeds.
+     * @param _maxStalePricePeriod The max stale period for price feeds.
+     */
+    function setMaxStalePricePeriod(uint256 _maxStalePricePeriod) external onlyOwner {
+        s.maxStalePeriod = _maxStalePricePeriod;
+    }
+
+    /**
      * @notice Get the current price and round IDs of an asset relative to a unit.
      * @param asset The address of the asset.
      * @param unit The address of the unit (e.g., USD).

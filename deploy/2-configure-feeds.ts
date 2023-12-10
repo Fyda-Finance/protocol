@@ -147,6 +147,11 @@ const feeds: any = {
   ],
 };
 
+const stalePeriod = 60 * 60 * 36; // 36 hours
+const sequencerUptimeFeed: any = {
+  arbirum: "0xFdB631F5EE196F0ed6FAa767959853A9F217697D",
+};
+
 module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRuntimeEnvironment) => {
   const diamond = await hre.ethers.getContract("Diamond");
   const priceOracleFacet: PriceOracleFacet = await ethers.getContractAt("PriceOracleFacet", diamond.address);
@@ -156,6 +161,13 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
 
   const tx = await priceOracleFacet.setAssetFeeds(_tokens, _feeds);
   await tx.wait();
+
+  if (sequencerUptimeFeed[network.name]) {
+    const tx = await priceOracleFacet.setSequencerUptimeFeed(sequencerUptimeFeed[network.name]);
+    await tx.wait();
+  }
+
+  const tx2 = await priceOracleFacet.setMaxStalePricePeriod(stalePeriod);
 
   console.log("Configuration complete");
 };

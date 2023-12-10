@@ -246,6 +246,10 @@ struct AppStorage {
     mapping(address => uint256) nonces;
     // reentrancy status
     ReentrancyStatus reentrancyStatus;
+    // sequencer uptime feed
+    address sequencerUptimeFeed;
+    // max stale period
+    uint256 maxStalePeriod;
 }
 
 /**

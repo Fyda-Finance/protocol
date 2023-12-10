@@ -45,6 +45,7 @@ describe("Swap and Impact", function () {
     const strategyFacet: StrategyFacet = await ethers.getContractAt("StrategyFacet", diamondAddress);
     const buyFacet: BuyFacet = await ethers.getContractAt("BuyFacet", diamondAddress);
     const priceOracleFacet = await ethers.getContractAt("PriceOracleFacet", diamondAddress);
+    await priceOracleFacet.setMaxStalePricePeriod("10000000000000");
 
     const lensFacet: LensFacet = await ethers.getContractAt("LensFacet", diamondAddress);
 
