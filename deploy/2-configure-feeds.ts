@@ -156,6 +156,11 @@ const feeds: any = {
   ],
   polygon: [
     {
+      // AAVE
+      token: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
+      feed: "0x72484b12719e23115761d5da1646945632979bb6",
+    },
+    {
       // WMATIC
       token: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
       feed: "0xab594600376ec9fd91f8e885dadf0ce036862de0",
