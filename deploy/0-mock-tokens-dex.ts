@@ -3,24 +3,12 @@ import { ethers } from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const feeds: any = {
-  goerli: [
-    {
-      token: "0x3e6fFe1Dd604C3315Ce48eb9cf1121A3062768D5",
-      feed: "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
-    },
-    {
-      token: "0x8FD6903611C717BC8673dd890eC5902551C15D82",
-      feed: "0x48731cF7e84dc94C5f84577882c14Be11a5B7456",
-    },
-    {
-      token: "0x21B903707b559BC0DF7b21412bEb4cBff2d4d133",
-      feed: "0xA39434A63A52E749F02807ae27335515BA4b07F7",
-    },
-    {
-      token: "0xA6FDe5C7fC7ec36eBC7e389329354CCf6dfab94F",
-      feed: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
-    },
-  ],
+  sepolia: {
+    WBTC: "0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43",
+    WETH: "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+    LINK: "0xc59E3633BAAC79493d908e63626716e204A45EdF",
+    USDC: "0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E",
+  },
 };
 
 module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRuntimeEnvironment) => {
@@ -56,6 +44,11 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
     log: true,
   });
 
+  let link = await hre.ethers.getContract("LINK");
+  let wbtc = await hre.ethers.getContract("WBTC");
+  let weth = await hre.ethers.getContract("WETH");
+  let usdc = await hre.ethers.getContract("USDC");
+
   await deploy("MockDEX", {
     contract: "ScenarioDEX",
     from: deployer,
@@ -64,16 +57,20 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   });
 
   let dex = await hre.ethers.getContract("MockDEX");
-  let networkFeeds = feeds[network.name];
 
-  for (let i = 0; i < networkFeeds.length; i++) {
-    const feed = networkFeeds[i];
-    console.log("Configuring feed for token", feed.token, feed.feed);
-    let tx = await dex.updateFeed(feed.token, feed.feed);
-    await tx.wait();
-  }
+  let tx = await dex.updateFeed(usdc.address, feeds[network.name]["USDC"]);
+  await tx.wait();
 
-  const tx = await dex.updateSlippage(10); // 0.1%;
+  tx = await dex.updateFeed(wbtc.address, feeds[network.name]["WBTC"]);
+  await tx.wait();
+
+  tx = await dex.updateFeed(weth.address, feeds[network.name]["WETH"]);
+  await tx.wait();
+
+  tx = await dex.updateFeed(link.address, feeds[network.name]["LINK"]);
+  await tx.wait();
+
+  tx = await dex.updateSlippage(10); // 0.1%;
   await tx.wait();
 };
 

@@ -93,7 +93,7 @@ yarn prettier
 ## Deployment Commands
 
 ```
-npx hardhat deploy --tags deployMock --network goerli
-npx hardhat deploy --tags deployDiamond --network goerli
-npx hardhat deploy --tags configureFeeds --network goerli
+npx hardhat deploy --tags deployMock --network <network_name>
+npx hardhat deploy --tags deployDiamond --network <network_name>
+npx hardhat deploy --tags configureFeeds --network <network_name>
 ```

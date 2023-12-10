@@ -23,11 +23,10 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    goerli: {
+    sepolia: {
       accounts: [process.env.PRIVATE_KEY || ""],
-      url: process.env.GOERLI_RPC_URL || "",
-      chainId: 5,
-      gasMultiplier: 1.5,
+      url: process.env.SEPOLIA_RPC_URL || "",
+      chainId: 11155111,
     },
     arbitrum: {
       accounts: [process.env.PRIVATE_KEY || ""],

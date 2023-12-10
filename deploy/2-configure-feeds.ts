@@ -5,22 +5,26 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { PriceOracleFacet } from "../typechain-types";
 
 const feeds: any = {
-  goerli: [
+  sepolia: [
     {
-      token: "0x3e6fFe1Dd604C3315Ce48eb9cf1121A3062768D5",
-      feed: "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+      // WBTC
+      token: "0x083f66c24cDc0140a910600a020b669B2960fc7e",
+      feed: "0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43",
     },
     {
-      token: "0x8FD6903611C717BC8673dd890eC5902551C15D82",
-      feed: "0x48731cF7e84dc94C5f84577882c14Be11a5B7456",
+      // WETH
+      token: "0x46eFed5564eD0FB6840abA7E8a4d12Da27757EB3",
+      feed: "0x694AA1769357215DE4FAC081bf1f309aDC325306",
     },
     {
-      token: "0x21B903707b559BC0DF7b21412bEb4cBff2d4d133",
-      feed: "0xA39434A63A52E749F02807ae27335515BA4b07F7",
+      // LINK
+      token: "0x1F28FB7151d3183764Ea1D724E567Bb8e0653d13",
+      feed: "0xc59E3633BAAC79493d908e63626716e204A45EdF",
     },
     {
-      token: "0xA6FDe5C7fC7ec36eBC7e389329354CCf6dfab94F",
-      feed: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
+      // USDC
+      token: "0x6458009bAC9ffd638331bC5612f22825893856C0",
+      feed: "0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E",
     },
   ],
   arbitrum: [
@@ -144,6 +148,11 @@ const feeds: any = {
       token: "0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F",
       feed: "0x0809e3d38d1b4214958faf06d8b1b1a2b73f2ab8",
     },
+    {
+      // TUSD
+      token: "0x4D15a3A2286D883AF0AA1B3f21367843FAc63E07",
+      feed: "0x6fabee62266da6686ee2744c6f15bb8352d2f28d",
+    },
   ],
 };
 
@@ -167,7 +176,7 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
     await tx.wait();
   }
 
-  const tx2 = await priceOracleFacet.setMaxStalePricePeriod(stalePeriod);
+  await priceOracleFacet.setMaxStalePricePeriod(stalePeriod);
 
   console.log("Configuration complete");
 };
