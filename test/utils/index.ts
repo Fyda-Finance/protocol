@@ -80,7 +80,7 @@ export async function setupDiamondFixture(): Promise<SetupDiamondFixture> {
   const floorFacet = await ethers.getContractAt("FloorFacet", diamondAddress);
 
   const priceOracleFacet = await ethers.getContractAt("PriceOracleFacet", diamondAddress);
-  await priceOracleFacet.setMaxStalePricePeriod("1000000000000000");
+  await priceOracleFacet.setMaxStalePricePeriod("10000000000000");
 
   const ScenarioFeedAggregator = await ethers.getContractFactory("ScenarioFeedAggregator");
   const usdcScenarioFeedAggregator: ScenarioFeedAggregator = await ScenarioFeedAggregator.deploy();
