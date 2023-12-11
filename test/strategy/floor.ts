@@ -62,7 +62,7 @@ describe("Floor", function () {
     parameters._floorType = 2;
     parameters._floorValue = "1000";
     parameters._investAmount = "1000000000000000000000";
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
 
     const dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
       setup.scenarioERC20WETH.address,
@@ -81,7 +81,7 @@ describe("Floor", function () {
     parameters._liquidateOnFloor = true;
     parameters._floorType = 1;
     parameters._floorValue = "90000000000";
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
 
     await setup.floorFacet.connect(setup.user).executeFloor(1, {
       dex: setup.scenarioDEX.address,

@@ -76,6 +76,7 @@ describe("Gasless", function () {
       setup.user.address,
       await setup.lensFacet.getNonce(setup.user.address),
       signature,
+      0,
     );
 
     const value = await setup.buyFacet.executionBuyAmount(true, 0);
@@ -192,6 +193,7 @@ describe("Gasless", function () {
       setup.user.address,
       await setup.lensFacet.getNonce(setup.user.address),
       signature,
+      0,
     );
 
     const value = await setup.buyFacet.executionBuyAmount(true, 0);
@@ -267,7 +269,7 @@ describe("Gasless", function () {
 
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
 
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
 
     const strategyId = 0;
 
@@ -334,7 +336,7 @@ describe("Gasless", function () {
     parameters._buyType = 1;
     parameters._buyValue = "1500000000";
     parameters._stableAmount = budget;
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     const param = {
       sellValue: "0",
       buyValue: "1400000000",

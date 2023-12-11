@@ -144,13 +144,13 @@ describe("Strategy", function () {
 
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
 
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     expect(await setup.strategyFacet.nextStrategyId()).to.equal(1);
     expect(await setup.strategyFacet.getStrategy(5)).to.be.reverted;
 
     parameters._floorValue = "1000000000";
     parameters._floorType = 1;
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     expect(await setup.strategyFacet.nextStrategyId()).to.equal(2);
 
     parameters._floorValue = "0";
@@ -159,7 +159,7 @@ describe("Strategy", function () {
     parameters._buyDCAUnit = 1;
     parameters._buyDCAValue = "12";
 
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     await expect(await setup.strategyFacet.nextStrategyId()).to.equal(3);
     parameters._buyValue = "10000";
     parameters._sellType = 1;
@@ -167,13 +167,13 @@ describe("Strategy", function () {
     parameters._investAmount = "100000";
     parameters._stableAmount = "0";
 
-    // await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
+    // await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0)).to.be.reverted;
 
     parameters._sellTwapTime = 1;
     parameters._sellTwapTimeUnit = 1;
     parameters._sellDCAUnit = 1;
     parameters._sellDCAValue = "12";
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     expect(await setup.strategyFacet.nextStrategyId()).to.equal(4);
   });
 
@@ -219,29 +219,29 @@ describe("Strategy", function () {
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 25);
 
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
-    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0)).to.be.reverted;
     parameters._stableToken = setup.scenarioERC20USDC.address;
-    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0)).to.be.reverted;
     parameters._floorValue = "100000000";
 
-    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0)).to.be.reverted;
     parameters._buyTwapTime = 0;
     parameters._buyTwapTimeUnit = 0;
-    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0)).to.be.reverted;
     parameters._sellTwapTime = 0;
     parameters._sellTwapTimeUnit = 0;
-    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0)).to.be.reverted;
     parameters._sellValue = "1600000000";
     parameters._sellType = 1;
-    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0)).to.be.reverted;
     parameters._sellTwapTime = 0;
     parameters._investAmount = "0";
     parameters._strValue = "1000";
-    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
+    await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0)).to.be.reverted;
     parameters._highSellValue = "1650000000";
-    // await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters)).to.be.reverted;
+    // await expect(setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0)).to.be.reverted;
     parameters._btdValue = "1000";
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
   });
 
   it("Update Strategy", async function () {
@@ -255,7 +255,7 @@ describe("Strategy", function () {
     parameters._buyType = 1;
     parameters._buyValue = "1500000000";
     parameters._stableAmount = budget;
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     const param = {
       sellValue: "0",
       buyValue: "0",
@@ -285,7 +285,7 @@ describe("Strategy", function () {
     await expect(setup.strategyFacet.connect(setup.user).updateStrategy(0, param)).to.be.reverted;
     parameters._sellType = 1;
     parameters._sellValue = "1600000000";
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     await expect(setup.strategyFacet.connect(setup.user).updateStrategy(1, param)).to.be.reverted;
     param.btdValue = "50000";
     await expect(setup.strategyFacet.connect(setup.user).updateStrategy(1, param)).to.be.reverted;
@@ -294,7 +294,7 @@ describe("Strategy", function () {
     parameters._buyDCAUnit = 2;
     parameters._buyDCAValue = "500000000";
     param.sellValue = "1900000000";
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     await setup.strategyFacet.connect(setup.user).updateStrategy(2, param);
     param.buyTwapTime = 1;
     await expect(setup.strategyFacet.connect(setup.user).updateStrategy(2, param)).to.be.reverted;
@@ -304,7 +304,7 @@ describe("Strategy", function () {
     parameters._buyTwapTime = 2;
     parameters._buyTwapTimeUnit = 1;
     param.buyTwapTime = 1;
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     await setup.strategyFacet.connect(setup.user).updateStrategy(3, param);
     let strategy = await setup.strategyFacet.getStrategy(3);
     expect(strategy.parameters._buyTwapTime).to.equal(1);

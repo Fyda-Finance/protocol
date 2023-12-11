@@ -126,7 +126,7 @@ describe("Swap and Impact", function () {
 
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
 
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
 
     const strategy = await setup.strategyFacet.nextStrategyId();
     expect(strategy).to.equal(1);
@@ -193,7 +193,7 @@ describe("Swap and Impact", function () {
 
     await setup.usdcScenarioFeedAggregator.setPrice("100000000", 25);
 
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
 
     const strategy = await setup.strategyFacet.nextStrategyId();
     expect(strategy).to.equal(1);

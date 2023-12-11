@@ -171,9 +171,10 @@ contract StrategyFacet is Modifiers {
      *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
      *      If the parameters do not meet the criteria, an error is thrown.
      * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
+     * @param investPrice the price at which investToken was bought
      */
-    function createStrategy(StrategyParameters memory _parameter) public nonReentrant {
-        _createStrategy(_parameter, msg.sender);
+    function createStrategy(StrategyParameters memory _parameter, uint256 investPrice) public nonReentrant {
+        _createStrategy(_parameter, msg.sender, investPrice);
     }
 
     /**
@@ -186,13 +187,15 @@ contract StrategyFacet is Modifiers {
      * @param account The address of the user who created the strategy.
      * @param nonce The nonce of the user who created the strategy.
      * @param signature The signature of the user who created the strategy.
+     * @param investPrice the price at which investToken was bought
      */
     function createStrategyOnBehalf(
         Permit[] memory permits,
         StrategyParameters memory _parameter,
         address account,
         uint256 nonce,
-        bytes memory signature
+        bytes memory signature,
+        uint256 investPrice
     ) public nonReentrant {
         for (uint256 i = 0; i < permits.length; i++) {
             IERC20Permit(permits[i].token).permit(
@@ -219,7 +222,7 @@ contract StrategyFacet is Modifiers {
             revert InvalidSigner();
         }
 
-        _createStrategy(_parameter, account);
+        _createStrategy(_parameter, account, investPrice);
     }
 
     /**
@@ -268,8 +271,9 @@ contract StrategyFacet is Modifiers {
      *      If the parameters do not meet the criteria, an error is thrown.
      * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
      * @param user The address of the user who created the strategy.
+     * @param _investPrice the price at which investToken was bought
      */
-    function _createStrategy(StrategyParameters memory _parameter, address user) internal {
+    function _createStrategy(StrategyParameters memory _parameter, address user, uint256 _investPrice) internal {
         if (_parameter._investToken == address(0)) {
             revert InvalidInvestToken();
         }
@@ -526,8 +530,10 @@ contract StrategyFacet is Modifiers {
             budget = _parameter._stableAmount;
         }
         uint256 investPrice = 0;
-        if (_parameter._investAmount > 0) {
+        if (_parameter._investAmount > 0 && _investPrice == 0) {
             investPrice = price;
+        } else if (_parameter._investAmount > 0) {
+            investPrice = _investPrice;
         }
         uint256 percentageAmountForSell = 0;
         if (_parameter._sellDCAUnit == DCA_UNIT.PERCENTAGE) {

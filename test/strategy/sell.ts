@@ -65,7 +65,7 @@ describe("Sell", function () {
     // parameters._sellDCAValue = "100000000000000000000";
     // parameters._strValue = "100000000";
     // parameters._strType = 3;
-    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     // let value = await setup.sellFacet.executionSellAmount(false, 0);
     // let dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
     //   setup.scenarioERC20WETH.address,
@@ -91,7 +91,7 @@ describe("Sell", function () {
     // await setup.wethScenarioFeedAggregator.setPrice("160000000000", 5);
     // await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
     // await setup.wethScenarioFeedAggregator.setRoundPrice(12, "165000000000");
-    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     // await setup.wethScenarioFeedAggregator.setPrice("160000000000", 5);
     // await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
     // value = await setup.sellFacet.executionSellAmount(false, 1);
@@ -115,7 +115,7 @@ describe("Sell", function () {
     // parameters._sellDCAValue = "900";
     // await setup.wethScenarioFeedAggregator.setPrice("160000000000", 5);
     // await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
-    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     // value = await setup.sellFacet.executionSellAmount(false, 2);
     // dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
     //   setup.scenarioERC20WETH.address,
@@ -130,7 +130,7 @@ describe("Sell", function () {
     // parameters._sellValue = "11000000000";
     // await setup.wethScenarioFeedAggregator.setPrice("160000000000", 5);
     // await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
-    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     // value = await setup.sellFacet.executionSellAmount(false, 3);
     // dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
     //   setup.scenarioERC20WETH.address,
@@ -146,7 +146,7 @@ describe("Sell", function () {
     // parameters._current_price = 2;
     // await setup.wethScenarioFeedAggregator.setPrice("160000000000", 5);
     // await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
-    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     // value = await setup.sellFacet.executionSellAmount(false, 4);
     // dexCalldata = setup.scenarioDEX.interface.encodeFunctionData("swap", [
     //   setup.scenarioERC20WETH.address,
@@ -162,7 +162,7 @@ describe("Sell", function () {
     // await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
     // parameters._highSellValue = "200000000000";
     // parameters._sellValue = "1650000000";
-    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    // await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     // await setup.wethScenarioFeedAggregator.setPrice("170000000000", 5);
     // await setup.usdcScenarioFeedAggregator.setPrice("100000000", 5);
     // await expect(
@@ -196,7 +196,7 @@ describe("Sell", function () {
     parameters._sellDCAValue = "100000000000000000000";
     parameters._sellTwapTime = 1;
     parameters._sellTwapTimeUnit = 1;
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
 
     const value = await setup.sellFacet.executionSellAmount(false, 0);
 
@@ -235,7 +235,7 @@ describe("Sell", function () {
     parameters._sellValue = "1000";
     parameters._investAmount = "100000000000000000000";
 
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
 
     let value = await setup.sellFacet.executionSellAmount(true, 0);
 
@@ -266,7 +266,7 @@ describe("Sell", function () {
     parameters._highSellValue = "2000000000";
     await setup.wethScenarioFeedAggregator.setPrice("120000000000", 5);
 
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
 
     value = await setup.sellFacet.executionSellAmount(true, 1);
 
@@ -292,7 +292,7 @@ describe("Sell", function () {
     let strategy = await setup.strategyFacet.connect(setup.user).getStrategy(1);
     expect(strategy.status).to.equal(2);
 
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     await setup.strategyFacet.connect(setup.user).cancelStrategy(2);
     strategy = await setup.strategyFacet.connect(setup.user).getStrategy(2);
     await expect(
@@ -321,7 +321,7 @@ describe("Sell", function () {
     parameters._sellValue = "1200000000";
     parameters._investAmount = "100000000000000000000";
 
-    await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
+    await setup.strategyFacet.connect(setup.user).createStrategy(parameters, 0);
     await setup.wethScenarioFeedAggregator.setPrice("210000000000", 5);
 
     const value = await setup.sellFacet.executionSellAmount(true, 0);
