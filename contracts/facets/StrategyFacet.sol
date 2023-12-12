@@ -262,14 +262,17 @@ contract StrategyFacet is Modifiers {
     }
 
     /**
-     * @notice Create a new trade execution strategy based on the provided parameters.
+     * @notice Compile a new trade execution strategy based on the provided parameters.
      * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
-     *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
-     *      If the parameters do not meet the criteria, an error is thrown.
      * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
      * @param user The address of the user who created the strategy.
+     * @return A `Strategy` struct containing details of the specified strategy.
+     * @return price of the invest token w.r.t. the stable when strategy was created
      */
-    function _createStrategy(StrategyParameters memory _parameter, address user) internal {
+    function compileStrategy(
+        StrategyParameters memory _parameter,
+        address user
+    ) public view returns (Strategy memory, uint256) {
         if (_parameter._investToken == address(0)) {
             revert InvalidInvestToken();
         }
@@ -537,28 +540,52 @@ contract StrategyFacet is Modifiers {
         if (_parameter._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
             percentageAmountForBuy = (_parameter._buyDCAValue * _parameter._stableAmount) / LibTrade.MAX_PERCENTAGE;
         }
-        s.strategies[s.nextStrategyId] = Strategy({
-            user: user,
-            sellTwapExecutedAt: 0,
-            buyTwapExecutedAt: 0,
-            investRoundIdForBTD: investRoundId,
-            stableRoundIdForBTD: stableRoundId,
-            investRoundIdForSTR: investRoundId,
-            stableRoundIdForSTR: stableRoundId,
-            parameters: _parameter,
-            investPrice: investPrice,
-            profit: 0,
-            sellPercentageAmount: percentageAmountForSell,
-            sellPercentageTotalAmount: percentageAmountForSell > 0 ? _parameter._investAmount : 0,
-            buyPercentageAmount: percentageAmountForBuy,
-            buyPercentageTotalAmount: percentageAmountForBuy > 0 ? _parameter._stableAmount : 0,
-            budget: budget,
-            status: Status.ACTIVE
-        });
 
+        return (
+            Strategy({
+                user: user,
+                sellTwapExecutedAt: 0,
+                buyTwapExecutedAt: 0,
+                investRoundIdForBTD: investRoundId,
+                stableRoundIdForBTD: stableRoundId,
+                investRoundIdForSTR: investRoundId,
+                stableRoundIdForSTR: stableRoundId,
+                parameters: _parameter,
+                investPrice: investPrice,
+                profit: 0,
+                sellPercentageAmount: percentageAmountForSell,
+                sellPercentageTotalAmount: percentageAmountForSell > 0 ? _parameter._investAmount : 0,
+                buyPercentageAmount: percentageAmountForBuy,
+                buyPercentageTotalAmount: percentageAmountForBuy > 0 ? _parameter._stableAmount : 0,
+                budget: budget,
+                status: Status.ACTIVE
+            }),
+            price
+        );
+    }
+
+    /**
+     * @notice Create a new trade execution strategy based on the provided parameters.
+     * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
+     *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
+     *      If the parameters do not meet the criteria, an error is thrown.
+     * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
+     * @param user The address of the user who created the strategy.
+     */
+    function _createStrategy(StrategyParameters memory _parameter, address user) internal {
+        (Strategy memory strategy, uint256 price) = compileStrategy(_parameter, user);
+        s.strategies[s.nextStrategyId] = strategy;
         s.nextStrategyId++;
 
-        emit StrategyCreated((s.nextStrategyId - 1), user, _parameter, investRoundId, stableRoundId, budget, price);
+        emit StrategyCreated(
+            (s.nextStrategyId - 1),
+            user,
+            _parameter,
+            strategy.investRoundIdForBTD,
+            strategy.stableRoundIdForBTD,
+            strategy.budget,
+            price
+        );
     }
 
     /**
