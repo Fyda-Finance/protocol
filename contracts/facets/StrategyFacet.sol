@@ -121,6 +121,10 @@ contract StrategyFacet is Modifiers {
         bytes memory signature,
         address account
     ) external nonReentrant {
+        if (s.nonces[account] != nonce) {
+            revert InvalidNonce();
+        }
+
         bytes32 messageHash = getMessageHashToCancel(id, nonce, account);
         bytes32 ethSignedMessageHash = LibSignature.getEthSignedMessageHash(messageHash);
         address signer = LibSignature.recoverSigner(ethSignedMessageHash, signature);
