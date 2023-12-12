@@ -589,6 +589,116 @@ contract StrategyFacet is Modifiers {
     }
 
     /**
+     * @notice Create a new trade execution strategy based on the provided parameters.
+     * @param strategy The strategy parameters defining the behavior and conditions of the strategy.
+     * @param user The address of the user who created the strategy.
+     * @param price price of the invest token w.r.t. the stable when strategy was compiled
+     */
+    function _createPreCompiledStrategy(Strategy memory strategy, address user, uint256 price) internal {
+        s.strategies[s.nextStrategyId] = strategy;
+        s.nextStrategyId++;
+
+        emit StrategyCreated(
+            (s.nextStrategyId - 1),
+            user,
+            strategy.parameters,
+            strategy.investRoundIdForBTD,
+            strategy.stableRoundIdForBTD,
+            strategy.budget,
+            price
+        );
+    }
+
+    /**
+     * @notice Create a new trade execution strategy based on the provided parameters.
+     * @param strategy The strategy parameters defining the behavior and conditions of the strategy.
+     * @param user The address of the user who created the strategy.
+     * @param price price of the invest token w.r.t. the stable when strategy was compiled
+     */
+    function createPreCompiledStrategy(
+        Strategy memory strategy,
+        address user,
+        uint256 price
+    ) external onlyOwner nonReentrant {
+        _createPreCompiledStrategy(strategy, user, price);
+    }
+
+    /**
+     * @notice Get the message hash for a given strategy to create it.
+     * @dev This function returns the message hash that must be signed by the user in order to create a strategy on behalf of another user.
+     * @param strategy The strategy parameters defining the behavior and conditions of the strategy.
+     * @param nonce The nonce of the user who created the strategy.
+     * @param account The address of the user who created the strategy.
+     * @param price price of the invest token w.r.t. the stable when strategy was compiled
+     * @return The message hash for the given strategy.
+     */
+    function getMessageHashToCreatePreCompiledStrategy(
+        Strategy memory strategy,
+        uint256 nonce,
+        address account,
+        uint256 price
+    ) public view returns (bytes32) {
+        return keccak256(abi.encode(account, nonce, strategy, price, LibUtil.getChainID()));
+    }
+
+    /**
+     * @notice Create a new trade execution strategy based on the provided parameters on behalf of another user.
+     * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
+     *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
+     *      If the parameters do not meet the criteria, an error is thrown.
+     * @param permits The array of `Permit` structs containing the parameters for the permit function.
+     * @param strategy The strategy parameters defining the behavior and conditions of the strategy.
+     * @param account The address of the user who created the strategy.
+     * @param nonce The nonce of the user who created the strategy.
+     * @param signature The signature of the user who created the strategy.
+     * @param price price of the invest token w.r.t. the stable when strategy was compiled
+     */
+    function createPreCompiledStrategyOnBehalf(
+        Permit[] memory permits,
+        Strategy memory strategy,
+        address account,
+        uint256 nonce,
+        bytes memory signature,
+        uint256 price
+    ) external nonReentrant {
+        for (uint256 i = 0; i < permits.length; i++) {
+            IERC20Permit(permits[i].token).permit(
+                permits[i].owner,
+                permits[i].spender,
+                permits[i].value,
+                permits[i].deadline,
+                permits[i].v,
+                permits[i].r,
+                permits[i].s
+            );
+        }
+
+        if (s.uniqueNonce[account][nonce] == true) {
+            revert InvalidNonce();
+        }
+
+        bytes32 messageHash = getMessageHashToCreatePreCompiledStrategy(strategy, nonce, account, price);
+        bytes32 ethSignedMessageHash = LibSignature.getEthSignedMessageHash(messageHash);
+        address signer = LibSignature.recoverSigner(ethSignedMessageHash, signature);
+        s.uniqueNonce[account][nonce] = true;
+
+        if (signer != account) {
+            revert InvalidSigner();
+        }
+
+        _createPreCompiledStrategy(strategy, account, price);
+    }
+
+    /**
+     * @notice Cancel a pre compiled and signed trade execution strategy.
+     * @dev This function allows users to cancel a trade execution strategy based on its nonce.
+     * @param nonce The nonce used when creating the strategy
+     */
+    function cancelUniqueNonce(uint256 nonce) external {
+        s.uniqueNonce[msg.sender][nonce] = true;
+    }
+
+    /**
      * @dev Update an existing strategy with new parameters.
      * @param strategyId The unique identifier of the strategy to update.
      * @param updateStruct A struct containing the updated parameters for the strategy.
