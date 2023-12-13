@@ -27,6 +27,8 @@ error SellPercentageNotSet();
 error StrValueGreaterThan100();
 error BtdValueGreaterThan100();
 error BuySellCurrentPrice();
+error TypeChosenWithoutValue();
+error DCAValueWithoutDCA();
 
 /**
  * @title StrategyFacet
@@ -513,6 +515,42 @@ contract StrategyFacet is Modifiers {
 
         if (_parameter._minimumLoss > 0 && _parameter._floorType != FloorLegType.DECREASE_BY) {
             revert FloorPercentageNotSet();
+        }
+
+        if (_parameter._btdType != DIP_SPIKE.NO_SPIKE && _parameter._btdValue == 0) {
+            revert TypeChosenWithoutValue();
+        }
+
+        if (_parameter._strType != DIP_SPIKE.NO_SPIKE && _parameter._strValue == 0) {
+            revert TypeChosenWithoutValue();
+        }
+
+        if (_parameter._buyTwapTimeUnit != TimeUnit.NO_UNIT && _parameter._buyTwapTime == 0) {
+            revert TypeChosenWithoutValue();
+        }
+
+        if (_parameter._sellTwapTimeUnit != TimeUnit.NO_UNIT && _parameter._sellTwapTime == 0) {
+            revert TypeChosenWithoutValue();
+        }
+
+        if (_parameter._floorType != FloorLegType.NO_TYPE && _parameter._floorValue == 0) {
+            revert TypeChosenWithoutValue();
+        }
+
+        if (_parameter._sellType != SellLegType.NO_TYPE && _parameter._sellValue == 0) {
+            revert TypeChosenWithoutValue();
+        }
+
+        if (_parameter._buyType != BuyLegType.NO_TYPE && _parameter._buyValue == 0) {
+            revert TypeChosenWithoutValue();
+        }
+
+        if ((_parameter._strValue == 0 && _parameter._sellTwapTime == 0) && _parameter._sellDCAValue > 0) {
+            revert DCAValueWithoutDCA();
+        }
+
+        if ((_parameter._btdValue == 0 && _parameter._buyTwapTime == 0) && _parameter._buyDCAValue > 0) {
+            revert DCAValueWithoutDCA();
         }
 
         uint256 decimals = 10 ** IERC20Metadata(_parameter._investToken).decimals();
