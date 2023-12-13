@@ -346,9 +346,7 @@ contract BuyFacet is Modifiers {
         uint256 previousValue = strategy.parameters._investAmount * strategy.investPrice;
         strategy.parameters._investAmount = strategy.parameters._investAmount + toTokenAmount;
 
-        strategy.investPrice =
-            (previousValue + (toTokenAmount * transferObject.price)) /
-            strategy.parameters._investAmount;
+        strategy.investPrice = (previousValue + (toTokenAmount * rate)) / strategy.parameters._investAmount;
 
         uint256 impact = LibTrade.validateImpact(rate, transferObject.price, strategy.parameters._impact, true);
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);

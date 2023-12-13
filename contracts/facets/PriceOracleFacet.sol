@@ -15,12 +15,32 @@ contract PriceOracleFacet is Modifiers {
     AppStorage internal s;
 
     /**
+     * @notice Emitted when an asset price feed is configured.
+     * @param asset The address of the asset.
+     * @param feed The address of the price feed for the asset.
+     */
+    event AssetFeedConfigured(address indexed asset, address indexed feed);
+
+    /**
+     * @notice Emitted when the sequencer uptime feed is configured.
+     * @param feed The address of the sequencer uptime feed.
+     */
+    event SequencerFeedUpdated(address indexed feed);
+
+    /**
+     * @notice Emitted when the max stale period for price feeds is updated.
+     * @param maxStalePeriod The max stale period for price feeds.
+     */
+    event MaxStalePricePeriodUpdated(uint256 indexed maxStalePeriod);
+
+    /**
      * @notice Sets the asset price feed address for a specific asset.
      * @param _asset The address of the asset.
      * @param _feed The address of the price feed for the asset.
      */
     function setAssetFeed(address _asset, address _feed) external onlyOwner {
         s.feeds[_asset] = _feed;
+        emit AssetFeedConfigured(_asset, _feed);
     }
 
     /**
@@ -32,6 +52,7 @@ contract PriceOracleFacet is Modifiers {
         require(_assets.length == _feeds.length, "length mismatch");
         for (uint256 i = 0; i < _assets.length; i++) {
             s.feeds[_assets[i]] = _feeds[i];
+            emit AssetFeedConfigured(_assets[i], _feeds[i]);
         }
     }
 
@@ -41,6 +62,7 @@ contract PriceOracleFacet is Modifiers {
      */
     function setSequencerUptimeFeed(address _sequencerUptimeFeed) external onlyOwner {
         s.sequencerUptimeFeed = _sequencerUptimeFeed;
+        emit SequencerFeedUpdated(_sequencerUptimeFeed);
     }
 
     /**
@@ -49,6 +71,7 @@ contract PriceOracleFacet is Modifiers {
      */
     function setMaxStalePricePeriod(uint256 _maxStalePricePeriod) external onlyOwner {
         s.maxStalePeriod = _maxStalePricePeriod;
+        emit MaxStalePricePeriodUpdated(_maxStalePricePeriod);
     }
 
     /**
