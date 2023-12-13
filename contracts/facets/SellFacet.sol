@@ -410,14 +410,16 @@ contract SellFacet is Modifiers {
         if (strategy.parameters._investAmount == 0) {
             strategy.investPrice = 0;
         }
-        strategy.parameters._stableAmount = strategy.parameters._stableAmount + toTokenAmount;
 
-        uint256 totalInvestAmount = (strategy.parameters._investAmount * transferObject.price) / decimals;
+        uint256 totalInvestAmount = (strategy.parameters._investAmount * strategy.investPrice) / decimals;
         uint256 sum = strategy.parameters._stableAmount + totalInvestAmount;
+        uint256 remainingAmount = strategy.budget - sum;
 
-        if (strategy.budget < sum) {
-            strategy.parameters._stableAmount = strategy.budget - totalInvestAmount;
-            strategy.profit = sum - strategy.budget + strategy.profit;
+        if (toTokenAmount > remainingAmount) {
+            strategy.parameters._stableAmount = strategy.parameters._stableAmount + remainingAmount;
+            strategy.profit = toTokenAmount - remainingAmount + strategy.profit;
+        } else {
+            strategy.parameters._stableAmount = strategy.parameters._stableAmount + toTokenAmount;
         }
 
         if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
