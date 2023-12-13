@@ -154,6 +154,7 @@ describe("Strategy", function () {
     expect(await setup.strategyFacet.nextStrategyId()).to.equal(2);
 
     parameters._floorValue = "0";
+    parameters._floorType = 0;
     parameters._btdType = 1;
     parameters._btdValue = "5000";
     parameters._buyDCAUnit = 1;
@@ -161,7 +162,13 @@ describe("Strategy", function () {
 
     await setup.strategyFacet.connect(setup.user).createStrategy(parameters);
     await expect(await setup.strategyFacet.nextStrategyId()).to.equal(3);
-    parameters._buyValue = "10000";
+    parameters._buyType = 0;
+    parameters._buyValue = "0";
+    parameters._btdType = 0;
+    parameters._btdValue = "0";
+    parameters._buyDCAUnit = 0;
+    parameters._buyDCAValue = "0";
+
     parameters._sellType = 1;
     parameters._sellValue = "120000000";
     parameters._investAmount = "100000";

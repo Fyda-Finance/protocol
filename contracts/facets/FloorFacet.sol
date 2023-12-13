@@ -32,13 +32,15 @@ contract FloorFacet is Modifiers {
      * @param tokens tokens substracted and added into the users wallet
      * @param stablePriceInUSD price of stable token in USD
      * @param investPrice the average price at which invest tokens were bought.
+     * @param profit it is the profit made by the strategy.
      */
     event FloorExecuted(
         uint256 indexed strategyId,
         uint256 impact,
         TokensTransaction tokens,
         uint256 stablePriceInUSD,
-        uint256 investPrice
+        uint256 investPrice,
+        uint256 profit
     );
     /**
      * @notice Emitted when a trade execution strategy is cancelled.
@@ -131,8 +133,15 @@ contract FloorFacet is Modifiers {
             // Update strategy details, including timestamp, asset amounts, round ID, and invest price.
             uint256 value = strategy.parameters._investAmount;
             strategy.parameters._investAmount = 0;
-            strategy.parameters._stableAmount += toTokenAmount;
             strategy.investPrice = 0;
+            uint256 remainingAmount = strategy.budget - strategy.parameters._stableAmount;
+
+            if (toTokenAmount > remainingAmount) {
+                strategy.parameters._stableAmount = strategy.parameters._stableAmount + remainingAmount;
+                strategy.profit = toTokenAmount - remainingAmount + strategy.profit;
+            } else {
+                strategy.parameters._stableAmount = strategy.parameters._stableAmount + toTokenAmount;
+            }
 
             if (strategy.parameters._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
                 strategy.buyPercentageAmount =
@@ -153,7 +162,8 @@ contract FloorFacet is Modifiers {
                     investAmount: strategy.parameters._investAmount
                 }),
                 stablePrice,
-                strategy.investPrice
+                strategy.investPrice,
+                strategy.profit
             );
         }
 
