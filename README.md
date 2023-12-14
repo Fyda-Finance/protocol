@@ -97,3 +97,19 @@ npx hardhat deploy --tags deployMock --network <network_name>
 npx hardhat deploy --tags deployDiamond --network <network_name>
 npx hardhat deploy --tags configureFeeds --network <network_name>
 ```
+
+## Verify Contracts
+
+In Sepolia you can verify using:
+
+```
+npx hardhat etherscan-verify --network sepolia
+```
+
+On Polygon and Arbitrum verify each contract individually.
+
+If a contract has constructors then verifying this way passing the constructor arguments:
+
+```
+npx hardhat verify 0xecA4aE6dd8D84264291631229f8f3146486667B6 --network polygon "1223a30278B980A2b04c51C56E045a0D9E976851" "0x64BE52e9a5aeDEC6851272B416202d4D0D212a77"
+```
