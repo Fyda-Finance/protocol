@@ -579,27 +579,24 @@ contract StrategyFacet is Modifiers {
         if (_parameter._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
             percentageAmountForBuy = (_parameter._buyDCAValue * _parameter._stableAmount) / LibTrade.MAX_PERCENTAGE;
         }
-
-        s.strategies[s.nextStrategyId].user = user;
-        s.strategies[s.nextStrategyId].sellTwapExecutedAt = 0;
-        s.strategies[s.nextStrategyId].buyTwapExecutedAt = 0;
-        s.strategies[s.nextStrategyId].investRoundIdForBTD = investRoundId;
-        s.strategies[s.nextStrategyId].stableRoundIdForBTD = stableRoundId;
-        s.strategies[s.nextStrategyId].investRoundIdForSTR = investRoundId;
-        s.strategies[s.nextStrategyId].stableRoundIdForSTR = stableRoundId;
-        s.strategies[s.nextStrategyId].parameters = _parameter;
-        s.strategies[s.nextStrategyId].investPrice = investPrice;
-        s.strategies[s.nextStrategyId].profit = 0;
-        s.strategies[s.nextStrategyId].sellPercentageAmount = percentageAmountForSell;
-        s.strategies[s.nextStrategyId].sellPercentageTotalAmount = percentageAmountForSell > 0
-            ? _parameter._investAmount
-            : 0;
-        s.strategies[s.nextStrategyId].buyPercentageAmount = percentageAmountForBuy;
-        s.strategies[s.nextStrategyId].buyPercentageTotalAmount = percentageAmountForBuy > 0
-            ? _parameter._stableAmount
-            : 0;
-        s.strategies[s.nextStrategyId].budget = budget;
-        s.strategies[s.nextStrategyId].status = Status.ACTIVE;
+        s.strategies[s.nextStrategyId] = Strategy({
+            user: user,
+            sellTwapExecutedAt: 0,
+            buyTwapExecutedAt: 0,
+            investRoundIdForBTD: investRoundId,
+            stableRoundIdForBTD: stableRoundId,
+            investRoundIdForSTR: investRoundId,
+            stableRoundIdForSTR: stableRoundId,
+            parameters: _parameter,
+            investPrice: investPrice,
+            profit: 0,
+            sellPercentageAmount: percentageAmountForSell,
+            sellPercentageTotalAmount: percentageAmountForSell > 0 ? _parameter._investAmount : 0,
+            buyPercentageAmount: percentageAmountForBuy,
+            buyPercentageTotalAmount: percentageAmountForBuy > 0 ? _parameter._stableAmount : 0,
+            budget: budget,
+            status: Status.ACTIVE
+        });
 
         s.nextStrategyId++;
 
