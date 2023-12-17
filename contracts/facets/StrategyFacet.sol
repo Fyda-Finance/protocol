@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { AppStorage, Strategy, StrategyParametersInput, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, UpdateStruct } from "../AppStorage.sol";
+import { AppStorage, Strategy, StrategyParameters, SellLegType, BuyLegType, FloorLegType, DCA_UNIT, DIP_SPIKE, TimeUnit, Status, UpdateStruct } from "../AppStorage.sol";
 import { Modifiers } from "../utils/Modifiers.sol";
 import { InvalidImpact, InvalidInvestToken, InvalidStableToken, TokensMustDiffer, AlreadyCancelled, AtLeastOneOptionRequired, InvalidBuyValue, InvalidBuyType, InvalidFloorValue, InvalidFloorType, InvalidSellType, InvalidSellValue, InvalidStableAmount, BuyAndSellAtMisorder, InvalidInvestAmount, FloorValueGreaterThanBuyValue, FloorValueGreaterThanSellValue, BothBuyTwapAndBTD, BuyDCAWithoutBuy, BuyTwapTimeInvalid, BuyTwapTimeUnitNotSelected, BothSellTwapAndSTR, SellDCAWithoutSell, SellTwapTimeUnitNotSelected, SellTwapTimeInvalid, SellTwapOrStrWithoutSellDCAUnit, SellDCAUnitWithoutSellDCAValue, StrWithoutStrType, BTDWithoutBTDType, BuyDCAWithoutBuyDCAUnit, BuyDCAUnitWithoutBuyDCAValue, InvalidHighSellValue, SellDCAValueRangeIsNotValid, BuyDCAValueRangeIsNotValid, DCAValueShouldBeLessThanIntitialAmount, OrphandStrategy, BuyNeverExecute, InvalidSigner, InvalidNonce, StrategyIsNotActive, BuyNotSet, SellNotSelected, PercentageNotInRange, BuyTwapNotSelected, SellTwapNotSelected, FloorNotSet } from "../utils/GenericErrors.sol";
 import { LibPrice } from "../libraries/LibPrice.sol";
@@ -79,7 +79,7 @@ contract StrategyFacet is Modifiers {
     event StrategyCreated(
         uint256 indexed strategyId,
         address user,
-        StrategyParametersInput parameter,
+        StrategyParameters parameter,
         uint80 investRoundId,
         uint80 stableRoundId,
         uint256 budget,
@@ -99,7 +99,7 @@ contract StrategyFacet is Modifiers {
      * @param strategyId The unique ID of the strategy.
      * @param updateStruct updated parameters of the strategy
      */
-    event StrategyUpdated(uint256 indexed strategyId, StrategyParametersInput updateStruct);
+    event StrategyUpdated(uint256 indexed strategyId, StrategyParameters updateStruct);
 
     /**
      * @notice Cancel a trade execution strategy.
@@ -178,7 +178,7 @@ contract StrategyFacet is Modifiers {
      *      If the parameters do not meet the criteria, an error is thrown.
      * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
      */
-    function createStrategy(StrategyParametersInput memory _parameter) public nonReentrant {
+    function createStrategy(StrategyParameters memory _parameter) public nonReentrant {
         _createStrategy(_parameter, msg.sender);
     }
 
@@ -195,7 +195,7 @@ contract StrategyFacet is Modifiers {
      */
     function createStrategyOnBehalf(
         Permit[] memory permits,
-        StrategyParametersInput memory _parameter,
+        StrategyParameters memory _parameter,
         address account,
         uint256 nonce,
         bytes memory signature
@@ -237,7 +237,7 @@ contract StrategyFacet is Modifiers {
      * @return The message hash for the given strategy.
      */
     function getMessageHashToCreate(
-        StrategyParametersInput memory _parameter,
+        StrategyParameters memory _parameter,
         uint256 nonce,
         address account
     ) public view returns (bytes32) {
@@ -275,7 +275,7 @@ contract StrategyFacet is Modifiers {
      * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
      * @param user The address of the user who created the strategy.
      */
-    function _createStrategy(StrategyParametersInput memory _parameter, address user) internal {
+    function _createStrategy(StrategyParameters memory _parameter, address user) internal {
         if (_parameter._investToken == address(0)) {
             revert InvalidInvestToken();
         }
@@ -587,6 +587,7 @@ contract StrategyFacet is Modifiers {
         s.strategies[s.nextStrategyId].stableRoundIdForBTD = stableRoundId;
         s.strategies[s.nextStrategyId].investRoundIdForSTR = investRoundId;
         s.strategies[s.nextStrategyId].stableRoundIdForSTR = stableRoundId;
+        s.strategies[s.nextStrategyId].parameters = _parameter;
         s.strategies[s.nextStrategyId].investPrice = investPrice;
         s.strategies[s.nextStrategyId].profit = 0;
         s.strategies[s.nextStrategyId].sellPercentageAmount = percentageAmountForSell;
@@ -599,38 +600,6 @@ contract StrategyFacet is Modifiers {
             : 0;
         s.strategies[s.nextStrategyId].budget = budget;
         s.strategies[s.nextStrategyId].status = Status.ACTIVE;
-
-        s.strategies[s.nextStrategyId].parameters._investToken = _parameter._investToken;
-        s.strategies[s.nextStrategyId].parameters._stableToken = _parameter._stableToken;
-        s.strategies[s.nextStrategyId].parameters._investAmount = _parameter._investAmount;
-        s.strategies[s.nextStrategyId].parameters._stableAmount = _parameter._stableAmount;
-        s.strategies[s.nextStrategyId].parameters._impact = _parameter._impact;
-        s.strategies[s.nextStrategyId].parameters._floorType = _parameter._floorType;
-        s.strategies[s.nextStrategyId].parameters._floorValue = _parameter._floorValue;
-        s.strategies[s.nextStrategyId].parameters._liquidateOnFloor = _parameter._liquidateOnFloor;
-        s.strategies[s.nextStrategyId].parameters._cancelOnFloor = _parameter._cancelOnFloor;
-        s.strategies[s.nextStrategyId].parameters._minimumLoss = _parameter._minimumLoss;
-        s.strategies[s.nextStrategyId].parameters._buyType = _parameter._buyType;
-        s.strategies[s.nextStrategyId].parameters._buyValue = _parameter._buyValue;
-        s.strategies[s.nextStrategyId].parameters._buyTwapTime = _parameter._buyTwapTime;
-        s.strategies[s.nextStrategyId].parameters._buyTwapTimeUnit = _parameter._buyTwapTimeUnit;
-        s.strategies[s.nextStrategyId].parameters._btdValue = _parameter._btdValue;
-        s.strategies[s.nextStrategyId].parameters._btdType = _parameter._btdType;
-        s.strategies[s.nextStrategyId].parameters._buyDCAUnit = _parameter._buyDCAUnit;
-        s.strategies[s.nextStrategyId].parameters._buyDCAValue = _parameter._buyDCAValue;
-        s.strategies[s.nextStrategyId].parameters._sellType = _parameter._sellType;
-        s.strategies[s.nextStrategyId].parameters._sellValue = _parameter._sellValue;
-        s.strategies[s.nextStrategyId].parameters._highSellValue = _parameter._highSellValue;
-        s.strategies[s.nextStrategyId].parameters._minimumProfit = _parameter._minimumProfit;
-        s.strategies[s.nextStrategyId].parameters._strValue = _parameter._strValue;
-        s.strategies[s.nextStrategyId].parameters._strType = _parameter._strType;
-        s.strategies[s.nextStrategyId].parameters._sellDCAUnit = _parameter._sellDCAUnit;
-        s.strategies[s.nextStrategyId].parameters._sellDCAValue = _parameter._sellDCAValue;
-        s.strategies[s.nextStrategyId].parameters._sellTwapTime = _parameter._sellTwapTime;
-        s.strategies[s.nextStrategyId].parameters._sellTwapTimeUnit = _parameter._sellTwapTimeUnit;
-        s.strategies[s.nextStrategyId].parameters._completeOnSell = _parameter._completeOnSell;
-        s.strategies[s.nextStrategyId].parameters._current_price_sell = _parameter._current_price_sell;
-        s.strategies[s.nextStrategyId].parameters._current_price_buy = _parameter._current_price_buy;
 
         s.nextStrategyId++;
 
@@ -1082,41 +1051,6 @@ contract StrategyFacet is Modifiers {
                 (strategy.parameters._sellDCAValue * strategy.sellPercentageTotalAmount) /
                 LibTrade.MAX_PERCENTAGE;
         }
-
-        StrategyParametersInput memory parameters = StrategyParametersInput({
-            _investToken: strategy.parameters._investToken,
-            _stableToken: strategy.parameters._stableToken,
-            _investAmount: strategy.parameters._investAmount,
-            _stableAmount: strategy.parameters._stableAmount,
-            _impact: strategy.parameters._impact,
-            _floorType: strategy.parameters._floorType,
-            _floorValue: strategy.parameters._floorValue,
-            _liquidateOnFloor: strategy.parameters._liquidateOnFloor,
-            _cancelOnFloor: strategy.parameters._cancelOnFloor,
-            _minimumLoss: strategy.parameters._minimumLoss,
-            _buyType: strategy.parameters._buyType,
-            _buyValue: strategy.parameters._buyValue,
-            _buyTwapTime: strategy.parameters._buyTwapTime,
-            _buyTwapTimeUnit: strategy.parameters._buyTwapTimeUnit,
-            _btdValue: strategy.parameters._btdValue,
-            _btdType: strategy.parameters._btdType,
-            _buyDCAUnit: strategy.parameters._buyDCAUnit,
-            _buyDCAValue: strategy.parameters._buyDCAValue,
-            _sellType: strategy.parameters._sellType,
-            _sellValue: strategy.parameters._sellValue,
-            _highSellValue: strategy.parameters._highSellValue,
-            _minimumProfit: strategy.parameters._minimumProfit,
-            _strValue: strategy.parameters._strValue,
-            _strType: strategy.parameters._strType,
-            _sellDCAUnit: strategy.parameters._sellDCAUnit,
-            _sellDCAValue: strategy.parameters._sellDCAValue,
-            _sellTwapTime: strategy.parameters._sellTwapTime,
-            _sellTwapTimeUnit: strategy.parameters._sellTwapTimeUnit,
-            _completeOnSell: strategy.parameters._completeOnSell,
-            _current_price_sell: strategy.parameters._current_price_sell,
-            _current_price_buy: strategy.parameters._current_price_buy
-        });
-
-        emit StrategyUpdated(strategyId, parameters);
+        emit StrategyUpdated(strategyId, strategy.parameters);
     }
 }
