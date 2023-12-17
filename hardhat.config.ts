@@ -43,25 +43,8 @@ const config: HardhatUserConfig = {
     apiKey: {
       sepolia: process.env.ETHERSCAN_API_KEY || "ETHERSCAN_API_KEY",
       polygon: process.env.POLYGONSCAN_API_KEY || "POLYGONSCAN_API_KEY",
+      arbitrumOne: process.env.ARBITRUMSCAN_API_KEY || "ARBITRUMSCAN_API_KEY",
     },
-    customChains: [
-      {
-        network: "sepolia",
-        chainId: 5,
-        urls: {
-          apiURL: "https://api-sepolia.etherscan.io/",
-          browserURL: "https://sepolia.etherscan.io/",
-        },
-      },
-      {
-        network: "polygon",
-        chainId: 137,
-        urls: {
-          apiURL: "https://api.polygonscan.com/api",
-          browserURL: "https://polygonscan.com/",
-        },
-      },
-    ],
   },
 };
 
