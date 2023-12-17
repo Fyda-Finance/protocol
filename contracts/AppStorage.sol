@@ -166,6 +166,8 @@ struct StrategyParameters {
     bool _current_price_sell;
     // @param _current_price The current price indicator is selected for buy
     bool _current_price_buy;
+    // @param This empty reserved space is put in place to allow future versions to add new variables without shifting down storage in the inheritance chain.
+    uint256[50] __gap;
 }
 
 /**
@@ -213,6 +215,8 @@ struct Strategy {
     uint256 budget;
     // @param status The current status of the strategy.
     Status status;
+    // @param This empty reserved space is put in place to allow future versions to add new variables without shifting down storage in the inheritance chain.
+    uint256[50] __gap;
 }
 /**
  * @notice AppStorage is the central storage structure for this contract, holding essential data.
