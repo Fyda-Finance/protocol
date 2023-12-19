@@ -291,6 +291,48 @@ const feeds: any = {
       feed: "0x4746dec9e833a82ec7c2c1356372ccf2cfcd2f3d",
     },
   ],
+  optimism: [
+    {
+      // wstETH
+      token: "0x1F32b1c2345538c0c6f582fCB022739c4A194Ebb",
+      feed: "0x41878779a388585509657ce5fb95a80050502186",
+    },
+    {
+      // OP
+      token: "0x4200000000000000000000000000000000000042",
+      feed: "0x0d276fc14719f9292d5c1ea2198673d1f4269246",
+    },
+    {
+      // WBTC
+      token: "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+      feed: "0xd702dd976fb76fffc2d3963d037dfdae5b04e593",
+    },
+    {
+      // WETH
+      token: "0x4200000000000000000000000000000000000006",
+      feed: "0x13e3ee699d1909e989722e753853ae30b17e08c5",
+    },
+    {
+      // LINK
+      token: "0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6",
+      feed: "0xcc232dcfaae6354ce191bd574108c1ad03f86450",
+    },
+    {
+      // USDC
+      token: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+      feed: "0x16a9fa2fda030272ce99b29cf780dfa30361e0f3",
+    },
+    {
+      // DAI
+      token: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      feed: "0x8dba75e83da73cc766a7e5a0ee71f656bab470d6",
+    },
+    {
+      // USDT
+      token: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+      feed: "0xecef79e109e997bca29c1c0897ec9d7b03647f5e",
+    },
+  ],
 };
 
 const stalePeriod = 60 * 60 * 25; // 25 hours

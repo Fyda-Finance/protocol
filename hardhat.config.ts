@@ -38,12 +38,18 @@ const config: HardhatUserConfig = {
       url: process.env.POLYGON_RPC_URL || "",
       chainId: 137,
     },
+    optimisticEthereum: {
+      accounts: [process.env.PRIVATE_KEY || ""],
+      url: process.env.OPTIMISM_RPC_URL || "",
+      chainId: 10,
+    },
   },
   etherscan: {
     apiKey: {
       sepolia: process.env.ETHERSCAN_API_KEY || "ETHERSCAN_API_KEY",
       polygon: process.env.POLYGONSCAN_API_KEY || "POLYGONSCAN_API_KEY",
       arbitrumOne: process.env.ARBITRUMSCAN_API_KEY || "ARBITRUMSCAN_API_KEY",
+      optimisticEthereum: process.env.OPTIMISMSCAN_API_KEY || "OPTIMISM_API_KEY",
     },
   },
 };
