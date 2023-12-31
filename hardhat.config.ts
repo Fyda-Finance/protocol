@@ -38,7 +38,7 @@ const config: HardhatUserConfig = {
       url: process.env.POLYGON_RPC_URL || "",
       chainId: 137,
     },
-    optimisticEthereum: {
+    optimism: {
       accounts: [process.env.PRIVATE_KEY || ""],
       url: process.env.OPTIMISM_RPC_URL || "",
       chainId: 10,
