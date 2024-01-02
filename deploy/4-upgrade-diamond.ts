@@ -1,3 +1,4 @@
+import { LedgerSigner } from "@anders-t/ethers-ledger";
 import hre from "hardhat";
 import { ethers } from "hardhat";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
@@ -59,7 +60,15 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
     },
   ];
 
-  const tx = await diamondCutFacet.diamondCut([...cut], ethers.constants.AddressZero, "0x");
+  let signer;
+  if (network.name !== "sepolia") {
+    signer = new LedgerSigner(hre.ethers.provider);
+  } else {
+    signer = accounts[0];
+  }
+
+  const tx = await diamondCutFacet.connect(signer).diamondCut([...cut], ethers.constants.AddressZero, "0x");
+  console.log("Hash:", tx.hash);
   await tx.wait();
 };
 

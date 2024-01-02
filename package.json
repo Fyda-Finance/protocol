@@ -22,8 +22,11 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@anders-t/ethers-ledger": "^1.0.4",
     "@chainlink/contracts": "^0.5.1",
     "@defi-wonderland/smock": "^2.3.4",
+    "@ethers-ext/signer-ledger": "^6.0.0-beta.1",
+    "@ethersproject/hardware-wallets": "^5.7.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
     "@openzeppelin/contracts": "^4.6.0",
     "@openzeppelin/contracts-upgradeable": "^4.7.3",
