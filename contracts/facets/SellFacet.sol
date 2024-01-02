@@ -186,14 +186,8 @@ contract SellFacet is Modifiers {
 
         uint256 value = executionSellAmount(true, strategyId);
 
-        if (strategy.parameters._btdValue > 0) {
-            strategy.investRoundIdForBTD = investRoundId;
-            strategy.stableRoundIdForBTD = stableRoundId;
-            emit ExecutedWithBTD(strategyId, RoundIds({ investRoundId: investRoundId, stableRoundId: stableRoundId }));
-        }
-
         // Perform the sell action, including transferring assets to the DEX.
-        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy);
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy, investRoundId, stableRoundId);
 
         // If there are no further buy actions in the strategy, mark it as completed.
         if (
@@ -266,15 +260,9 @@ contract SellFacet is Modifiers {
             revert TWAPTimeDifferenceIsLess();
         }
 
-        if (strategy.parameters._btdValue > 0) {
-            strategy.investRoundIdForBTD = investRoundId;
-            strategy.stableRoundIdForBTD = stableRoundId;
-            emit ExecutedWithBTD(strategyId, RoundIds({ investRoundId: investRoundId, stableRoundId: stableRoundId }));
-        }
-
         // Update the TWAP execution timestamp and perform the TWAP sell action.
         strategy.sellTwapExecutedAt = block.timestamp;
-        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy);
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy, investRoundId, stableRoundId);
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
         if (
@@ -349,13 +337,7 @@ contract SellFacet is Modifiers {
 
         uint256 value = executionSellAmount(false, strategyId);
 
-        if (strategy.parameters._btdValue > 0) {
-            strategy.investRoundIdForBTD = investRoundId;
-            strategy.stableRoundIdForBTD = stableRoundId;
-            emit ExecutedWithBTD(strategyId, RoundIds({ investRoundId: investRoundId, stableRoundId: stableRoundId }));
-        }
-
-        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy);
+        transferSell(strategyId, TransferObject(value, swap, price, sellAt), strategy, investRoundId, stableRoundId);
 
         // Mark the strategy as completed if there are no further buy actions and no assets left to invest.
 
@@ -404,7 +386,9 @@ contract SellFacet is Modifiers {
     function transferSell(
         uint256 strategyId,
         TransferObject memory transferObject,
-        Strategy storage strategy
+        Strategy storage strategy,
+        uint80 investRoundId,
+        uint80 stableRoundId
     ) internal {
         // Create a swap data structure for the DEX trade.
         LibSwap.SwapData memory swap = LibSwap.SwapData(
@@ -462,7 +446,13 @@ contract SellFacet is Modifiers {
 
         uint256 stablePrice = LibPrice.getUSDPrice(strategy.parameters._stableToken);
 
-        emitSellTradeEvent(strategyId, impact, transferObject, stablePrice, strategy, toTokenAmount);
+        if (strategy.parameters._btdValue > 0 && strategy.parameters._sellType == SellLegType.INCREASE_BY) {
+            strategy.investRoundIdForBTD = investRoundId;
+            strategy.stableRoundIdForBTD = stableRoundId;
+            emit ExecutedWithBTD(strategyId, RoundIds({ investRoundId: investRoundId, stableRoundId: stableRoundId }));
+        }
+
+        emitSellTradeEvent(strategyId, impact, transferObject, stablePrice, toTokenAmount);
     }
 
     /**
@@ -588,9 +578,10 @@ contract SellFacet is Modifiers {
         uint256 impact,
         TransferObject memory transferObject,
         uint256 stablePrice,
-        Strategy storage strategy,
         uint256 tokensAdded
     ) internal {
+        Strategy storage strategy = s.strategies[strategyId];
+
         if (
             (strategy.parameters._sellValue > 0 &&
                 strategy.parameters._strValue == 0 &&

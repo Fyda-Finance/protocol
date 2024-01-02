@@ -214,7 +214,7 @@ contract FloorFacet is Modifiers {
             strategy.profit
         );
 
-        if (strategy.parameters._btdValue > 0) {
+        if (strategy.parameters._btdValue > 0 && strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
             strategy.investRoundIdForBTD = investRoundId;
             strategy.stableRoundIdForBTD = stableRoundId;
             emit ExecutedWithBTD(strategyId, RoundIds({ investRoundId: investRoundId, stableRoundId: stableRoundId }));
