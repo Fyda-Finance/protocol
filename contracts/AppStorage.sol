@@ -250,6 +250,8 @@ struct AppStorage {
     address sequencerUptimeFeed;
     // max stale period
     uint256 maxStalePeriod;
+    // unique non-sequential nonces
+    mapping(address => mapping(uint256 => bool)) uniqueNonce;
 }
 
 /**

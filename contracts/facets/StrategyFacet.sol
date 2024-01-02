@@ -268,14 +268,17 @@ contract StrategyFacet is Modifiers {
     }
 
     /**
-     * @notice Create a new trade execution strategy based on the provided parameters.
+     * @notice Compile a new trade execution strategy based on the provided parameters.
      * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
-     *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
-     *      If the parameters do not meet the criteria, an error is thrown.
      * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
      * @param user The address of the user who created the strategy.
+     * @return A `Strategy` struct containing details of the specified strategy.
+     * @return price of the invest token w.r.t. the stable when strategy was created
      */
-    function _createStrategy(StrategyParameters memory _parameter, address user) internal {
+    function compileStrategy(
+        StrategyParameters memory _parameter,
+        address user
+    ) public view returns (Strategy memory, uint256) {
         if (_parameter._investToken == address(0)) {
             revert InvalidInvestToken();
         }
@@ -579,28 +582,162 @@ contract StrategyFacet is Modifiers {
         if (_parameter._buyDCAUnit == DCA_UNIT.PERCENTAGE) {
             percentageAmountForBuy = (_parameter._buyDCAValue * _parameter._stableAmount) / LibTrade.MAX_PERCENTAGE;
         }
-        s.strategies[s.nextStrategyId] = Strategy({
-            user: user,
-            sellTwapExecutedAt: 0,
-            buyTwapExecutedAt: 0,
-            investRoundIdForBTD: investRoundId,
-            stableRoundIdForBTD: stableRoundId,
-            investRoundIdForSTR: investRoundId,
-            stableRoundIdForSTR: stableRoundId,
-            parameters: _parameter,
-            investPrice: investPrice,
-            profit: 0,
-            sellPercentageAmount: percentageAmountForSell,
-            sellPercentageTotalAmount: percentageAmountForSell > 0 ? _parameter._investAmount : 0,
-            buyPercentageAmount: percentageAmountForBuy,
-            buyPercentageTotalAmount: percentageAmountForBuy > 0 ? _parameter._stableAmount : 0,
-            budget: budget,
-            status: Status.ACTIVE
-        });
 
+        return (
+            Strategy({
+                user: user,
+                sellTwapExecutedAt: 0,
+                buyTwapExecutedAt: 0,
+                investRoundIdForBTD: investRoundId,
+                stableRoundIdForBTD: stableRoundId,
+                investRoundIdForSTR: investRoundId,
+                stableRoundIdForSTR: stableRoundId,
+                parameters: _parameter,
+                investPrice: investPrice,
+                profit: 0,
+                sellPercentageAmount: percentageAmountForSell,
+                sellPercentageTotalAmount: percentageAmountForSell > 0 ? _parameter._investAmount : 0,
+                buyPercentageAmount: percentageAmountForBuy,
+                buyPercentageTotalAmount: percentageAmountForBuy > 0 ? _parameter._stableAmount : 0,
+                budget: budget,
+                status: Status.ACTIVE
+            }),
+            price
+        );
+    }
+
+    /**
+     * @notice Create a new trade execution strategy based on the provided parameters.
+     * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
+     *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
+     *      If the parameters do not meet the criteria, an error is thrown.
+     * @param _parameter The strategy parameters defining the behavior and conditions of the strategy.
+     * @param user The address of the user who created the strategy.
+     */
+    function _createStrategy(StrategyParameters memory _parameter, address user) internal {
+        (Strategy memory strategy, uint256 price) = compileStrategy(_parameter, user);
+        s.strategies[s.nextStrategyId] = strategy;
         s.nextStrategyId++;
 
-        emit StrategyCreated((s.nextStrategyId - 1), user, _parameter, investRoundId, stableRoundId, budget, price);
+        emit StrategyCreated(
+            (s.nextStrategyId - 1),
+            user,
+            _parameter,
+            strategy.investRoundIdForBTD,
+            strategy.stableRoundIdForBTD,
+            strategy.budget,
+            price
+        );
+    }
+
+    /**
+     * @notice Create a new trade execution strategy based on the provided parameters.
+     * @param strategy The strategy parameters defining the behavior and conditions of the strategy.
+     * @param user The address of the user who created the strategy.
+     * @param price price of the invest token w.r.t. the stable when strategy was compiled
+     */
+    function _createPreCompiledStrategy(Strategy memory strategy, address user, uint256 price) internal {
+        s.strategies[s.nextStrategyId] = strategy;
+        s.nextStrategyId++;
+
+        emit StrategyCreated(
+            (s.nextStrategyId - 1),
+            user,
+            strategy.parameters,
+            strategy.investRoundIdForBTD,
+            strategy.stableRoundIdForBTD,
+            strategy.budget,
+            price
+        );
+    }
+
+    /**
+     * @notice Create a new trade execution strategy based on the provided parameters.
+     * @param strategy The strategy parameters defining the behavior and conditions of the strategy.
+     * @param user The address of the user who created the strategy.
+     * @param price price of the invest token w.r.t. the stable when strategy was compiled
+     */
+    function createPreCompiledStrategy(
+        Strategy memory strategy,
+        address user,
+        uint256 price
+    ) external onlyOwner nonReentrant {
+        _createPreCompiledStrategy(strategy, user, price);
+    }
+
+    /**
+     * @notice Get the message hash for a given strategy to create it.
+     * @dev This function returns the message hash that must be signed by the user in order to create a strategy on behalf of another user.
+     * @param strategy The strategy parameters defining the behavior and conditions of the strategy.
+     * @param nonce The nonce of the user who created the strategy.
+     * @param account The address of the user who created the strategy.
+     * @param price price of the invest token w.r.t. the stable when strategy was compiled
+     * @return The message hash for the given strategy.
+     */
+    function getMessageHashToCreatePreCompiledStrategy(
+        Strategy memory strategy,
+        uint256 nonce,
+        address account,
+        uint256 price
+    ) public view returns (bytes32) {
+        return keccak256(abi.encode(account, nonce, strategy, price, LibUtil.getChainID()));
+    }
+
+    /**
+     * @notice Create a new trade execution strategy based on the provided parameters on behalf of another user.
+     * @dev This function validates the input parameters to ensure they satisfy the criteria for creating a strategy.
+     *      If the parameters are valid, a new strategy is created and an event is emitted to indicate the successful creation.
+     *      If the parameters do not meet the criteria, an error is thrown.
+     * @param permits The array of `Permit` structs containing the parameters for the permit function.
+     * @param strategy The strategy parameters defining the behavior and conditions of the strategy.
+     * @param account The address of the user who created the strategy.
+     * @param nonce The nonce of the user who created the strategy.
+     * @param signature The signature of the user who created the strategy.
+     * @param price price of the invest token w.r.t. the stable when strategy was compiled
+     */
+    function createPreCompiledStrategyOnBehalf(
+        Permit[] memory permits,
+        Strategy memory strategy,
+        address account,
+        uint256 nonce,
+        bytes memory signature,
+        uint256 price
+    ) external nonReentrant {
+        for (uint256 i = 0; i < permits.length; i++) {
+            IERC20Permit(permits[i].token).permit(
+                permits[i].owner,
+                permits[i].spender,
+                permits[i].value,
+                permits[i].deadline,
+                permits[i].v,
+                permits[i].r,
+                permits[i].s
+            );
+        }
+
+        if (s.uniqueNonce[account][nonce] == true) {
+            revert InvalidNonce();
+        }
+
+        bytes32 messageHash = getMessageHashToCreatePreCompiledStrategy(strategy, nonce, account, price);
+        bytes32 ethSignedMessageHash = LibSignature.getEthSignedMessageHash(messageHash);
+        address signer = LibSignature.recoverSigner(ethSignedMessageHash, signature);
+        s.uniqueNonce[account][nonce] = true;
+
+        if (signer != account) {
+            revert InvalidSigner();
+        }
+
+        _createPreCompiledStrategy(strategy, account, price);
+    }
+
+    /**
+     * @notice Cancel a pre compiled and signed trade execution strategy.
+     * @dev This function allows users to cancel a trade execution strategy based on its nonce.
+     * @param nonce The nonce used when creating the strategy
+     */
+    function cancelUniqueNonce(uint256 nonce) external {
+        s.uniqueNonce[msg.sender][nonce] = true;
     }
 
     /**
