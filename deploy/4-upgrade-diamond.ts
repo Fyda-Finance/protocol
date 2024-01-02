@@ -11,53 +11,52 @@ module.exports = async ({ network, getNamedAccounts, deployments }: HardhatRunti
   const accounts = await ethers.getSigners();
   const deployer = accounts[0].address;
 
-  // await deploy("SellFacet", {
-  //   from: deployer,
-  //   args: [],
-  //   log: true,
-  // });
-
-  await deploy("BuyFacet", {
+  await deploy("SellFacet", {
     from: deployer,
     args: [],
     log: true,
   });
 
-  // await deploy("FloorFacet", {
+  // await deploy("BuyFacet", {
   //   from: deployer,
   //   args: [],
   //   log: true,
   // });
 
-  // const sellFacet = await hre.ethers.getContract("SellFacet");
-  const buyFacet = await hre.ethers.getContract("BuyFacet");
-  // const floorFacet = await hre.ethers.getContract("FloorFacet");
+  await deploy("FloorFacet", {
+    from: deployer,
+    args: [],
+    log: true,
+  });
 
-  // const sellFacetSelectors: any = getSelectors(sellFacet);
-  const buyFacetSelectors: any = getSelectors(buyFacet);
-  // const floorFacetSelectors: any = getSelectors(floorFacet);
+  const sellFacet = await hre.ethers.getContract("SellFacet");
+  // const buyFacet = await hre.ethers.getContract("BuyFacet");
+  const floorFacet = await hre.ethers.getContract("FloorFacet");
 
-  const diamondCutFacet: DiamondCutFacet = await ethers.getContractAt(
-    "DiamondCutFacet",
-    "0x781C0F94CF2F7C1030CA188B1778831714609799",
-  );
+  const sellFacetSelectors: any = getSelectors(sellFacet);
+  // const buyFacetSelectors: any = getSelectors(buyFacet);
+  const floorFacetSelectors: any = getSelectors(floorFacet);
+
+  const diamond = await hre.ethers.getContract("Diamond");
+
+  const diamondCutFacet: DiamondCutFacet = await ethers.getContractAt("DiamondCutFacet", diamond.address);
 
   const cut = [
-    // {
-    //   facetAddress: sellFacet.address,
-    //   action: 1, //replace
-    //   functionSelectors: sellFacetSelectors,
-    // },
     {
-      facetAddress: buyFacet.address,
+      facetAddress: sellFacet.address,
       action: 1, //replace
-      functionSelectors: buyFacetSelectors,
+      functionSelectors: sellFacetSelectors,
     },
     // {
-    //   facetAddress: floorFacet.address,
+    //   facetAddress: buyFacet.address,
     //   action: 1, //replace
-    //   functionSelectors: floorFacetSelectors,
+    //   functionSelectors: buyFacetSelectors,
     // },
+    {
+      facetAddress: floorFacet.address,
+      action: 1, //replace
+      functionSelectors: floorFacetSelectors,
+    },
   ];
 
   const tx = await diamondCutFacet.diamondCut([...cut], ethers.constants.AddressZero, "0x");
