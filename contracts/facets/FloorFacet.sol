@@ -12,6 +12,18 @@ error PriceIsGreaterThanFloorValue();
 error MinimumLossRequired();
 
 /**
+ * @title RoundIds
+ * @notice This struct stores round Id for the transaction of invest and stable tokens.
+ * Struct Fields:
+ * @param investRoundId: the round Id of the invest token.
+ * @param stableRoundId: the round Id of the stable token
+ */
+struct RoundIds {
+    uint80 investRoundId;
+    uint80 stableRoundId;
+}
+
+/**
  * @title FloorFacet
  * @notice This facet contains functions responsible for evaluating conditions related to the floor price and liquidation events.
  * @dev FloorFacet specializes in verifying floor price conditions, handling liquidation actions when the floor price is reached,
@@ -42,6 +54,14 @@ contract FloorFacet is Modifiers {
         uint256 investPrice,
         uint256 profit
     );
+
+    /**
+     * @notice Emitted when a floor execution happens with BTD value.
+     * @param strategyId The unique ID of the strategy where the floor execution is initiated.
+     * @param rounds the round Ids of invest and stable tokens.
+     */
+
+    event ExecutedWithBTD(uint256 indexed strategyId, RoundIds rounds);
     /**
      * @notice Emitted when a trade execution strategy is cancelled.
      * @param strategyId The unique ID of the cancelled strategy.
@@ -76,7 +96,10 @@ contract FloorFacet is Modifiers {
             revert NoSwapFromZeroBalance();
         }
 
-        (uint256 price, , ) = LibPrice.getPrice(strategy.parameters._investToken, strategy.parameters._stableToken);
+        (uint256 price, uint80 investRoundId, uint80 stableRoundId) = LibPrice.getPrice(
+            strategy.parameters._investToken,
+            strategy.parameters._stableToken
+        );
 
         uint256 floorAt;
         if (strategy.parameters._floorType == FloorLegType.LIMIT_PRICE) {
@@ -149,23 +172,10 @@ contract FloorFacet is Modifiers {
                     LibTrade.MAX_PERCENTAGE;
                 strategy.buyPercentageTotalAmount = strategy.parameters._stableAmount;
             }
-
-            // Check if the strategy should be canceled on reaching the floor price.
-
-            emit FloorExecuted(
-                strategyId,
-                impact,
-                TokensTransaction({
-                    tokenSubstracted: value,
-                    tokenAdded: toTokenAmount,
-                    stableAmount: strategy.parameters._stableAmount,
-                    investAmount: strategy.parameters._investAmount
-                }),
-                stablePrice,
-                strategy.investPrice,
-                strategy.profit
-            );
+            emitEvents(strategyId, impact, value, toTokenAmount, stablePrice, investRoundId, stableRoundId);
         }
+
+        // Check if the strategy should be canceled on reaching the floor price.
 
         if (strategy.parameters._cancelOnFloor) {
             uint256 investPrice = LibPrice.getUSDPrice(strategy.parameters._investToken);
@@ -176,6 +186,38 @@ contract FloorFacet is Modifiers {
         if (strategy.parameters._cancelOnFloor == false && strategy.parameters._buyValue == 0) {
             strategy.status = Status.CANCELLED;
             emit StrategyCancelled(strategyId, 0, stablePrice);
+        }
+    }
+
+    function emitEvents(
+        uint256 strategyId,
+        uint256 impact,
+        uint256 value,
+        uint256 toTokenAmount,
+        uint256 stablePrice,
+        uint80 investRoundId,
+        uint80 stableRoundId
+    ) internal {
+        Strategy storage strategy = s.strategies[strategyId];
+
+        emit FloorExecuted(
+            strategyId,
+            impact,
+            TokensTransaction({
+                tokenSubstracted: value,
+                tokenAdded: toTokenAmount,
+                stableAmount: strategy.parameters._stableAmount,
+                investAmount: strategy.parameters._investAmount
+            }),
+            stablePrice,
+            strategy.investPrice,
+            strategy.profit
+        );
+
+        if (strategy.parameters._btdValue > 0 && strategy.parameters._floorType == FloorLegType.DECREASE_BY) {
+            strategy.investRoundIdForBTD = investRoundId;
+            strategy.stableRoundIdForBTD = stableRoundId;
+            emit ExecutedWithBTD(strategyId, RoundIds({ investRoundId: investRoundId, stableRoundId: stableRoundId }));
         }
     }
 }
