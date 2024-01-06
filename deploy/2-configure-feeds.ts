@@ -59,6 +59,11 @@ const feeds: any = {
       feed: "0x50834f3163758fcc1df9973b6e91f0f0f0434ad3",
     },
     {
+      // USDC
+      token: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+      feed: "0x50834f3163758fcc1df9973b6e91f0f0f0434ad3",
+    },
+    {
       // DAI
       token: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
       feed: "0xc5c8e77b397e531b8ec06bfb0048328b30e9ecfb",
@@ -286,6 +291,11 @@ const feeds: any = {
       feed: "0xfe4a8cc5b5b2366c1b58bea3858e81843581b2f7",
     },
     {
+      // USDC
+      token: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+      feed: "0xfe4a8cc5b5b2366c1b58bea3858e81843581b2f7",
+    },
+    {
       // DAI
       token: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
       feed: "0x4746dec9e833a82ec7c2c1356372ccf2cfcd2f3d",
@@ -320,6 +330,11 @@ const feeds: any = {
     {
       // USDC
       token: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+      feed: "0x16a9fa2fda030272ce99b29cf780dfa30361e0f3",
+    },
+    {
+      // USDC
+      token: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
       feed: "0x16a9fa2fda030272ce99b29cf780dfa30361e0f3",
     },
     {
